@@ -283,3 +283,51 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
     bottom:max(12px, env(safe-area-inset-bottom, 0px)) !important;
   }
 }
+
+
+/* Final fix: keep the two flight controls separated at opposite screen edges. */
+#hud.on #boost, #boost {
+  left: auto !important;
+  right: max(12px, env(safe-area-inset-right, 0px)) !important;
+  inset-inline-start: auto !important;
+  inset-inline-end: max(12px, env(safe-area-inset-right, 0px)) !important;
+  bottom: max(28px, env(safe-area-inset-bottom, 0px)) !important;
+  width: clamp(64px, 19vw, 88px) !important;
+  height: clamp(64px, 19vw, 88px) !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  z-index: 30 !important;
+}
+#hud.on #fire, #fire {
+  left: max(12px, env(safe-area-inset-left, 0px)) !important;
+  right: auto !important;
+  inset-inline-start: max(12px, env(safe-area-inset-left, 0px)) !important;
+  inset-inline-end: auto !important;
+  bottom: max(28px, env(safe-area-inset-bottom, 0px)) !important;
+  width: clamp(64px, 19vw, 88px) !important;
+  height: clamp(64px, 19vw, 88px) !important;
+  z-index: 30 !important;
+}
+#tapHint {
+  left: 50% !important;
+  right: auto !important;
+  inset-inline-start: auto !important;
+  inset-inline-end: auto !important;
+  bottom: max(30px, env(safe-area-inset-bottom, 0px)) !important;
+  width: min(34vw, 240px) !important;
+  transform: translateX(-50%);
+  text-align: center !important;
+}
+@media (max-width: 380px) {
+  #hud.on #boost, #boost, #hud.on #fire, #fire {
+    width: 68px !important;
+    height: 68px !important;
+  }
+  #tapHint { width: 30vw !important; bottom: max(22px, env(safe-area-inset-bottom, 0px)) !important; }
+}
+@media (max-height: 560px) {
+  #hud.on #boost, #boost, #hud.on #fire, #fire {
+    bottom: max(12px, env(safe-area-inset-bottom, 0px)) !important;
+  }
+  #tapHint { bottom: max(12px, env(safe-area-inset-bottom, 0px)) !important; }
+}
