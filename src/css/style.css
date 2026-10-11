@@ -237,3 +237,49 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
   #fire svg{width:25px;height:25px}
   #tapHint{left:86px;right:86px;bottom:12px;font-size:10px}
 }
+
+
+/* Hotfix: force the red boost control to remain visible above the flight HUD. */
+#hud.on #boost,
+#boost{
+  display:flex !important;
+  position:absolute !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  z-index:30 !important;
+  left:auto !important;
+  right:max(14px, env(safe-area-inset-right, 0px)) !important;
+  inset-inline-start:auto !important;
+  inset-inline-end:max(14px, env(safe-area-inset-right, 0px)) !important;
+  bottom:max(28px, env(safe-area-inset-bottom, 0px)) !important;
+  width:88px !important;
+  height:88px !important;
+  min-width:88px;
+  min-height:88px;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:center !important;
+  overflow:visible !important;
+  pointer-events:auto !important;
+  transform:none;
+  background:radial-gradient(circle at 32% 22%,#ffbc79 0%,#ff7950 32%,#e5483a 68%,#a82a1f 100%) !important;
+  border:4px solid #fff !important;
+  border-radius:50% !important;
+  box-shadow:0 5px 0 #7a1d15,0 8px 18px rgba(122,29,21,.35),inset 0 2px 0 rgba(255,255,255,.35) !important;
+  color:#fff !important;
+}
+#boost span,#boost em{display:block !important;visibility:visible !important;opacity:1 !important;color:#fff !important;position:relative;z-index:2}
+@media(max-width:380px){
+  #hud.on #boost,#boost{
+    width:76px !important;height:76px !important;min-width:76px;min-height:76px;
+    right:max(12px, env(safe-area-inset-right, 0px)) !important;
+    inset-inline-end:max(12px, env(safe-area-inset-right, 0px)) !important;
+    bottom:max(20px, env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+@media(max-height:560px){
+  #hud.on #boost,#boost{
+    width:68px !important;height:68px !important;min-width:68px;min-height:68px;
+    bottom:max(12px, env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
