@@ -675,7 +675,10 @@ function updateRoute(m){
   const targetX=routeTargetMeters*4;
   destination.position.set(targetX,0,routeCurve(targetX));
   const remaining=Math.max(0,Math.ceil(routeTargetMeters-m));
-  const progress=Math.max(0,Math.min(100,Math.floor((1-remaining/500)*100)));\n  $('routeRemaining').textContent=remaining;\n  $('routeProgressFill').style.width=progress+'%';\n  $('routeProgressText').textContent=progress+'%';
+  const progress=Math.max(0,Math.min(100,Math.floor((1-remaining/500)*100)));
+  $('routeRemaining').textContent=remaining;
+  $('routeProgressFill').style.width=progress+'%';
+  $('routeProgressText').textContent=progress+'%';
 }
 const camPos=new THREE.Vector3(),camLook=new THREE.Vector3(),tP=new THREE.Vector3(),tL=new THREE.Vector3(),_v=new THREE.Vector3();
 let curFov=62;
