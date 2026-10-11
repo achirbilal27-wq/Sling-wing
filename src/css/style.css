@@ -77,3 +77,38 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
   .pips b{width:8px;height:8px}
   .btn.up .coin-i{width:14px;height:14px;flex:0 0 14px}
 }
+
+
+/* Premium arcade polish: tactile controls, soft highlights and upgrade feedback. */
+.pill{background:linear-gradient(145deg,#fff8e6,#ffe6b6);box-shadow:0 4px 0 var(--wood-d),inset 0 2px 0 rgba(255,255,255,.9);text-shadow:0 1px 0 rgba(255,255,255,.8)}
+#title{letter-spacing:.2px;-webkit-text-stroke:.35px rgba(138,75,30,.25);text-shadow:0 3px 0 #8a4b1e,0 6px 0 rgba(91,43,14,.22),0 0 22px rgba(255,255,255,.32)}
+#hint{filter:drop-shadow(0 2px 4px rgba(29,82,118,.18))}
+#best:not(:empty){width:max-content;max-width:90%;left:50%;transform:translateX(-50%);padding:3px 14px;background:rgba(41,104,145,.32);border:1px solid rgba(255,255,255,.45);border-radius:999px;backdrop-filter:blur(5px)}
+.card{position:relative;background:linear-gradient(155deg,#d99852 0%,#bf793b 48%,#a85e2b 100%);border-color:#75401f;box-shadow:0 5px 0 #75401f,0 9px 16px rgba(66,35,12,.18),inset 0 1px 0 rgba(255,231,185,.8);transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
+.card::before{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:linear-gradient(125deg,rgba(255,255,255,.18),transparent 36%,transparent 68%,rgba(88,38,9,.08));z-index:0}
+.card>*{position:relative;z-index:1}
+.card .ic{box-shadow:inset 0 2px 0 rgba(255,255,255,.92),inset 0 -3px 0 rgba(138,75,30,.12),0 3px 0 rgba(76,37,12,.18)}
+.card .lv{background:linear-gradient(145deg,#7ee65b,#37a923);box-shadow:0 2px 0 #287b19,0 0 0 2px rgba(255,255,255,.2);text-shadow:0 1px 1px rgba(0,0,0,.25)}
+.pips b{box-shadow:inset 0 1px 2px rgba(0,0,0,.2);transition:background .18s ease,transform .18s ease,box-shadow .18s ease}
+.pips b.f{background:linear-gradient(180deg,#fff08a,#ffc629);box-shadow:0 0 5px rgba(255,216,65,.45),inset 0 1px 0 rgba(255,255,255,.65)}
+.btn{position:relative;min-height:34px;transition:transform .12s ease,filter .12s ease,box-shadow .12s ease}
+.btn.up{background:linear-gradient(180deg,#70e34d 0%,#4cbd2d 58%,#3da122 100%);box-shadow:0 4px 0 var(--green-d),inset 0 1px 0 rgba(255,255,255,.42)}
+.btn.up.no{background:linear-gradient(180deg,#b5a99a,#8d7e6d);box-shadow:0 4px 0 #6e6155,inset 0 1px 0 rgba(255,255,255,.25)}
+.btn.up:active,.plus:active,.go:active{transform:translateY(3px);filter:brightness(.96);box-shadow:0 1px 0 var(--green-d)}
+.btn.up .coin-i{flex:0 0 18px;box-shadow:inset 0 1px 0 rgba(255,255,255,.85),0 1px 0 rgba(116,65,0,.3)}
+.upgrade-arrow,.max-mark{width:17px;height:17px;flex:0 0 17px;filter:drop-shadow(0 1px 0 rgba(0,0,0,.2))}
+.card.just-upgraded{animation:levelCardPop .48s cubic-bezier(.2,.8,.25,1) both;border-color:#ffe27a;box-shadow:0 5px 0 #75401f,0 0 0 2px rgba(255,226,122,.55),0 0 22px rgba(255,209,60,.55)}
+.card.just-upgraded::before{background:linear-gradient(115deg,transparent 20%,rgba(255,255,255,.8) 43%,rgba(255,243,173,.2) 52%,transparent 70%);background-size:240% 100%;animation:upgradeShine .62s ease-out both}
+.card.just-upgraded .lv{animation:levelBadgePop .45s cubic-bezier(.2,.8,.25,1) both}
+#boost{position:relative;overflow:hidden;box-shadow:0 5px 0 #7a1d15,0 8px 18px rgba(122,29,21,.25),inset 0 2px 0 rgba(255,255,255,.35);background:radial-gradient(circle at 32% 22%,#ffbc79 0%,#ff7950 32%,#e5483a 68%,#a82a1f 100%)}
+#boost::before{content:"";position:absolute;inset:6px;border:1px solid rgba(255,255,255,.55);border-radius:50%;pointer-events:none}
+#boost span,#boost em{position:relative;z-index:1}
+.plus{background:linear-gradient(180deg,#7bea54,#43b92c);box-shadow:0 3px 0 var(--green-d),inset 0 1px 0 rgba(255,255,255,.5);transition:transform .12s ease,filter .12s ease}
+.go{background:linear-gradient(180deg,#75e954,#48bf2d 65%,#3ba222);box-shadow:0 5px 0 var(--green-d),inset 0 1px 0 rgba(255,255,255,.45);transition:transform .12s ease,filter .12s ease}
+.panel{box-shadow:0 8px 0 var(--wood-d),0 16px 35px rgba(0,0,0,.25),inset 0 2px 0 rgba(255,255,255,.8)}
+#toast{padding-inline:16px;text-shadow:0 3px 0 rgba(94,42,12,.7),0 0 18px rgba(255,210,74,.35)}
+@keyframes levelCardPop{0%{transform:scale(1)}38%{transform:scale(1.035) translateY(-3px)}72%{transform:scale(.99)}100%{transform:scale(1)}}
+@keyframes levelBadgePop{0%{transform:scale(.55) rotate(-18deg)}70%{transform:scale(1.18) rotate(5deg)}100%{transform:scale(1) rotate(0)}}
+@keyframes upgradeShine{0%{background-position:120% 0}100%{background-position:-130% 0}}
+@media(hover:hover){.card:hover{transform:translateY(-2px);box-shadow:0 7px 0 #75401f,0 12px 18px rgba(66,35,12,.2),inset 0 1px 0 rgba(255,231,185,.8)}.btn.up:hover:not(.no){filter:brightness(1.06)}}
+@media(prefers-reduced-motion:reduce){.card,.card .ic svg,.pips b,.btn,.plus,.go{transition:none}.card.just-upgraded,.card.just-upgraded::before,.card.just-upgraded .lv{animation:none}}
