@@ -269,6 +269,7 @@ let routeTargetMeters=500;
 let P,run,objs,shake=0,time=0,power=0,powerDir=1,night=0,snapCam=true;
 const down=new Set(),ptr=new Map(),keys={left:false,right:false};
 const parts=[],floats=[],shots=[];
+const shotGeo=new THREE.BoxGeometry(12,2.2,2.2),shotMat=new THREE.MeshBasicMaterial({color:0x7ff5ff});
 let shotCooldown=0;
 const G=560;
 
@@ -415,7 +416,7 @@ $('fire').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagatio
 function doShoot(){
   if(state!=='flight'||shotCooldown>0)return;
   shotCooldown=0.24;
-  const mesh=new THREE.Mesh(new THREE.BoxGeometry(12,2.2,2.2),new THREE.MeshBasicMaterial({color:0x7ff5ff}));
+  const mesh=new THREE.Mesh(shotGeo,shotMat);
   mesh.position.set((P.x+28)*S,Y(P.alt),P.z*S);scene.add(mesh);
   shots.push({x:P.x+28,alt:P.alt,z:P.z,vx:1900,life:0.62,mesh});
   beep(720,0.055,'square',0.025);
