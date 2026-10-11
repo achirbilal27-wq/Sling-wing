@@ -268,13 +268,15 @@ let state='ready';
 let routeTargetMeters=500;
 let P,run,objs,shake=0,time=0,power=0,powerDir=1,night=0,snapCam=true;
 const down=new Set(),ptr=new Map(),keys={left:false,right:false};
-const parts=[],floats=[];
+const parts=[],floats=[],shots=[];
+let shotCooldown=0;
 const G=560;
 
 function clearObjs(){while(objGroup.children.length)objGroup.remove(objGroup.children[0]);}
 function resetRun(){
   P={x:0,alt:85,z:0,vz:0,s:0,a:0.62,roll:0,yaw:0,boostT:0,spin:0,sliding:false,bounces:0};
   routeTargetMeters=500;
+  shots.forEach(s=>scene.remove(s.mesh));shots.length=0;shotCooldown=0;
   run={coins:0,picked:0,maxAlt:0};
   objs={coins:[],rings:[],birds:[],fuels:[],drafts:[],next:600};
   clearObjs();
@@ -399,6 +401,7 @@ cv.addEventListener('pointercancel',up);
 window.addEventListener('keydown',e=>{
   if(e.code==='Space'&&!e.repeat){e.preventDefault();down.add('k');if(state==='ready')startCharge();}
   if(e.code==='KeyB')doBoost();
+  if(e.code==='KeyF')doShoot();
   if(e.code==='ArrowLeft'||e.code==='KeyA')keys.left=true;
   if(e.code==='ArrowRight'||e.code==='KeyD')keys.right=true;
 });
@@ -408,6 +411,15 @@ window.addEventListener('keyup',e=>{
   if(e.code==='ArrowRight'||e.code==='KeyD')keys.right=false;
 });
 $('boost').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();doBoost();});
+$('fire').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();doShoot();});
+function doShoot(){
+  if(state!=='flight'||shotCooldown>0)return;
+  shotCooldown=0.24;
+  const mesh=new THREE.Mesh(new THREE.BoxGeometry(12,2.2,2.2),new THREE.MeshBasicMaterial({color:0x7ff5ff}));
+  mesh.position.set((P.x+28)*S,Y(P.alt),P.z*S);scene.add(mesh);
+  shots.push({x:P.x+28,alt:P.alt,z:P.z,vx:1900,life:0.62,mesh});
+  beep(720,0.055,'square',0.025);
+}
 function steerInput(){
   let v=0;
   const first=ptr.values().next().value;
@@ -438,6 +450,7 @@ function launch(){
 
 /* ---------- update ---------- */
 function updateFlight(dt){
+  shotCooldown=Math.max(0,shotCooldown-dt);
   const holding=down.size>0;
   const lvP=save.lv.plane;
   const maxPitch=clamp((P.s-130)/320,0,0.62);
@@ -520,6 +533,20 @@ function updateFlight(dt){
       addFloat(P.x,P.alt+50,'اصطدام!','#ff8a7a');beep(110,.25,'square',0.06);
       for(let i=0;i<14;i++)addPart(b.x,b.alt,(Math.random()-.5)*300,(Math.random()-.5)*300,0.6,0xf2f2f2,3,b.z);
     }
+  }
+  for(let i=shots.length-1;i>=0;i--){
+    const shot=shots[i];shot.x+=shot.vx*dt;shot.life-=dt;
+    shot.mesh.position.set(shot.x*S,Y(shot.alt),shot.z*S);
+    let hit=false;
+    for(const b of objs.birds){
+      if(b.hit)continue;
+      if(Math.abs(b.x-shot.x)<28&&Math.abs(b.alt-shot.alt)<32&&Math.abs(b.z-shot.z)<36){
+        b.hit=true;hit=true;addFloat(b.x,b.alt+35,'إصابة!','#8cf5ff',b.z);beep(980,.08,'triangle',0.035);
+        for(let n=0;n<5;n++)addPart(b.x,b.alt,(Math.random()-.5)*120,(Math.random()-.5)*120,0.25,0x7ff5ff,2.5,b.z);
+        break;
+      }
+    }
+    if(hit||shot.life<=0){scene.remove(shot.mesh);shots.splice(i,1);}
   }
 }
 
