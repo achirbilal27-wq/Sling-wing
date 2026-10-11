@@ -296,23 +296,23 @@ const ICONS={
   coin:'<svg viewBox="0 0 64 64" role="img" aria-label="مضاعف العملات"><defs><linearGradient id="coEdge" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#b66b05"/><stop offset=".45" stop-color="#ffe477"/><stop offset="1" stop-color="#c27b08"/></linearGradient><radialGradient id="coFace" cx=".32" cy=".22" r=".9"><stop stop-color="#fff7b0"/><stop offset=".42" stop-color="#ffd84c"/><stop offset=".78" stop-color="#f4a900"/><stop offset="1" stop-color="#d77a00"/></radialGradient></defs><ellipse cx="33" cy="54" rx="20" ry="4" fill="#8a4b1e" opacity=".18"/><g transform="rotate(-10 32 35)"><ellipse cx="31" cy="43" rx="20" ry="10" fill="#c17a08" stroke="#8b4c09" stroke-width="2"/><path d="M11 34v9c0 6 9 11 20 11s20-5 20-11v-9" fill="url(#coEdge)" stroke="#a76108" stroke-width="2"/><ellipse cx="31" cy="34" rx="20" ry="10" fill="url(#coFace)" stroke="#a76108" stroke-width="2.5"/><ellipse cx="31" cy="34" rx="15" ry="6.8" fill="none" stroke="#fff1a0" stroke-width="1.8"/><path d="M35 25 27 37h6l-4 7 11-13h-7l3-6z" fill="#fff8c7" stroke="#d58b0a" stroke-width="1.2" stroke-linejoin="round"/><path d="M17 29q4-4 9-4" fill="none" stroke="#fffbd6" stroke-width="2.5" stroke-linecap="round"/></g><path d="m48 8 2.5 6 6.5 2.5-6.5 2.5-2.5 6-2.5-6-6.5-2.5 6.5-2.5z" fill="#fff4a1" stroke="#f0b51b" stroke-width="1.3"/></svg>'
 };
 const NAMES={sling:'قوة المقلاع',plane:'الطائرة',coin:'مضاعف العملات'};
-function renderHangar(){
+function renderHangar(upgradedKey){
   $('hCoins').textContent=save.coins;
   $('hFuel').textContent=save.fuel;
   $('best').textContent=save.best>0?('أفضل مسافة: '+save.best+' م'):'';
   const box=$('cards');box.innerHTML='';
   ['sling','plane','coin'].forEach(k=>{
     const l=save.lv[k],max=l>=MAXLV,c=cost(l);
-    const d=document.createElement('div');d.className='card';
+    const d=document.createElement('div');d.className='card'+(k===upgradedKey?' just-upgraded':'');
     let pips='';for(let i=0;i<MAXLV;i++)pips+='<b'+(i<l?' class="f"':'')+'></b>';
     d.innerHTML='<div class="ic">'+ICONS[k]+'<span class="lv">'+(l+1)+'</span></div><div class="nm">'+NAMES[k]+(k==='coin'?' ×'+(l+1):'')+'</div><div class="pips">'+pips+'</div>';
     const b=document.createElement('button');
     b.className='btn up'+((!max&&save.coins<c)?' no':'');
-    b.innerHTML=max?'الأقصى':'<span>تطوير</span><i class="coin-i"></i><span>'+c+'</span>';
+    b.innerHTML=max?'<span>الأقصى</span><svg class="max-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 8.6l6.2-.9z" fill="currentColor"/></svg>':'<svg class="upgrade-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>تطوير</span><i class="coin-i"></i><span>'+c+'</span>';
     b.addEventListener('click',()=>{
       if(max)return;
       if(save.coins<c){toast('العملات غير كافية');beep(160,.12,'square');return;}
-      save.coins-=c;save.lv[k]++;persist();beep(660,.1,'triangle');beep(880,.14,'triangle');renderHangar();
+      save.coins-=c;save.lv[k]++;persist();beep(660,.1,'triangle');beep(880,.14,'triangle');renderHangar(k);toast('تم التطوير! ✨');
     });
     d.appendChild(b);box.appendChild(d);
   });
