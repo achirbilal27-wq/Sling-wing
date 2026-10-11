@@ -180,3 +180,60 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
   #routeInfo{right:16px;bottom:102px;width:154px;padding:7px 9px}
   .route-distance strong{font-size:23px}
 }
+
+
+/* Final flight HUD layout: navigation at the upper-left, boost right, fire left. */
+#routeInfo{
+  top:12px;left:12px;right:auto;bottom:auto;transform:none;
+  width:158px;max-width:calc(100vw - 24px);padding:9px 10px 8px;
+}
+#dist{top:108px;font-size:clamp(48px,14vw,64px)}
+#alt{top:174px}
+#biomeBadge{top:207px}
+#boost{
+  right:18px;left:auto;inset-inline-start:auto;inset-inline-end:18px;
+  bottom:28px;width:88px;height:88px;z-index:7;
+}
+#fire{
+  position:absolute;left:18px;right:auto;bottom:28px;z-index:7;
+  width:88px;height:88px;border:3px solid rgba(255,255,255,.96);border-radius:50%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
+  color:#fff;font:800 16px/1.15 var(--font-ui);cursor:pointer;pointer-events:auto;
+  background:radial-gradient(circle at 32% 22%,#7ff5ff 0%,#18a8d1 40%,#12638d 78%,#073b60 100%);
+  box-shadow:0 5px 0 #073b60,0 8px 18px rgba(0,0,0,.28),inset 0 2px 0 rgba(255,255,255,.45);
+  touch-action:manipulation;
+}
+#fire svg{width:35px;height:35px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.25))}
+#fire span{position:relative;z-index:1}
+#fire:active{transform:translateY(3px);box-shadow:0 2px 0 #073b60,0 4px 10px rgba(0,0,0,.22)}
+#tapHint{
+  left:112px;right:112px;inset-inline-start:auto;inset-inline-end:auto;
+  bottom:30px;max-width:none;padding:0 6px;text-align:center;
+}
+@media(max-width:380px){
+  #routeInfo{top:10px;left:10px;right:auto;bottom:auto;width:148px;padding:7px 8px}
+  .route-head{font-size:10px}
+  .route-distance strong{font-size:23px}
+  #dist{top:105px;font-size:48px}
+  #alt{top:160px;font-size:13px}
+  #biomeBadge{top:188px}
+  #boost{right:12px;left:auto;bottom:20px;width:76px;height:76px}
+  #boost span{font-size:17px}
+  #boost em{font-size:24px}
+  #fire{left:12px;right:auto;bottom:20px;width:76px;height:76px;font-size:14px}
+  #fire svg{width:29px;height:29px}
+  #tapHint{left:94px;right:94px;bottom:22px;font-size:11px;line-height:1.3}
+}
+@media(max-height:560px){
+  #routeInfo{top:8px;left:8px;right:auto;bottom:auto;width:142px;padding:6px 8px}
+  .route-distance strong{font-size:21px}
+  #dist{top:82px;font-size:42px}
+  #alt{top:132px;font-size:12px}
+  #biomeBadge{top:155px;font-size:11px}
+  #boost{right:12px;left:auto;bottom:12px;width:68px;height:68px}
+  #boost span{font-size:15px}
+  #boost em{font-size:21px}
+  #fire{left:12px;right:auto;bottom:12px;width:68px;height:68px;font-size:12px}
+  #fire svg{width:25px;height:25px}
+  #tapHint{left:86px;right:86px;bottom:12px;font-size:10px}
+}
