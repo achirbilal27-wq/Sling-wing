@@ -11,10 +11,10 @@ const H=(n,k)=>{const s=Math.sin(n*12.9898+k*78.233)*43758.5453;return s-Math.fl
 
 /* ---------- save ---------- */
 const KEY='sling_wing_v1';
-let save={coins:200,fuel:1,best:0,lv:{sling:0,plane:0,coin:0}};
+let save={coins:200,fuel:1,best:0,model:'trainer',lv:{sling:0,plane:0,coin:0}};
 try{
   const s=JSON.parse(localStorage.getItem(KEY)||'null');
-  if(s){save=Object.assign(save,s);save.lv=Object.assign({sling:0,plane:0,coin:0},s.lv||{});}
+  if(s){save=Object.assign(save,s);save.lv=Object.assign({sling:0,plane:0,coin:0},s.lv||{});save.model=typeof s.model==='string'?s.model:'trainer';}
 }catch(e){}
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(save));}catch(e){}}
 const cost=l=>Math.round(90*Math.pow(1.7,l));
@@ -193,7 +193,14 @@ const shadowMat=new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opa
 const shadow=new THREE.Mesh(new THREE.CircleGeometry(1,20),shadowMat);shadow.rotation.x=-Math.PI/2;scene.add(shadow);
 
 /* ---------- plane model ---------- */
-const PAL=[[0x8bd13a,0x5a9a1c],[0xff6a4a,0xc2381f],[0x4aa8ff,0x2476c9],[0xffc83d,0xd18a00],[0xb46bff,0x7a35c9],[0xf4f4f4,0x2b2b36]];
+const PAL=[[0x8bd13a,0x5a9a1c],[0x4aa8ff,0x2476c9],[0xffc83d,0xd18a00],[0xb46bff,0x7a35c9],[0xff6a4a,0xc2381f],[0xf4f4f4,0x2b2b36]];
+const AIRCRAFT={
+ trainer:{name:'الصقر التدريبي',short:'الصقر',unlock:0,shield:9.5,shot:0.24,boost:1,speed:1,upgrade:'توازن وتحكم'},
+ interceptor:{name:'المعترض السريع',short:'المعترض',unlock:500,shield:9,shot:0.17,boost:1,speed:1.12,upgrade:'سرعة نيران أعلى'},
+ guardian:{name:'الحارس المدرع',short:'الحارس',unlock:1500,shield:6.8,shot:0.25,boost:0.95,speed:0.94,upgrade:'درع أسرع تجددًا'},
+ phantom:{name:'الشبح النفاث',short:'الشبح',unlock:3000,shield:8,shot:0.2,boost:1.35,speed:1.08,upgrade:'تعزيز أطول'}
+};
+function aircraft(){return AIRCRAFT[save.model]||AIRCRAFT.trainer;}
 const bodyMat=matS(0x8bd13a,0.5),accMat=matS(0x5a9a1c,0.6);
 const planeG=new THREE.Group();planeG.rotation.order='ZYX';
 (function buildPlane(){
@@ -219,10 +226,38 @@ planeG.add(prop);
 const flame=new THREE.Mesh(new THREE.ConeGeometry(1.1,5,8),new THREE.MeshBasicMaterial({color:0xffa83d}));
 flame.rotation.z=Math.PI/2;flame.position.set(-7.5,0,0);flame.visible=false;planeG.add(flame);
 scene.add(planeG);
-let appliedLv=-1;
+/* Distinct silhouette kits make every unlocked aircraft visually recognizable. */
+const variantKits={};
+function addKit(name,color,parts){
+  const g=new THREE.Group();
+  const m=matS(color,0.38,{metalness:0.24});
+  parts.forEach(p=>{const mesh=new THREE.Mesh(p.geo,m);mesh.position.set(...p.pos);if(p.rot)mesh.rotation.set(...p.rot);if(p.scale)mesh.scale.set(...p.scale);g.add(mesh);});
+  g.visible=false;planeG.add(g);variantKits[name]=g;
+}
+addKit('interceptor',0x4aa8ff,[
+ {geo:new THREE.BoxGeometry(5,0.32,18),pos:[-0.2,-0.35,0],rot:[0,0.08,0]},
+ {geo:new THREE.CylinderGeometry(0.72,0.58,5.4,10),pos:[-1.6,-0.8,-3.7],rot:[0,0,Math.PI/2]},
+ {geo:new THREE.CylinderGeometry(0.72,0.58,5.4,10),pos:[-1.6,-0.8,3.7],rot:[0,0,Math.PI/2]}
+]);
+addKit('guardian',0xffc83d,[
+ {geo:new THREE.BoxGeometry(7.2,1.1,3.8),pos:[-0.5,-0.55,-2.8]},
+ {geo:new THREE.BoxGeometry(7.2,1.1,3.8),pos:[-0.5,-0.55,2.8]},
+ {geo:new THREE.BoxGeometry(3.2,0.5,18),pos:[-0.6,-0.1,0]}
+]);
+addKit('phantom',0xb46bff,[
+ {geo:new THREE.BoxGeometry(6,0.3,19),pos:[-0.5,-0.25,0],rot:[0,0,-0.12]},
+ {geo:new THREE.BoxGeometry(4,0.6,2.4),pos:[-4.2,0.1,-2.1]},
+ {geo:new THREE.BoxGeometry(4,0.6,2.4),pos:[-4.2,0.1,2.1]}
+]);
+const shieldMesh=new THREE.Mesh(new THREE.SphereGeometry(9,18,12),new THREE.MeshBasicMaterial({color:0x7ff5ff,wireframe:true,transparent:true,opacity:0.68,depthWrite:false}));
+shieldMesh.scale.set(1.15,0.62,0.9);shieldMesh.visible=false;planeG.add(shieldMesh);
+let shieldT=0,shieldCooldown=0,appliedLv=-1,appliedModel='';
 function applyPlaneColors(){
-  const l=Math.min(save.lv.plane,PAL.length-1);if(l===appliedLv)return;appliedLv=l;
-  bodyMat.color.setHex(PAL[l][0]);accMat.color.setHex(PAL[l][1]);
+  const model=save.model in AIRCRAFT?save.model:'trainer';
+  const colorIndex={trainer:0,interceptor:1,guardian:2,phantom:3}[model];
+  const l=Math.min(colorIndex+Math.floor(save.lv.plane/3),PAL.length-1);
+  if(l!==appliedLv){appliedLv=l;bodyMat.color.setHex(PAL[l][0]);accMat.color.setHex(PAL[l][1]);}
+  if(model!==appliedModel){appliedModel=model;Object.keys(variantKits).forEach(k=>variantKits[k].visible=k===model);}
 }
 
 /* ---------- objects ---------- */
@@ -247,6 +282,14 @@ function makeBird(){
   });
   g.scale.setScalar(1.35);g.userData.wings=[g.children[3],g.children[4]];
   return g;
+}
+function makeEnemyPlane(){
+  const g=new THREE.Group();
+  const hull=new THREE.Mesh(new THREE.SphereGeometry(1,12,8),matS(0x3a4058,0.42,{metalness:0.3}));hull.scale.set(4.5,1.35,1.4);g.add(hull);
+  const wings=new THREE.Mesh(new THREE.BoxGeometry(4.8,0.28,12),matS(0xe5483a,0.4,{metalness:0.18}));wings.position.set(-0.4,-0.1,0);g.add(wings);
+  const cockpit=new THREE.Mesh(new THREE.SphereGeometry(1,10,7),matS(0xffa4a4,0.2,{transparent:true,opacity:0.85}));cockpit.scale.set(1.25,0.7,0.8);cockpit.position.set(1.1,1.05,0);g.add(cockpit);
+  [-3.3,3.3].forEach(z=>{const pod=new THREE.Mesh(new THREE.CylinderGeometry(0.55,0.7,3.8,8),matS(0x252a3b,0.5));pod.rotation.z=Math.PI/2;pod.position.set(-1.2,-0.5,z);g.add(pod);});
+  g.rotation.y=Math.PI;return g;
 }
 function makeCan(){
   const g=new THREE.Group();
@@ -279,7 +322,8 @@ function resetRun(){
   routeTargetMeters=500;
   shots.forEach(s=>scene.remove(s.mesh));shots.length=0;shotCooldown=0;
   run={coins:0,picked:0,maxAlt:0};
-  objs={coins:[],rings:[],birds:[],fuels:[],drafts:[],next:600};
+  objs={coins:[],rings:[],birds:[],enemies:[],enemyShots:[],fuels:[],drafts:[],next:600,nextEnemy:900/M_PER_PX};
+  shieldT=0;shieldCooldown=0;shieldMesh.visible=false;
   clearObjs();
   parts.forEach(p=>{p.mesh.visible=false;});parts.length=0;
   floats.forEach(f=>f.el.remove());floats.length=0;
@@ -307,6 +351,12 @@ function addCoin(x,alt,z){
 }
 const zc=z=>clamp(z,-320,320);
 function spawn(until){
+  while(objs.nextEnemy<until){
+    const x=objs.nextEnemy;
+    const e={x,alt:180+Math.random()*390,z:zc((Math.random()-.5)*420),phase:Math.random()*6.28,fireT:1.2+Math.random()*1.4,hit:false};
+    e.mesh=makeEnemyPlane();e.mesh.position.set(x*S,Y(e.alt),e.z*S);objGroup.add(e.mesh);objs.enemies.push(e);
+    objs.nextEnemy+=600/M_PER_PX;
+  }
   while(objs.next<until){
     const x=objs.next,m=x*M_PER_PX,r=Math.random(),z0=(Math.random()-0.5)*440;
     if(r<0.3){
@@ -357,12 +407,22 @@ function renderHangar(upgradedKey){
   $('hCoins').textContent=save.coins;
   $('hFuel').textContent=save.fuel;
   $('best').textContent=save.best>0?('أفضل مسافة: '+save.best+' م'):'';
+  const fleet=$('fleet');fleet.innerHTML='';
+  Object.entries(AIRCRAFT).forEach(([key,a])=>{
+    const unlocked=save.best>=a.unlock;
+    const b=document.createElement('button');b.type='button';
+    b.className='fleet-btn'+(save.model===key?' selected':'')+(!unlocked?' locked':'');
+    b.innerHTML='<span class="fleet-icon">'+({trainer:'✈',interceptor:'➤',guardian:'⬟',phantom:'✦'}[key])+'</span><span class="fleet-name">'+a.short+'</span><small>'+(unlocked?(save.model===key?'محددة':'اختيار'):(a.unlock+' م'))+'</small>';
+    b.addEventListener('click',()=>{if(!unlocked){toast('اقطع '+a.unlock+' م لفتحها');beep(160,.1,'square');return;}save.model=key;persist();appliedModel='';appliedLv=-1;renderHangar();beep(640,.1,'triangle');toast(a.name);});
+    fleet.appendChild(b);
+  });
   const box=$('cards');box.innerHTML='';
   ['sling','plane','coin'].forEach(k=>{
     const l=save.lv[k],max=l>=MAXLV,c=cost(l);
     const d=document.createElement('div');d.className='card'+(k===upgradedKey?' just-upgraded':'');
     let pips='';for(let i=0;i<MAXLV;i++)pips+='<b'+(i<l?' class="f"':'')+'></b>';
-    d.innerHTML='<div class="ic">'+ICONS[k]+'<span class="lv">'+(l+1)+'</span></div><div class="nm">'+NAMES[k]+(k==='coin'?' ×'+(l+1):'')+'</div><div class="pips">'+pips+'</div>';
+    const cardName=k==='plane'?aircraft().short+' · '+aircraft().upgrade:NAMES[k];
+    d.innerHTML='<div class="ic">'+ICONS[k]+'<span class="lv">'+(l+1)+'</span></div><div class="nm">'+cardName+(k==='coin'?' ×'+(l+1):'')+'</div><div class="pips">'+pips+'</div>';
     const b=document.createElement('button');
     b.className='btn up'+((!max&&save.coins<c)?' no':'');
     b.innerHTML=max?'<span>الأقصى</span><svg class="max-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 8.6l6.2-.9z" fill="currentColor"/></svg>':'<svg class="upgrade-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>تطوير</span><i class="coin-i"></i><span>'+c+'</span>';
@@ -415,10 +475,10 @@ $('boost').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagati
 $('fire').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();doShoot();});
 function doShoot(){
   if(state!=='flight'||shotCooldown>0)return;
-  shotCooldown=0.24;
+  shotCooldown=Math.max(0.11,aircraft().shot-save.lv.plane*0.012);
   const mesh=new THREE.Mesh(shotGeo,shotMat);
   mesh.position.set((P.x+28)*S,Y(P.alt),P.z*S);scene.add(mesh);
-  shots.push({x:P.x+28,alt:P.alt,z:P.z,vx:1900,life:0.62,mesh});
+  shots.push({x:P.x+28,alt:P.alt,z:P.z,vx:1900*aircraft().speed,life:0.62,mesh});
   beep(720,0.055,'square',0.025);
 }
 function steerInput(){
@@ -432,7 +492,7 @@ function steerInput(){
 function doBoost(){
   if(state!=='flight'||P.boostT>0.2)return;
   if(save.fuel<=0){toast('لا يوجد وقود');beep(160,.12,'square');return;}
-  save.fuel--;P.boostT=1.6;beep(180,.4,'sawtooth',0.04);shake=Math.max(shake,0.15);
+  save.fuel--;P.boostT=(1.6+save.lv.plane*0.08)*aircraft().boost;beep(180,.4,'sawtooth',0.04);shake=Math.max(shake,0.15);
 }
 function launch(){
   const lv=save.lv.sling;
@@ -458,7 +518,7 @@ function updateFlight(dt){
   let target=holding?Math.min(0.55,maxPitch):-0.6;
   if(P.s<160&&!P.sliding)target=-0.8;
   if(!P.sliding)P.a+=(target-P.a)*Math.min(1,dt*3.2);
-  const K=0.00022*(1-0.09*lvP);
+  const K=0.00022*(1-0.09*lvP)/aircraft().speed;
   let ds=-G*Math.sin(P.a)-K*P.s*P.s;
   if(P.boostT>0){
     ds+=620;P.boostT-=dt;
@@ -466,6 +526,11 @@ function updateFlight(dt){
   }
   if(P.sliding){ds=-380;P.a=0;}
   P.s+=ds*dt;
+  P.s*=1+(aircraft().speed-1)*dt*0.18;
+  shieldCooldown=Math.max(0,shieldCooldown-dt);
+  shieldT=Math.max(0,shieldT-dt);
+  shieldMesh.visible=shieldT>0;
+  if(shieldMesh.visible)shieldMesh.material.opacity=0.45+Math.sin(time*22)*0.2;
   if(P.alt>0&&!P.sliding)P.s=Math.max(P.s,105);
   // steering
   const steer=P.sliding?0:steerInput();
@@ -530,10 +595,36 @@ function updateFlight(dt){
     if(b.hit){b.alt-=180*dt;continue;}
     const dx=b.x-P.x,dy=b.alt-P.alt,dz=b.z-P.z;
     if(dx*dx+dy*dy+dz*dz<46*46){
-      b.hit=true;P.s*=0.62;P.a=Math.min(P.a,-0.2);shake=0.5;
-      addFloat(P.x,P.alt+50,'اصطدام!','#ff8a7a');beep(110,.25,'square',0.06);
+      b.hit=true;
+      if(shieldCooldown<=0){activateShield(b.x,b.alt,b.z);}
+      else{P.s*=0.62;P.a=Math.min(P.a,-0.2);shake=0.5;addFloat(P.x,P.alt+50,'اصطدام!','#ff8a7a');beep(110,.25,'square',0.06);}
       for(let i=0;i<14;i++)addPart(b.x,b.alt,(Math.random()-.5)*300,(Math.random()-.5)*300,0.6,0xf2f2f2,3,b.z);
     }
+  }
+  for(const e of objs.enemies){
+    if(e.hit)continue;
+    e.x-=180*dt;e.phase+=dt*2.1;e.z=zc(e.z+Math.sin(e.phase)*14*dt);
+    e.fireT-=dt;
+    if(e.fireT<=0&&e.x>P.x+120&&e.x<P.x+4200){
+      e.fireT=Math.max(0.75,1.65-save.lv.plane*0.06);
+      const mesh=new THREE.Mesh(enemyShotGeo,enemyShotMat);mesh.position.set(e.x*S,Y(e.alt),e.z*S);scene.add(mesh);
+      objs.enemyShots.push({x:e.x,alt:e.alt,z:e.z,vx:-(950+P.s*0.45),life:2.5,mesh});
+    }
+    const dx=e.x-P.x,dy=e.alt-P.alt,dz=e.z-P.z;
+    if(dx*dx+dy*dy+dz*dz<48*48){
+      e.hit=true;e.mesh.visible=false;
+      if(shieldCooldown<=0)activateShield(e.x,e.alt,e.z);
+      else{P.s*=0.72;P.alt=Math.max(25,P.alt-45);shake=0.45;addFloat(P.x,P.alt+45,'ضربة معادية!','#ff9b91',P.z);beep(120,.18,'square',0.05);}
+    }
+  }
+  for(let i=objs.enemyShots.length-1;i>=0;i--){
+    const b=objs.enemyShots[i];b.x+=b.vx*dt;b.life-=dt;b.mesh.position.set(b.x*S,Y(b.alt),b.z*S);
+    if(Math.abs(b.x-P.x)<34&&Math.abs(b.alt-P.alt)<32&&Math.abs(b.z-P.z)<40){
+      if(shieldCooldown<=0)activateShield(b.x,b.alt,b.z);
+      else{P.s*=0.86;P.alt=Math.max(20,P.alt-20);shake=0.22;addFloat(P.x,P.alt+35,'إصابة!','#ff9b91',P.z);}
+      b.life=0;
+    }
+    if(b.life<=0){scene.remove(b.mesh);objs.enemyShots.splice(i,1);}
   }
   for(let i=shots.length-1;i>=0;i--){
     const shot=shots[i];shot.x+=shot.vx*dt;shot.life-=dt;
@@ -547,6 +638,15 @@ function updateFlight(dt){
         break;
       }
     }
+    if(!hit){for(const e of objs.enemies){
+      if(e.hit)continue;
+      if(Math.abs(e.x-shot.x)<38&&Math.abs(e.alt-shot.alt)<40&&Math.abs(e.z-shot.z)<45){
+        e.hit=true;e.mesh.visible=false;hit=true;run.coins+=18*(1+save.lv.coin);
+        addFloat(e.x,e.alt+45,'طائرة معادية +18','#ffe27a',e.z);beep(1050,.1,'triangle',0.04);shake=Math.max(shake,0.12);
+        for(let n=0;n<10;n++)addPart(e.x,e.alt,(Math.random()-.5)*180,(Math.random()-.5)*180,0.35,0xff9b4a,3,e.z);
+        break;
+      }
+    }}
     if(hit||shot.life<=0){scene.remove(shot.mesh);shots.splice(i,1);}
   }
 }
@@ -575,7 +675,7 @@ function update(dt){
     const lim=P.x-800;
     const keep=o=>{if(o.x<lim&&o.mesh)objGroup.remove(o.mesh);return o.x>=lim;};
     objs.coins=objs.coins.filter(keep);objs.rings=objs.rings.filter(keep);
-    objs.birds=objs.birds.filter(keep);objs.fuels=objs.fuels.filter(keep);objs.drafts=objs.drafts.filter(keep);
+    objs.birds=objs.birds.filter(keep);objs.enemies=objs.enemies.filter(o=>{if(o.x<lim){objGroup.remove(o.mesh);return false;}return true;});objs.fuels=objs.fuels.filter(keep);objs.drafts=objs.drafts.filter(keep);
   }
   shake=Math.max(0,shake-dt);
   // hud
@@ -591,6 +691,14 @@ function update(dt){
 }
 const VIEW_AHEAD=14000;
 
+function activateShield(x,alt,z){
+  shieldT=1.15;
+  shieldCooldown=Math.max(3.8,aircraft().shield-save.lv.plane*0.38-(save.model==='guardian'?1.1:0));
+  shake=Math.max(shake,0.12);beep(760,.1,'sine',0.035);beep(1080,.12,'triangle',0.025);
+  addFloat(x,alt+48,'الدرع التلقائي!','#8cf5ff',z);
+  for(let i=0;i<12;i++)addPart(x,alt,(Math.random()-.5)*220,(Math.random()-.5)*220,0.35,0x7ff5ff,3,z);
+}
+const enemyShotGeo=new THREE.SphereGeometry(1.6,8,6),enemyShotMat=new THREE.MeshBasicMaterial({color:0xff635f});
 function endRun(){
   state='result';
   const m=Math.max(0,Math.floor(P.x*M_PER_PX));
@@ -693,7 +801,7 @@ function placeScenery(px){
 function updateRoute(m){
   while(m>=routeTargetMeters){
     routeTargetMeters+=500;
-    if(state==='flight')addFloat(P.x,P.alt+55,'نقطة وصول جديدة!','#8cf5ff',P.z);
+    if(state==='flight'){const reward=35*(1+save.lv.coin);run.coins+=reward;addFloat(P.x,P.alt+55,'وصلت للهدف! +'+reward,'#8cf5ff',P.z);beep(720,.12,'triangle',0.035);}
   }
   const px=P.x*S;
   for(let i=0;i<routeSegments.length;i++){
@@ -751,6 +859,12 @@ function render(dt){
   for(const c of objs.coins)if(c.on)c.mesh.rotation.y=time*3+c.x*0.01;
   for(const f of objs.fuels)if(f.on){f.mesh.rotation.y=time*1.5;f.mesh.position.y=Y(f.alt)+Math.sin(time*3)*0.4;}
   for(const r of objs.rings)if(r.on)r.mesh.rotation.x=time*0.8;
+  for(const e of objs.enemies){
+    e.mesh.position.set(e.x*S,Y(e.alt),e.z*S);
+    e.mesh.visible=!e.hit;
+    e.mesh.rotation.z=Math.sin(e.phase)*0.06;
+  }
+  for(const b of objs.enemyShots){b.mesh.position.set(b.x*S,Y(b.alt),b.z*S);}
   for(const b of objs.birds){
     b.mesh.position.set(b.x*S,Y(b.alt),b.z*S);
     const w=Math.sin(b.t)*0.9,ws=b.mesh.userData.wings;
