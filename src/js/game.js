@@ -39,8 +39,8 @@ try{renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});}
 catch(e){fail('جهازك أو متصفحك لا يدعم WebGL المطلوب للعبة ثلاثية الأبعاد.');return;}
 renderer.setClearColor(0x000000,0);
 const scene=new THREE.Scene();
-scene.fog=new THREE.Fog(0xd9f4ff,150,1500);
-const camera=new THREE.PerspectiveCamera(62,1,0.5,3200);
+scene.fog=new THREE.Fog(0xd9f4ff,180,3600);
+const camera=new THREE.PerspectiveCamera(62,1,0.5,4200);
 const hemi=new THREE.HemisphereLight(0xffffff,0x6a8f4a,0.95);scene.add(hemi);
 const sunL=new THREE.DirectionalLight(0xffffff,0.8);sunL.position.set(-60,120,40);scene.add(sunL);
 let W=400,Hh=800,baseFov=62;
@@ -57,14 +57,21 @@ const mat=(c,o)=>new THREE.MeshLambertMaterial(Object.assign({color:c,flatShadin
 const matS=(c,r,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:r===undefined?0.6:r,metalness:0.05,flatShading:true},o||{}));
 
 /* ground */
-function groundTex(){
+function groundTex(base,patch){
   const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');
-  g.fillStyle='#5fbf4a';g.fillRect(0,0,64,64);
-  g.fillStyle='#6ccf55';g.fillRect(0,0,32,64);
-  for(let i=0;i<50;i++){g.fillStyle='rgba(20,80,30,.14)';g.fillRect(Math.random()*64,Math.random()*64,3,3);}
-  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(80,80);t.anisotropy=4;return t;
+  g.fillStyle=base||'#5fbf4a';g.fillRect(0,0,64,64);
+  g.fillStyle=patch||'#6ccf55';g.fillRect(0,0,32,64);
+  for(let i=0;i<50;i++){g.fillStyle='rgba(30,35,28,.11)';g.fillRect(Math.random()*64,Math.random()*64,3,3);}
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(180,80);t.anisotropy=4;return t;
 }
-const ground=new THREE.Mesh(new THREE.PlaneGeometry(2560,2560),new THREE.MeshLambertMaterial({map:groundTex()}));
+const groundMaps=[
+  groundTex('#5fbf4a','#6ccf55'),
+  groundTex('#d7b36f','#e8cb8d'),
+  groundTex('#eaf3fb','#ffffff'),
+  groundTex('#3faea9','#78d4c6'),
+  groundTex('#655956','#88756b')
+];
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(6000,2560),new THREE.MeshLambertMaterial({map:groundMaps[0]}));
 ground.rotation.x=-Math.PI/2;scene.add(ground);
 
 /* mountains */
@@ -81,6 +88,20 @@ for(let i=0;i<TR_N;i++){
   const b=new THREE.Mesh(leafGeo1,leafMat);b.position.y=5.5;
   const c=new THREE.Mesh(leafGeo2,leafMat);c.position.y=8.6;
   g.add(a,b,c);scene.add(g);trees.push(g);
+}
+/* Desert props: compact reusable cacti, enabled only in the desert biome. */
+const cactusMat=mat(0x2e8765),cactusDarkMat=mat(0x206548);
+const cactusStemGeo=new THREE.CylinderGeometry(0.8,1,7,7);
+const cactusArmGeo=new THREE.CylinderGeometry(0.42,0.5,3.2,7);
+const CACTUS_N=30,cacti=[];
+for(let i=0;i<CACTUS_N;i++){
+  const g=new THREE.Group();
+  const stem=new THREE.Mesh(cactusStemGeo,cactusMat);stem.position.y=3.5;g.add(stem);
+  const armA=new THREE.Mesh(cactusArmGeo,cactusDarkMat);armA.position.set(-1.05,3.4,0);armA.rotation.z=-0.72;g.add(armA);
+  const armB=new THREE.Mesh(cactusArmGeo,cactusMat);armB.position.set(1.05,4.2,0);armB.rotation.z=0.72;g.add(armB);
+  const tipA=new THREE.Mesh(new THREE.SphereGeometry(0.48,7,6),cactusMat);tipA.position.set(-2.15,4.5,0);g.add(tipA);
+  const tipB=new THREE.Mesh(new THREE.SphereGeometry(0.48,7,6),cactusMat);tipB.position.set(2.15,5.3,0);g.add(tipB);
+  g.visible=false;scene.add(g);cacti.push(g);
 }
 /* clouds */
 const cloudMat=new THREE.MeshLambertMaterial({color:0xffffff,flatShading:true,transparent:true,opacity:0.92});
@@ -112,6 +133,37 @@ function setSign(s,label){
   c.fillStyle='#3b2314';c.font='800 44px Cairo,sans-serif';c.textAlign='center';c.textBaseline='middle';
   c.fillText(label,80,42);s.tex.needsUpdate=true;
 }
+/* Scenic flight route: a curved ground road leads to an illuminated arrival gate. */
+const routeGroup=new THREE.Group();scene.add(routeGroup);
+const roadMat=new THREE.MeshLambertMaterial({color:0x394451,side:THREE.DoubleSide});
+const routeLineMat=new THREE.MeshBasicMaterial({color:0xffd84a});
+const routeEdgeMat=new THREE.MeshBasicMaterial({color:0x8cf5ff});
+const routeSegments=[];
+for(let i=0;i<42;i++){
+  const g=new THREE.Group();
+  const road=new THREE.Mesh(new THREE.PlaneGeometry(54,18),roadMat);road.rotation.x=-Math.PI/2;road.position.y=0.06;g.add(road);
+  const dash=new THREE.Mesh(new THREE.BoxGeometry(26,0.12,0.6),routeLineMat);dash.position.set(0,0.14,0);g.add(dash);
+  [-8.35,8.35].forEach(z=>{const edge=new THREE.Mesh(new THREE.BoxGeometry(54,0.1,0.28),routeEdgeMat);edge.position.set(0,0.13,z);g.add(edge);});
+  routeGroup.add(g);routeSegments.push(g);
+}
+const destination=new THREE.Group();scene.add(destination);
+const runwayMat=new THREE.MeshLambertMaterial({color:0x59636f,side:THREE.DoubleSide});
+const runway=new THREE.Mesh(new THREE.PlaneGeometry(220,100),runwayMat);runway.rotation.x=-Math.PI/2;runway.position.y=0.08;destination.add(runway);
+const runwayLineMat=new THREE.MeshBasicMaterial({color:0xffffff});
+for(let i=-2;i<=2;i++){const mark=new THREE.Mesh(new THREE.BoxGeometry(8,0.1,3),runwayLineMat);mark.position.set(i*24,0.15,0);destination.add(mark);}
+const gateMat=new THREE.MeshStandardMaterial({color:0x23d8e7,emissive:0x07515a,roughness:0.35});
+const gatePostA=new THREE.Mesh(new THREE.BoxGeometry(4,32,4),gateMat);gatePostA.position.set(0,16,-42);destination.add(gatePostA);
+const gatePostB=new THREE.Mesh(new THREE.BoxGeometry(4,32,4),gateMat);gatePostB.position.set(0,16,42);destination.add(gatePostB);
+const gateTop=new THREE.Mesh(new THREE.BoxGeometry(4,4,88),new THREE.MeshStandardMaterial({color:0xffc83d,emissive:0x614000,roughness:0.35}));gateTop.position.set(0,32,0);destination.add(gateTop);
+const destinationCanvas=document.createElement('canvas');destinationCanvas.width=320;destinationCanvas.height=96;
+const destinationCtx=destinationCanvas.getContext('2d');
+destinationCtx.fillStyle='#123a52';destinationCtx.fillRect(0,0,320,96);
+destinationCtx.strokeStyle='#ffda63';destinationCtx.lineWidth=8;destinationCtx.strokeRect(4,4,312,88);
+destinationCtx.fillStyle='#ffffff';destinationCtx.font='800 42px Cairo,sans-serif';destinationCtx.textAlign='center';destinationCtx.textBaseline='middle';destinationCtx.fillText('وصول  ✈',160,49);
+const destinationTexture=new THREE.CanvasTexture(destinationCanvas);
+const destinationBoard=new THREE.Mesh(new THREE.PlaneGeometry(32,9.6),new THREE.MeshBasicMaterial({map:destinationTexture,side:THREE.DoubleSide}));
+destinationBoard.rotation.y=-Math.PI/2;destinationBoard.position.set(-3,25,0);destination.add(destinationBoard);
+function routeCurve(x){return Math.sin(x*0.0011)*18+Math.sin(x*0.0027)*6;}
 /* dock + slingshot */
 const dock=new THREE.Mesh(new THREE.BoxGeometry(34,0.8,18),mat(0xb9773e));dock.position.set(0,0.4,0);scene.add(dock);
 const dockEdge=new THREE.Mesh(new THREE.BoxGeometry(34.4,0.5,18.4),mat(0x8a4b1e));dockEdge.position.set(0,0.1,0);scene.add(dockEdge);
@@ -213,6 +265,7 @@ function makeDraft(R){
 
 /* ---------- state ---------- */
 let state='ready';
+let routeTargetMeters=500;
 let P,run,objs,shake=0,time=0,power=0,powerDir=1,night=0,snapCam=true;
 const down=new Set(),ptr=new Map(),keys={left:false,right:false};
 const parts=[],floats=[];
@@ -221,6 +274,7 @@ const G=560;
 function clearObjs(){while(objGroup.children.length)objGroup.remove(objGroup.children[0]);}
 function resetRun(){
   P={x:0,alt:85,z:0,vz:0,s:0,a:0.62,roll:0,yaw:0,boostT:0,spin:0,sliding:false,bounces:0};
+  routeTargetMeters=500;
   run={coins:0,picked:0,maxAlt:0};
   objs={coins:[],rings:[],birds:[],fuels:[],drafts:[],next:600};
   clearObjs();
@@ -526,6 +580,26 @@ function endRun(){
 
 /* ---------- render ---------- */
 const SKY=[['#4fc3ff','#d9f4ff'],['#ff7e5f','#ffd9a8'],['#0b1245','#3b3a8c'],['#ff8fb0','#ffe3b0']];
+const BIOMES=[
+  {name:'السهول الخضراء',mountain:0x5b9a7a,leaf:0x2f9a4a,trunk:0x7a4a22,cactus:0x2e8765},
+  {name:'الصحراء الذهبية',mountain:0xc18b53,leaf:0x2e8765,trunk:0x8c5b32,cactus:0x347f55},
+  {name:'القمم الثلجية',mountain:0x91abc7,leaf:0xeaf3ff,trunk:0x718090,cactus:0x8ca5b8},
+  {name:'الساحل الأزرق',mountain:0x468e9a,leaf:0x238b57,trunk:0x765038,cactus:0x2e8765},
+  {name:'الوادي الصخري',mountain:0x5a4b50,leaf:0x3f714a,trunk:0x48332c,cactus:0x5b514c}
+];
+let activeBiome=-1;
+function applyBiome(m){
+  const index=Math.floor(m/650)%BIOMES.length;
+  if(index===activeBiome)return;
+  activeBiome=index;
+  const b=BIOMES[index];
+  ground.material.map=groundMaps[index];ground.material.needsUpdate=true;
+  mtMat.color.setHex(b.mountain);leafMat.color.setHex(b.leaf);trunkMat.color.setHex(b.trunk);
+  cactusMat.color.setHex(b.cactus);
+  trees.forEach(t=>{t.visible=index!==1;});
+  cacti.forEach(c=>{c.visible=index===1;});
+  $('biomeBadge').textContent=b.name;
+}
 const hexRGB=c=>[parseInt(c.slice(1,3),16),parseInt(c.slice(3,5),16),parseInt(c.slice(5,7),16)];
 const mixC=(a,b,t)=>{const A=hexRGB(a),B=hexRGB(b);return 'rgb('+A.map((v,i)=>Math.round(lerp(v,B[i],t))).join(',')+')';};
 const ease=t=>t*t*(3-2*t);
@@ -534,6 +608,7 @@ const fogCol=new THREE.Color(),cDay=new THREE.Color(0xffffff),cNight=new THREE.C
 const hemiDay=new THREE.Color(0xffffff),hemiNight=new THREE.Color(0x7a85d0),sunDay=new THREE.Color(0xffffff),sunDusk=new THREE.Color(0xffb27a);
 function updateSky(){
   const m=Math.max(0,P.x*M_PER_PX);
+  applyBiome(m);
   const cyc=(m/250)%4,i=Math.floor(cyc),f=ease(cyc-i);
   const a=SKY[i],b=SKY[(i+1)%4];
   const top=mixC(a[0],b[0],f),bot=mixC(a[1],b[1],f);
@@ -565,6 +640,12 @@ function placeScenery(px){
     const t=trees[i],sg=H(n,6)>0.5?1:-1,sc=0.8+H(n,8)*0.8;
     t.position.set(n*TR_SP+H(n,9)*10,0,sg*(42+H(n,7)*90));t.scale.setScalar(sc);
   }
+  n0=Math.floor(px/65)-3;
+  for(let i=0;i<CACTUS_N;i++){
+    const n=n0+(((i-n0)%CACTUS_N)+CACTUS_N)%CACTUS_N;
+    const c=cacti[i],sg=H(n,16)>0.5?1:-1,sc=0.75+H(n,18)*0.9;
+    c.position.set(n*65+H(n,19)*18,0,sg*(50+H(n,17)*105));c.scale.setScalar(sc);
+  }
   n0=Math.floor(px/CL_SP)-3;
   for(let i=0;i<CL_N;i++){
     const n=n0+(((i-n0)%CL_N)+CL_N)%CL_N;
@@ -580,6 +661,21 @@ function placeScenery(px){
   }
   // ground follows the plane, snapped to the texture tile
   ground.position.set(Math.floor(px/32)*32,0,Math.floor(P.z*S/32)*32);
+}
+function updateRoute(m){
+  while(m>=routeTargetMeters){
+    routeTargetMeters+=500;
+    if(state==='flight')addFloat(P.x,P.alt+55,'نقطة وصول جديدة!','#8cf5ff',P.z);
+  }
+  const px=P.x*S;
+  for(let i=0;i<routeSegments.length;i++){
+    const x=px+35+i*52,segment=routeSegments[i];
+    segment.position.set(x,0,routeCurve(x));
+  }
+  const targetX=routeTargetMeters*4;
+  destination.position.set(targetX,0,routeCurve(targetX));
+  const remaining=Math.max(0,Math.ceil(routeTargetMeters-m));
+  $('routeInfo').textContent='الوجهة القادمة · '+remaining+' م';
 }
 const camPos=new THREE.Vector3(),camLook=new THREE.Vector3(),tP=new THREE.Vector3(),tL=new THREE.Vector3(),_v=new THREE.Vector3();
 let curFov=62;
@@ -604,6 +700,7 @@ function render(dt){
   applyPlaneColors();
   updateSky();
   placeScenery(P.x*S);
+  updateRoute(Math.max(0,P.x*M_PER_PX));
   // plane
   planeG.position.set(P.x*S,Y(P.alt),P.z*S);
   planeG.rotation.set(P.roll,P.yaw,P.a);

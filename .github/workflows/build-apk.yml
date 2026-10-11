@@ -36,6 +36,9 @@ jobs:
       - name: Prepare game assets
         run: npm run prepare-www
 
+      - name: Check game JavaScript syntax
+        run: node --check src/js/game.js
+
       - name: Generate Android project
         run: npx cap add android
 
