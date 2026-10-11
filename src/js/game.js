@@ -613,14 +613,14 @@ function updateFlight(dt){
     const dx=e.x-P.x,dy=e.alt-P.alt,dz=e.z-P.z;
     if(dx*dx+dy*dy+dz*dz<48*48){
       e.hit=true;e.mesh.visible=false;
-      if(shieldCooldown<=0)activateShield(e.x,e.alt,e.z);
+      if(shieldT>0||shieldCooldown<=0)activateShield(e.x,e.alt,e.z);
       else{P.s*=0.72;P.alt=Math.max(25,P.alt-45);shake=0.45;addFloat(P.x,P.alt+45,'ضربة معادية!','#ff9b91',P.z);beep(120,.18,'square',0.05);}
     }
   }
   for(let i=objs.enemyShots.length-1;i>=0;i--){
     const b=objs.enemyShots[i];b.x+=b.vx*dt;b.life-=dt;b.mesh.position.set(b.x*S,Y(b.alt),b.z*S);
     if(Math.abs(b.x-P.x)<34&&Math.abs(b.alt-P.alt)<32&&Math.abs(b.z-P.z)<40){
-      if(shieldCooldown<=0)activateShield(b.x,b.alt,b.z);
+      if(shieldT>0||shieldCooldown<=0)activateShield(b.x,b.alt,b.z);
       else{P.s*=0.86;P.alt=Math.max(20,P.alt-20);shake=0.22;addFloat(P.x,P.alt+35,'إصابة!','#ff9b91',P.z);}
       b.life=0;
     }
