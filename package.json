@@ -1,0 +1,19 @@
+{
+  "name": "sling-wing",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sling Wing - 3D airplane slingshot game (Capacitor Android)",
+  "scripts": {
+    "prepare-www": "node scripts/prepare.js",
+    "sync": "npm run prepare-www && npx cap sync android",
+    "open": "npx cap open android",
+    "apk": "npm run sync && cd android && ./gradlew assembleDebug",
+    "bundle": "npm run sync && cd android && ./gradlew bundleRelease"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.1.0",
+    "@capacitor/cli": "^6.1.0",
+    "@capacitor/core": "^6.1.0",
+    "three": "0.128.0"
+  }
+}

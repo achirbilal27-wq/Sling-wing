@@ -1,0 +1,9 @@
+{
+  "appId": "com.example.slingwing",
+  "appName": "جناح المقلاع",
+  "webDir": "www",
+  "backgroundColor": "#4fc3ff",
+  "android": {
+    "allowMixedContent": false
+  }
+}

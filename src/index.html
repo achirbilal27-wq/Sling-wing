@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>جناح المقلاع ثلاثي الأبعاد</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;800&family=Lalezar&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+<div id="app">
+  <canvas id="c"></canvas>
+  <div id="fx"></div>
+
+  <div class="layer on" id="hangar">
+    <div id="top">
+      <span class="pill"><i class="coin-i"></i><span id="hCoins">0</span></span>
+      <span class="pill"><i class="fuel-i"></i><span id="hFuel">0</span><button class="plus" id="buyFuel" aria-label="شراء وقود">+</button></span>
+    </div>
+    <div id="title">جناح المقلاع</div>
+    <div id="hint">اضغط مطولًا لشدّ المقلاع، واترك عند المنطقة الذهبية</div>
+    <div id="best"></div>
+    <div id="cards"></div>
+  </div>
+
+  <div class="layer" id="charge">
+    <div id="meterTxt">اترك عند الذهبي!</div>
+    <div id="meter"><div class="sweet"></div><div class="fill" id="mFill"></div></div>
+  </div>
+
+  <div class="layer" id="hud">
+    <div id="dist">0<small>م</small></div>
+    <div id="alt"></div>
+    <span class="pill" id="runCoins"><i class="coin-i"></i><span id="rCoins">0</span></span>
+    <button id="boost" aria-label="تعزيز"><span>تعزيز</span><em id="bFuel">1</em></button>
+    <div id="tapHint">اضغط مطولًا للصعود واترك للانقضاض. اسحب إصبعك يمينًا أو يسارًا للتوجيه</div>
+  </div>
+
+  <div class="layer" id="result">
+    <div class="panel">
+      <h2>هبطت الطائرة</h2>
+      <div class="big"><span id="rDist">0</span><small>م</small></div>
+      <div class="rec" id="rRec" style="display:none">رقم قياسي جديد</div>
+      <div class="rows">
+        <div><span>عملات جمعتها</span><span id="rPick">0</span></div>
+        <div><span>مكافأة المسافة</span><span id="rBonus">0</span></div>
+        <div><span>المجموع</span><span id="rTotal">0</span></div>
+      </div>
+      <button class="go" id="again">حلّق مرة أخرى</button>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+</div>
+
+<script src="js/game.js"></script>
+</body>
+</html>
