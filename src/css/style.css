@@ -100,7 +100,22 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
 .card.just-upgraded{animation:levelCardPop .48s cubic-bezier(.2,.8,.25,1) both;border-color:#ffe27a;box-shadow:0 5px 0 #75401f,0 0 0 2px rgba(255,226,122,.55),0 0 22px rgba(255,209,60,.55)}
 .card.just-upgraded::before{background:linear-gradient(115deg,transparent 20%,rgba(255,255,255,.8) 43%,rgba(255,243,173,.2) 52%,transparent 70%);background-size:240% 100%;animation:upgradeShine .62s ease-out both}
 .card.just-upgraded .lv{animation:levelBadgePop .45s cubic-bezier(.2,.8,.25,1) both}
-#boost{position:relative;overflow:hidden;box-shadow:0 5px 0 #7a1d15,0 8px 18px rgba(122,29,21,.25),inset 0 2px 0 rgba(255,255,255,.35);background:radial-gradient(circle at 32% 22%,#ffbc79 0%,#ff7950 32%,#e5483a 68%,#a82a1f 100%)}
+/* Keep boost pinned to the lower-left corner in RTL too; never let it join HUD flow. */
+#boost{position:absolute;left:18px;right:auto;inset-inline-start:auto;bottom:34px;z-index:6;overflow:hidden;box-shadow:0 5px 0 #7a1d15,0 8px 18px rgba(122,29,21,.25),inset 0 2px 0 rgba(255,255,255,.35);background:radial-gradient(circle at 32% 22%,#ffbc79 0%,#ff7950 32%,#e5483a 68%,#a82a1f 100%)}
+/* Place the help text on the opposite side with enough clearance from boost. */
+#tapHint{right:18px;left:auto;inset-inline-end:auto;max-width:min(44vw,360px);padding:0 4px;text-align:right}
+@media(max-width:380px){
+  #boost{left:12px;bottom:22px;width:82px;height:82px}
+  #boost span{font-size:18px}
+  #boost em{font-size:26px}
+  #tapHint{right:12px;bottom:24px;max-width:calc(100vw - 118px);font-size:12px}
+}
+@media(max-height:560px){
+  #boost{bottom:16px;width:76px;height:76px}
+  #boost span{font-size:17px}
+  #boost em{font-size:24px}
+  #tapHint{bottom:20px;font-size:12px}
+}
 #boost::before{content:"";position:absolute;inset:6px;border:1px solid rgba(255,255,255,.55);border-radius:50%;pointer-events:none}
 #boost span,#boost em{position:relative;z-index:1}
 .plus{background:linear-gradient(180deg,#7bea54,#43b92c);box-shadow:0 3px 0 var(--green-d),inset 0 1px 0 rgba(255,255,255,.5);transition:transform .12s ease,filter .12s ease}
