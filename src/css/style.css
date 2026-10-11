@@ -145,3 +145,38 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
   #routeInfo{top:105px}
   #biomeBadge{top:135px}
 }
+
+
+/* Flight controls: boost on the right, with a compact simulator-style route HUD above it. */
+#boost{left:auto;right:18px;inset-inline-start:auto;inset-inline-end:18px;bottom:28px}
+#tapHint{right:auto;left:18px;inset-inline-end:auto;inset-inline-start:18px;text-align:left;max-width:min(44vw,360px)}
+#routeInfo{
+  top:auto;left:auto;right:18px;bottom:138px;transform:none;
+  width:176px;max-width:calc(100vw - 36px);white-space:normal;
+  padding:10px 12px 9px;border:1px solid rgba(137,224,255,.7);border-radius:16px;
+  background:linear-gradient(145deg,rgba(8,35,58,.88),rgba(14,71,99,.76));
+  box-shadow:0 7px 22px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.18);
+  backdrop-filter:blur(9px);text-shadow:0 1px 2px rgba(0,0,0,.55);
+  overflow:visible;
+}
+.route-head{display:flex;align-items:center;gap:6px;color:#b9eeff;font-size:11px;font-weight:800;letter-spacing:.1px}
+.route-head svg{width:18px;height:18px;flex:0 0 18px;color:#70e4ff}
+.route-distance{display:flex;align-items:baseline;gap:5px;margin:2px 0 5px;color:#fff}
+.route-distance strong{font:800 29px/1.1 var(--font-ui);font-variant-numeric:tabular-nums;text-shadow:0 0 12px rgba(92,222,255,.28)}
+.route-distance small{font-size:13px;color:#b9eeff;font-weight:800}
+.route-track{height:6px;border-radius:999px;background:rgba(255,255,255,.2);overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.35)}
+.route-track span{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,#3ad8ff,#9bffdc);box-shadow:0 0 9px rgba(58,216,255,.55);transition:width .18s linear}
+.route-foot{display:flex;justify-content:space-between;gap:8px;margin-top:5px;font-size:10px;color:rgba(255,255,255,.82)}
+#biomeBadge{top:150px}
+@media(max-width:380px){
+  #boost{right:12px;left:auto;bottom:22px;width:82px;height:82px}
+  #tapHint{left:12px;right:auto;bottom:24px;max-width:calc(100vw - 118px);font-size:12px;text-align:left}
+  #routeInfo{right:12px;bottom:116px;width:158px;padding:8px 10px}
+  .route-distance strong{font-size:25px}
+}
+@media(max-height:560px){
+  #boost{right:16px;left:auto;bottom:16px;width:76px;height:76px}
+  #tapHint{left:16px;right:auto;bottom:20px;font-size:12px}
+  #routeInfo{right:16px;bottom:102px;width:154px;padding:7px 9px}
+  .route-distance strong{font-size:23px}
+}
