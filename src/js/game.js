@@ -20,7 +20,7 @@ function persist(){try{localStorage.setItem(KEY,JSON.stringify(save));}catch(e){
 const cost=l=>Math.round(90*Math.pow(1.7,l));
 const DAILY_MISSIONS=[
   {id:'distance',metric:'distance',title:'رحلة بعيدة',description:'تجاوز 1000 متر في رحلة واحدة',target:1000,unit:'م',reward:80},
-  {id:'coins',metric:'coins',title:'جامع العملات',description:'اجمع 15 عملة في رحلة واحدة',target:15,unit:'عملة',reward:60},
+  {id:'coins',metric:'picked',title:'جامع العملات',description:'اجمع 3 عملات ذهبية في رحلة واحدة',target:3,unit:'عملات',reward:60},
   {id:'gates',metric:'gates',title:'خبير البوابات',description:'اجتز 3 بوابات في رحلة واحدة',target:3,unit:'بوابة',reward:100}
 ];
 function dailyDateKey(){
@@ -30,18 +30,19 @@ function dailyDateKey(){
 function ensureDaily(){
   const date=dailyDateKey();
   if(!save.daily||save.daily.date!==date){
-    save.daily={date,distance:0,coins:0,gates:0,claimed:{distance:false,coins:false,gates:false}};
+    save.daily={date,distance:0,picked:0,gates:0,claimed:{distance:false,coins:false,gates:false}};
     persist();
     return;
   }
-  save.daily.claimed=Object.assign({distance:false,coins:false,gates:false},save.daily.claimed||{});
-  ['distance','coins','gates'].forEach(k=>{if(!Number.isFinite(save.daily[k])||save.daily[k]<0)save.daily[k]=0;});
+  save.daily.claimed=Object.assign({distance:false,coins:false,gates:false},save.daily.claimed&&typeof save.daily.claimed==='object'?save.daily.claimed:{});
+  ['distance','picked','gates'].forEach(k=>{if(!Number.isFinite(save.daily[k])||save.daily[k]<0)save.daily[k]=0;});
+  DAILY_MISSIONS.forEach(m=>{save.daily.claimed[m.id]=save.daily.claimed[m.id]===true;});
 }
 function updateDailyMissions(distance){
   ensureDaily();
   const daily=save.daily;
   daily.distance=Math.max(daily.distance,distance);
-  daily.coins=Math.max(daily.coins,run.coins);
+  daily.picked=Math.max(daily.picked,run.picked);
   daily.gates=Math.max(daily.gates,run.gates);
   let reward=0;
   const completed=[];
@@ -52,7 +53,6 @@ function updateDailyMissions(distance){
       completed.push(m);
     }
   });
-  persist();
   return {reward,completed};
 }
 
