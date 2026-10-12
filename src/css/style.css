@@ -552,3 +552,27 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
   .aircraft-stat strong{font-size:10px}
   .upgrade-desc{min-height:23px;font-size:8px}
 }
+
+@media(max-height:460px){
+  #aircraftStats{top:213px;padding:4px 6px 5px}
+  .aircraft-stats-head{margin-bottom:3px}
+  .aircraft-stats-icon{flex-basis:22px;height:22px;font-size:14px}
+  .aircraft-stats-head strong{font-size:10px}
+  .aircraft-stats-head small{font-size:7px}
+  .stats-chip{font-size:7px}
+  .aircraft-stat-grid{gap:2px}
+  .aircraft-stat{padding:2px}
+  .aircraft-stat span{font-size:6px}
+  .aircraft-stat strong{font-size:9px}
+  .aircraft-stat i{height:3px;margin-top:2px}
+  #cards{bottom:5px;gap:4px}
+  .card{padding:4px 3px 6px;border-width:2px;border-radius:10px}
+  .card .ic{height:30px;margin-bottom:3px;border-radius:8px}
+  .card .ic svg{width:28px;height:28px}
+  .card .nm{min-height:22px;font-size:9px}
+  .upgrade-desc{display:none}
+  .pips{margin:2px 0 4px}
+  .pips b{width:7px;height:6px}
+  .btn{min-height:24px;font-size:12px;padding:3px 2px}
+  .btn.up .coin-i{width:11px;height:11px;flex-basis:11px}
+}
