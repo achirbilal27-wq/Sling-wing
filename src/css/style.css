@@ -424,3 +424,49 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
   #fuelGauge{width:58px;height:58px;top:8px;right:8px}
   .fuel-readout strong{font-size:14px}
 }
+
+
+/* Skill chain and aerial boss indicators */
+#comboHud,#bossHud{
+  position:absolute;left:50%;transform:translateX(-50%);z-index:8;
+  color:#fff;text-align:center;text-shadow:0 1px 3px rgba(0,0,0,.65);
+  border:1px solid rgba(255,255,255,.48);backdrop-filter:blur(7px);
+  box-shadow:0 4px 14px rgba(0,0,0,.18);pointer-events:none;
+}
+#comboHud{
+  top:240px;display:none;align-items:center;gap:9px;padding:5px 13px;
+  border-radius:999px;background:linear-gradient(135deg,rgba(123,73,10,.82),rgba(180,104,18,.76));
+}
+#comboHud.on{display:flex;animation:comboPop .22s ease-out}
+#comboHud span{font-size:11px;font-weight:800;white-space:nowrap}
+#comboHud strong{font:800 19px/1 var(--font-ui);color:#ffe27a}
+#bossHud{
+  top:278px;width:min(220px,58vw);display:none;flex-direction:column;gap:4px;
+  padding:7px 11px;border-radius:13px;background:linear-gradient(145deg,rgba(75,17,29,.9),rgba(28,22,43,.82));
+  border-color:rgba(255,130,130,.7)
+}
+#bossHud.on{display:flex;animation:bossIn .28s ease-out}
+#bossHud strong{font-size:12px;letter-spacing:.3px;color:#ffd6d3}
+.boss-track{height:7px;border-radius:999px;overflow:hidden;background:rgba(0,0,0,.45);box-shadow:inset 0 1px 2px rgba(0,0,0,.4)}
+.boss-track span{display:block;width:100%;height:100%;border-radius:inherit;background:linear-gradient(90deg,#ff4e57,#ffb05e);box-shadow:0 0 8px rgba(255,88,88,.45);transition:width .15s}
+#bossHealthText{font:800 10px/1 var(--font-ui);color:#fff0ed}
+.result-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:8px 0 14px}
+.result-stats div{display:flex;align-items:center;justify-content:space-between;gap:5px;padding:5px 8px;border-radius:10px;background:rgba(185,119,62,.12);border:1px solid rgba(138,75,30,.16)}
+.result-stats small{font-size:11px;font-weight:800;color:#6b442a}
+.result-stats strong{font-size:14px;color:#3b2314;white-space:nowrap}
+@keyframes comboPop{from{opacity:0;transform:translateX(-50%) scale(.85)}to{opacity:1;transform:translateX(-50%) scale(1)}}
+@keyframes bossIn{from{opacity:0;transform:translateX(-50%) translateY(-5px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@media(max-width:380px){
+  #comboHud{top:228px;padding:4px 10px;gap:7px}
+  #comboHud span{font-size:10px}
+  #comboHud strong{font-size:17px}
+  #bossHud{top:263px;width:min(190px,60vw);padding:6px 9px}
+  .result-stats{gap:4px;margin:6px 0 11px}
+  .result-stats div{padding:4px 6px}
+  .result-stats small{font-size:10px}
+  .result-stats strong{font-size:13px}
+}
+@media(max-height:560px){
+  #comboHud{top:197px}
+  #bossHud{top:232px}
+}
