@@ -357,7 +357,7 @@ const G=560;
 
 function clearObjs(){while(objGroup.children.length)objGroup.remove(objGroup.children[0]);}
 function resetRun(){
-  P={x:0,alt:85,z:0,vz:0,s:0,a:0.62,roll:0,yaw:0,boostT:0,spin:0,sliding:false,bounces:0,fuel:100,launchT:0,engineOut:false,fuelWarned:false};
+  P={x:0,alt:85,z:0,vz:0,s:0,a:0.62,roll:0,yaw:0,boostT:0,spin:0,sliding:false,bounces:0,fuel:100,launchT:0,engineOut:false,fuelWarned:false,abilityCooldown:0,magnetT:0};
   routeTargetMeters=500;
   shots.forEach(s=>scene.remove(s.mesh));shots.length=0;shotCooldown=0;
   run={coins:0,picked:0,maxAlt:0,gateCombo:0,bestCombo:0,gates:0,bosses:0};
@@ -548,6 +548,7 @@ window.addEventListener('keydown',e=>{
   if(e.code==='Space'&&!e.repeat){e.preventDefault();down.add('k');if(state==='ready')startCharge();}
   if(e.code==='KeyB')doBoost();
   if(e.code==='KeyF')doShoot();
+  if(e.code==='KeyE')doAbility();
   if(e.code==='ArrowLeft'||e.code==='KeyA')keys.left=true;
   if(e.code==='ArrowRight'||e.code==='KeyD')keys.right=true;
 });
@@ -558,6 +559,40 @@ window.addEventListener('keyup',e=>{
 });
 $('boost').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();doBoost();});
 $('fire').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();doShoot();});
+$('specialAbility').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();doAbility();});
+const ABILITIES={
+  trainer:{name:'درع',icon:'🛡'},
+  interceptor:{name:'اندفاع',icon:'⚡'},
+  guardian:{name:'إمداد',icon:'⛽'},
+  phantom:{name:'مغناطيس',icon:'🧲'}
+};
+function updateAbilityUI(){
+  const key=save.model||'trainer',a=ABILITIES[key]||ABILITIES.trainer;
+  $('abilityIcon').textContent=a.icon;$('abilityName').textContent=a.name;
+  const cd=P&&Number.isFinite(P.abilityCooldown)?P.abilityCooldown:0;
+  $('abilityCooldown').textContent=P&&P.magnetT>0?'مغناطيس '+Math.ceil(P.magnetT)+'ث':(cd>0?Math.ceil(cd)+'ث':'جاهزة');
+  $('specialAbility').classList.toggle('cooldown',cd>0);
+  $('specialAbility').classList.toggle('ready',cd<=0);
+}
+function doAbility(){
+  if(state!=='flight')return;
+  if(P.abilityCooldown>0.01){toast('القدرة بعد '+Math.ceil(P.abilityCooldown)+' ث');return;}
+  const key=save.model||'trainer';
+  if(key==='guardian'&&P.fuel>=90){toast('الوقود شبه ممتلئ؛ احتفظ بقدرة الإمداد');return;}
+  P.abilityCooldown=12;
+  if(key==='trainer'){
+    shieldT=Math.max(shieldT,2.4);shieldCooldown=Math.max(shieldCooldown,1.2);shieldMesh.visible=true;
+    addFloat(P.x,P.alt+48,'درع الصقر!','#a7f4ff',P.z);beep(760,.1,'sine',.04);beep(1080,.15,'triangle',.03);
+  }else if(key==='interceptor'){
+    P.boostT=Math.max(P.boostT,2.25);addFloat(P.x,P.alt+48,'اندفاع فائق!','#ffe27a',P.z);shake=Math.max(shake,.18);beep(180,.24,'sawtooth',.04);
+  }else if(key==='guardian'){
+    P.fuel=Math.min(100,P.fuel+38);P.engineOut=P.fuel<=0;P.fuelWarned=false;updateFuelGauge();
+    addFloat(P.x,P.alt+48,'إمداد وقود +38٪','#baf6ff',P.z);beep(500,.12,'triangle');beep(750,.14,'triangle');
+  }else{
+    P.magnetT=6;addFloat(P.x,P.alt+48,'مغناطيس العملات!','#ffe27a',P.z);beep(820,.12,'triangle');beep(1040,.15,'triangle');
+  }
+  updateAbilityUI();
+}
 function doShoot(){
   if(state!=='flight'||shotCooldown>0)return;
   shotCooldown=Math.max(0.11,aircraft().shot-save.lv.plane*0.012);
@@ -603,13 +638,15 @@ function launch(){
   $('bFuel').textContent=save.fuel;
   $('tapHint').textContent='الإقلاع الآلي جارٍ… بعدها اسحب يمينًا ويسارًا وواصل الضغط للصعود';
   $('tapHint').style.opacity=1;
-  updateFuelGauge();
+  updateFuelGauge();updateAbilityUI();
   show('hud');
 }
 
 /* ---------- update ---------- */
 function updateFlight(dt){
   shotCooldown=Math.max(0,shotCooldown-dt);
+  P.abilityCooldown=Math.max(0,P.abilityCooldown-dt);
+  P.magnetT=Math.max(0,P.magnetT-dt);
   const holding=down.size>0;
   const lvP=save.lv.plane;
   const wasFueled=P.fuel>0;
@@ -674,8 +711,12 @@ function updateFlight(dt){
   const mult=1+save.lv.coin;
   for(const c of objs.coins){
     if(!c.on)continue;
+    if(P.magnetT>0&&c.x>=P.x&&c.x-P.x<360&&Math.abs(c.alt-P.alt)<300&&Math.abs(c.z-P.z)<300){
+      const pull=Math.min(1,dt*4.5);c.alt+=(P.alt-c.alt)*pull;c.z+=(P.z-c.z)*pull;c.mesh.position.y=Y(c.alt);c.mesh.position.z=c.z*S;
+    }
     const dx=c.x-P.x,dy=c.alt-P.alt,dz=c.z-P.z;
-    if(dx*dx+dy*dy+dz*dz<50*50){
+    const pickupRange=P.magnetT>0?125:50;
+    if(Math.abs(dx)<(P.magnetT>0?155:50)&&dy*dy+dz*dz<pickupRange*pickupRange){
       c.on=false;c.mesh.visible=false;run.coins+=5*mult;run.picked++;
       beep(900+Math.min(run.picked,20)*25,.07,'triangle',0.04);
       for(let i=0;i<5;i++)addPart(c.x,c.alt,(Math.random()-.5)*180,(Math.random()-.5)*180,0.35,0xffd84a,3,c.z);
@@ -807,7 +848,7 @@ function update(dt){
     $('alt').textContent='الارتفاع '+Math.floor(P.alt/10)+' م';
     $('boost').classList.toggle('off',save.fuel<=0||P.boostT>0.2);
     $('bFuel').textContent=save.fuel;
-    updateFuelGauge();
+    updateFuelGauge();updateAbilityUI();
     if(P.launchT<=0&&$('tapHint').textContent.indexOf('الإقلاع الآلي')===0){$('tapHint').textContent='اضغط مطولًا للصعود واترك للانقضاض. اسحب يمينًا أو يسارًا للتوجيه';}
     if(m>10)$('tapHint').style.opacity=0;
   }
