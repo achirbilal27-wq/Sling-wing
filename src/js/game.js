@@ -495,7 +495,7 @@ function renderHangar(upgradedKey){
     const d=document.createElement('div');d.className='card'+(k===upgradedKey?' just-upgraded':'');
     let pips='';for(let i=0;i<MAXLV;i++)pips+='<b'+(i<l?' class="f"':'')+'></b>';
     const cardName=k==='plane'?aircraft().short+' · '+aircraft().upgrade:NAMES[k];
-    const descriptions={sling:'إقلاع أقوى واندفاع أولي أفضل',plane:'خزان وقود أكبر مدىً: كل مستوى يقلل الاستهلاك بنحو 12٪ ويؤخر الهبوط الاضطراري',coin:'مكافآت عملات أكبر من البوابات والخصوم'};
+    const descriptions={sling:'إقلاع أقوى واندفاع أولي أفضل',plane:'خزان وقود أكبر مدىً: كل مستوى يضيف 14٪ إلى مدة الطيران الأساسية ويؤخر الهبوط الاضطراري',coin:'مكافآت عملات أكبر من البوابات والخصوم'};
     d.innerHTML='<div class="ic">'+ICONS[k]+'<span class="lv">'+(l+1)+'</span></div><div class="nm">'+cardName+(k==='coin'?' ×'+(l+1):'')+'</div><div class="upgrade-desc">'+descriptions[k]+'</div><div class="pips">'+pips+'</div>';
     const b=document.createElement('button');
     b.className='btn up'+((!max&&save.coins<c)?' no':'');
