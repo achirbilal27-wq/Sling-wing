@@ -639,3 +639,39 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
   .mission-progress{height:6px;margin:6px 0 4px}
   .missions-foot{margin-top:7px;font-size:9px}
 }
+
+
+/* Layout correction: reserve a real slot for aircraft stats above the three upgrade cards. */
+#hangar{
+  --upgrade-cards-height:190px;
+  --upgrade-cards-bottom:12px;
+  --aircraft-stats-gap:8px;
+}
+#hangar #cards{
+  height:var(--upgrade-cards-height);
+  bottom:var(--upgrade-cards-bottom);
+}
+#hangar #aircraftStats{
+  top:auto;
+  bottom:calc(var(--upgrade-cards-bottom) + var(--upgrade-cards-height) + var(--aircraft-stats-gap));
+}
+@media(max-width:600px){
+  #hangar{--upgrade-cards-height:180px}
+}
+@media(max-height:600px){
+  #hangar{
+    --upgrade-cards-height:158px;
+    --upgrade-cards-bottom:8px;
+    --aircraft-stats-gap:7px;
+  }
+}
+@media(max-height:560px){
+  #hangar{--upgrade-cards-height:145px}
+}
+@media(max-height:460px){
+  #hangar{
+    --upgrade-cards-height:120px;
+    --upgrade-cards-bottom:5px;
+    --aircraft-stats-gap:6px;
+  }
+}
