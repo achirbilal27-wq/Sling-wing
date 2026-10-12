@@ -195,10 +195,10 @@ const shadow=new THREE.Mesh(new THREE.CircleGeometry(1,20),shadowMat);shadow.rot
 /* ---------- plane model ---------- */
 const PAL=[[0x8bd13a,0x5a9a1c],[0x4aa8ff,0x2476c9],[0xffc83d,0xd18a00],[0xb46bff,0x7a35c9],[0xff6a4a,0xc2381f],[0xf4f4f4,0x2b2b36]];
 const AIRCRAFT={
- trainer:{name:'الصقر التدريبي',short:'الصقر',unlock:0,shield:9.5,shot:0.24,boost:1,speed:1,upgrade:'توازن وتحكم'},
- interceptor:{name:'المعترض السريع',short:'المعترض',unlock:500,shield:9,shot:0.17,boost:1,speed:1.12,upgrade:'سرعة نيران أعلى'},
- guardian:{name:'الحارس المدرع',short:'الحارس',unlock:1500,shield:6.8,shot:0.25,boost:0.95,speed:0.94,upgrade:'درع أسرع تجددًا'},
- phantom:{name:'الشبح النفاث',short:'الشبح',unlock:3000,shield:8,shot:0.2,boost:1.35,speed:1.08,upgrade:'تعزيز أطول'}
+ trainer:{name:'الصقر التدريبي',short:'الصقر',unlock:0,shield:9.5,shot:0.24,boost:1,speed:1,fuelUse:1,upgrade:'توازن وتحكم'},
+ interceptor:{name:'المعترض السريع',short:'المعترض',unlock:500,shield:9,shot:0.17,boost:1,speed:1.12,fuelUse:1.08,upgrade:'سرعة نيران أعلى'},
+ guardian:{name:'الحارس المدرع',short:'الحارس',unlock:1500,shield:6.8,shot:0.25,boost:0.95,speed:0.94,fuelUse:0.78,upgrade:'درع أسرع وتجهيز وقود اقتصادي'},
+ phantom:{name:'الشبح النفاث',short:'الشبح',unlock:3000,shield:8,shot:0.2,boost:1.35,speed:1.08,fuelUse:1.12,upgrade:'تعزيز أطول وسرعة أعلى'}
 };
 function aircraft(){return AIRCRAFT[save.model]||AIRCRAFT.trainer;}
 const bodyMat=matS(0x8bd13a,0.5),accMat=matS(0x5a9a1c,0.6);
@@ -318,7 +318,7 @@ const G=560;
 
 function clearObjs(){while(objGroup.children.length)objGroup.remove(objGroup.children[0]);}
 function resetRun(){
-  P={x:0,alt:85,z:0,vz:0,s:0,a:0.62,roll:0,yaw:0,boostT:0,spin:0,sliding:false,bounces:0};
+  P={x:0,alt:85,z:0,vz:0,s:0,a:0.62,roll:0,yaw:0,boostT:0,spin:0,sliding:false,bounces:0,fuel:100,launchT:0,engineOut:false,fuelWarned:false};
   routeTargetMeters=500;
   shots.forEach(s=>scene.remove(s.mesh));shots.length=0;shotCooldown=0;
   run={coins:0,picked:0,maxAlt:0};
@@ -481,6 +481,13 @@ function doShoot(){
   shots.push({x:P.x+28,alt:P.alt,z:P.z,vx:1900*aircraft().speed,life:0.62,mesh});
   beep(720,0.055,'square',0.025);
 }
+function updateFuelGauge(){
+  const p=clamp(P&&Number.isFinite(P.fuel)?P.fuel:100,0,100);
+  const arc=$('fuelArc'),num=$('fuelPercent'),g=$('fuelGauge');
+  if(arc)arc.style.strokeDashoffset=String(182.2*(1-p/100));
+  if(num)num.textContent=Math.ceil(p)+'%';
+  if(g){g.classList.toggle('low',p<=20&&p>0);g.classList.toggle('empty',p<=0);g.classList.toggle('launching',!!(P&&P.launchT>0));}
+}
 function steerInput(){
   let v=0;
   const first=ptr.values().next().value;
@@ -499,13 +506,19 @@ function launch(){
   const perfect=power>=0.88;
   let s=(560+110*lv)*(0.4+0.6*power);
   const pull=power*80;
-  P.x=-pull*Math.cos(0.62);P.alt=85-pull*Math.sin(0.62);P.z=0;P.vz=0;
-  if(perfect){s*=1.1;addFloat(P.x+60,P.alt+60,'إطلاق مثالي!','#ffe27a',0);beep(880,.2,'triangle');}
-  P.s=s;P.a=0.62;
+  P.x=-pull*Math.cos(0.62);P.alt=110+power*70+(perfect?55:0);P.z=0;P.vz=0;
+  P.fuel=100;P.launchT=1.65;P.engineOut=false;P.fuelWarned=false;
+  // The slingshot gives the aircraft a strong automatic climb before handing control to the pilot.
+  s*=perfect?1.32:1.12;
+  if(perfect){addFloat(P.x+60,P.alt+60,'إطلاق ذهبي بكامل القوة!','#ffe27a',0);run.perfectLaunch=true;run.coins+=25*(1+save.lv.coin);beep(880,.2,'triangle');beep(1120,.18,'triangle');}
+  else{addFloat(P.x+50,P.alt+45,'إقلاع قوي!','#baf6ff',0);}
+  P.s=s;P.a=0.76;
   state='flight';
   beep(240,.25,'sawtooth',0.05);shake=0.25;
   $('bFuel').textContent=save.fuel;
+  $('tapHint').textContent='الإقلاع الآلي جارٍ… بعدها اسحب يمينًا ويسارًا وواصل الضغط للصعود';
   $('tapHint').style.opacity=1;
+  updateFuelGauge();
   show('hud');
 }
 
@@ -514,12 +527,18 @@ function updateFlight(dt){
   shotCooldown=Math.max(0,shotCooldown-dt);
   const holding=down.size>0;
   const lvP=save.lv.plane;
+  const wasFueled=P.fuel>0;
+  if(wasFueled){P.fuel=Math.max(0,P.fuel-dt*(100/48)*(aircraft().fuelUse||1)*(P.boostT>0?1.55:1));}
+  if(P.fuel<=0&&!P.engineOut){P.engineOut=true;P.fuelWarned=true;toast('نفد الوقود! الطائرة تدخل الهبوط الاضطراري');addFloat(P.x,P.alt+58,'نفد الوقود — هبوط اضطراري','#ff8d7e',P.z);beep(170,.28,'sawtooth',0.05);shake=Math.max(shake,0.18);}
+  if(P.fuel>0&&P.fuel<20&&!P.fuelWarned){P.fuelWarned=true;toast('تنبيه: الوقود أقل من 20٪');beep(340,.1,'square');}
   const maxPitch=clamp((P.s-130)/320,0,0.62);
-  let target=holding?Math.min(0.55,maxPitch):-0.6;
+  let target=P.launchT>0?0.78:(P.engineOut?-0.72:(holding?Math.min(0.55,maxPitch):-0.6));
   if(P.s<160&&!P.sliding)target=-0.8;
-  if(!P.sliding)P.a+=(target-P.a)*Math.min(1,dt*3.2);
+  if(!P.sliding)P.a+=(target-P.a)*Math.min(1,dt*(P.launchT>0?1.5:3.2));
   const K=0.00022*(1-0.09*lvP)/aircraft().speed;
   let ds=-G*Math.sin(P.a)-K*P.s*P.s;
+  if(P.fuel>0)ds+=145*aircraft().speed;
+  if(P.launchT>0){ds+=330;P.launchT=Math.max(0,P.launchT-dt);}
   if(P.boostT>0){
     ds+=620;P.boostT-=dt;
     addPart(P.x-60*Math.cos(P.a),P.alt-60*Math.sin(P.a),-140-Math.random()*80,(Math.random()-0.5)*60,0.35,Math.random()<.5?0xffb23d:0xff5a2a,5+Math.random()*4,P.z);
@@ -533,7 +552,7 @@ function updateFlight(dt){
   if(shieldMesh.visible)shieldMesh.material.opacity=0.45+Math.sin(time*22)*0.2;
   if(P.alt>0&&!P.sliding)P.s=Math.max(P.s,105);
   // steering
-  const steer=P.sliding?0:steerInput();
+  const steer=(P.sliding||P.launchT>0)?0:steerInput();
   P.vz+=(steer*330-P.vz)*Math.min(1,dt*4);
   P.z=clamp(P.z+P.vz*dt,-340,340);
   if(Math.abs(P.z)>=340)P.vz*=0.5;
@@ -588,7 +607,7 @@ function updateFlight(dt){
   for(const f of objs.fuels){
     if(!f.on)continue;
     const dx=f.x-P.x,dy=f.alt-P.alt,dz=f.z-P.z;
-    if(dx*dx+dy*dy+dz*dz<54*54){f.on=false;f.mesh.visible=false;save.fuel++;$('bFuel').textContent=save.fuel;addFloat(f.x,f.alt+40,'+1 وقود','#ffb3a8',f.z);beep(500,.12,'triangle');beep(750,.14,'triangle');}
+    if(dx*dx+dy*dy+dz*dz<54*54){f.on=false;f.mesh.visible=false;P.fuel=Math.min(100,P.fuel+24);P.fuelWarned=false;addFloat(f.x,f.alt+40,'+24٪ وقود','#baf6ff',f.z);beep(500,.12,'triangle');beep(750,.14,'triangle');updateFuelGauge();}
   }
   for(const b of objs.birds){
     b.x+=b.vx*dt;b.t+=dt*9;
@@ -686,6 +705,8 @@ function update(dt){
     $('alt').textContent='الارتفاع '+Math.floor(P.alt/10)+' م';
     $('boost').classList.toggle('off',save.fuel<=0||P.boostT>0.2);
     $('bFuel').textContent=save.fuel;
+    updateFuelGauge();
+    if(P.launchT<=0&&$('tapHint').textContent.indexOf('الإقلاع الآلي')===0){$('tapHint').textContent='اضغط مطولًا للصعود واترك للانقضاض. اسحب يمينًا أو يسارًا للتوجيه';}
     if(m>10)$('tapHint').style.opacity=0;
   }
 }
