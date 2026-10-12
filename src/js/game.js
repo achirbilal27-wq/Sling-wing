@@ -234,10 +234,10 @@ const shadow=new THREE.Mesh(new THREE.CircleGeometry(1,20),shadowMat);shadow.rot
 /* ---------- plane model ---------- */
 const PAL=[[0x8bd13a,0x5a9a1c],[0x4aa8ff,0x2476c9],[0xffc83d,0xd18a00],[0xb46bff,0x7a35c9],[0xff6a4a,0xc2381f],[0xf4f4f4,0x2b2b36]];
 const AIRCRAFT={
- trainer:{name:'الصقر التدريبي',short:'الصقر',unlock:0,shield:9.5,shot:0.24,boost:1,speed:1,fuelUse:1,upgrade:'توازن وتحكم'},
- interceptor:{name:'المعترض السريع',short:'المعترض',unlock:500,shield:9,shot:0.17,boost:1,speed:1.12,fuelUse:1.08,upgrade:'سرعة نيران أعلى'},
- guardian:{name:'الحارس المدرع',short:'الحارس',unlock:1500,shield:6.8,shot:0.25,boost:0.95,speed:0.94,fuelUse:0.78,upgrade:'درع أسرع وتجهيز وقود اقتصادي'},
- phantom:{name:'الشبح النفاث',short:'الشبح',unlock:3000,shield:8,shot:0.2,boost:1.35,speed:1.08,fuelUse:1.12,upgrade:'تعزيز أطول وسرعة أعلى'}
+ trainer:{name:'الصقر التدريبي',short:'الصقر',unlock:0,shield:9.5,shot:0.24,boost:1,speed:1,fuelUse:1,upgrade:'خزان وقود موسّع'},
+ interceptor:{name:'المعترض السريع',short:'المعترض',unlock:500,shield:9,shot:0.17,boost:1,speed:1.12,fuelUse:1.08,upgrade:'خزان وقود للرحلات الطويلة'},
+ guardian:{name:'الحارس المدرع',short:'الحارس',unlock:1500,shield:6.8,shot:0.25,boost:0.95,speed:0.94,fuelUse:0.78,upgrade:'خزان اقتصادي ممتد المدى'},
+ phantom:{name:'الشبح النفاث',short:'الشبح',unlock:3000,shield:8,shot:0.2,boost:1.35,speed:1.08,fuelUse:1.12,upgrade:'خزان نفاث عالي السعة'}
 };
 function aircraft(){return AIRCRAFT[save.model]||AIRCRAFT.trainer;}
 const bodyMat=matS(0x8bd13a,0.5),accMat=matS(0x5a9a1c,0.6);
@@ -478,12 +478,12 @@ function renderHangar(upgradedKey){
   const stats=$('aircraftStats');
   if(stats){
     const speedPct=Math.round(selected.speed*100);
-    const fuelPct=Math.round(100/(selected.fuelUse||1));
+    const fuelPct=Math.round(100*(1+save.lv.plane*0.14)/(selected.fuelUse||1));
     const shotMs=Math.round(Math.max(0.11,selected.shot-save.lv.plane*0.012)*1000);
     const shieldSec=Math.max(3.8,selected.shield-save.lv.plane*0.38-(save.model==='guardian'?1.1:0));
     const rows=[
       {label:'السرعة',value:speedPct+'%',bar:clamp((speedPct-75)/55*100,0,100),tone:'speed'},
-      {label:'كفاءة الوقود',value:fuelPct+'%',bar:clamp((fuelPct-70)/65*100,0,100),tone:'fuel'},
+      {label:'مدى الوقود',value:fuelPct+'%',bar:clamp((fuelPct-70)/150*100,0,100),tone:'fuel'},
       {label:'فاصل الإطلاق',value:shotMs+' ms',bar:clamp((260-shotMs)/160*100,0,100),tone:'fire'},
       {label:'عودة الدرع',value:shieldSec.toFixed(1)+' ث',bar:clamp((12-shieldSec)/9*100,0,100),tone:'shield'}
     ];
@@ -495,7 +495,7 @@ function renderHangar(upgradedKey){
     const d=document.createElement('div');d.className='card'+(k===upgradedKey?' just-upgraded':'');
     let pips='';for(let i=0;i<MAXLV;i++)pips+='<b'+(i<l?' class="f"':'')+'></b>';
     const cardName=k==='plane'?aircraft().short+' · '+aircraft().upgrade:NAMES[k];
-    const descriptions={sling:'إقلاع أقوى واندفاع أولي أفضل',plane:'نيران أسرع وتعزيز أطول؛ لون الطائرة يتطور كل 3 مستويات',coin:'مكافآت عملات أكبر من البوابات والخصوم'};
+    const descriptions={sling:'إقلاع أقوى واندفاع أولي أفضل',plane:'خزان وقود أكبر مدىً: كل مستوى يقلل الاستهلاك بنحو 12٪ ويؤخر الهبوط الاضطراري',coin:'مكافآت عملات أكبر من البوابات والخصوم'};
     d.innerHTML='<div class="ic">'+ICONS[k]+'<span class="lv">'+(l+1)+'</span></div><div class="nm">'+cardName+(k==='coin'?' ×'+(l+1):'')+'</div><div class="upgrade-desc">'+descriptions[k]+'</div><div class="pips">'+pips+'</div>';
     const b=document.createElement('button');
     b.className='btn up'+((!max&&save.coins<c)?' no':'');
@@ -650,7 +650,7 @@ function updateFlight(dt){
   const holding=down.size>0;
   const lvP=save.lv.plane;
   const wasFueled=P.fuel>0;
-  if(wasFueled){P.fuel=Math.max(0,P.fuel-dt*(100/48)*(aircraft().fuelUse||1)*(P.boostT>0?1.55:1));}
+  if(wasFueled){const tankEfficiency=1+save.lv.plane*0.14;P.fuel=Math.max(0,P.fuel-dt*(100/48)*(aircraft().fuelUse||1)/tankEfficiency*(P.boostT>0?1.55:1));}
   if(P.fuel<=0&&!P.engineOut){P.engineOut=true;P.fuelWarned=true;toast('نفد الوقود! الطائرة تدخل الهبوط الاضطراري');addFloat(P.x,P.alt+58,'نفد الوقود — هبوط اضطراري','#ff8d7e',P.z);beep(170,.28,'sawtooth',0.05);shake=Math.max(shake,0.18);}
   if(P.fuel>0&&P.fuel<20&&!P.fuelWarned){P.fuelWarned=true;toast('تنبيه: الوقود أقل من 20٪');beep(340,.1,'square');}
   const maxPitch=clamp((P.s-130)/320,0,0.62);
