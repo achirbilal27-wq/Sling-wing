@@ -394,3 +394,33 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
   .pips{margin:3px 0 5px}
   .btn{min-height:29px}
 }
+
+
+/* Compact circular aircraft fuel instrument */
+#fuelGauge{
+  position:absolute;top:12px;right:12px;width:72px;height:72px;z-index:5;
+  border:1px solid rgba(204,244,255,.45);border-radius:50%;
+  background:linear-gradient(145deg,rgba(9,35,55,.78),rgba(12,59,79,.58));
+  box-shadow:0 4px 14px rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,.18);
+  backdrop-filter:blur(7px);color:#fff;pointer-events:none;
+}
+#fuelGauge svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+#fuelGauge circle{fill:none;stroke-width:5}
+#fuelGauge .fuel-track{stroke:rgba(255,255,255,.18)}
+#fuelGauge .fuel-arc{stroke:#70f0b0;stroke-linecap:round;stroke-dasharray:182.2;stroke-dashoffset:0;transition:stroke-dashoffset .18s linear,stroke .2s}
+.fuel-readout{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;text-shadow:0 1px 3px rgba(0,0,0,.55)}
+.fuel-readout strong{font:800 17px/1 var(--font-ui);letter-spacing:-.4px}
+.fuel-readout small{font:700 8px/1.2 var(--font-ui);white-space:nowrap;opacity:.92}
+#fuelGauge.low .fuel-arc{stroke:#ffd166}
+#fuelGauge.empty .fuel-arc{stroke:#ff5d67}
+#fuelGauge.empty .fuel-readout strong{color:#ff9a9f}
+#fuelGauge.launching{box-shadow:0 0 0 2px rgba(112,240,176,.16),0 0 18px rgba(112,240,176,.24)}
+@media(max-width:380px){
+  #fuelGauge{width:64px;height:64px;top:10px;right:10px}
+  .fuel-readout strong{font-size:15px}
+  .fuel-readout small{font-size:7px}
+}
+@media(max-height:560px){
+  #fuelGauge{width:58px;height:58px;top:8px;right:8px}
+  .fuel-readout strong{font-size:14px}
+}
