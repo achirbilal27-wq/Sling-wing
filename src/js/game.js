@@ -34,9 +34,11 @@ function ensureDaily(){
     persist();
     return;
   }
+  const legacyCoinMetric=!Number.isFinite(save.daily.picked);
   save.daily.claimed=Object.assign({distance:false,coins:false,gates:false},save.daily.claimed&&typeof save.daily.claimed==='object'?save.daily.claimed:{});
   ['distance','picked','gates'].forEach(k=>{if(!Number.isFinite(save.daily[k])||save.daily[k]<0)save.daily[k]=0;});
   DAILY_MISSIONS.forEach(m=>{save.daily.claimed[m.id]=save.daily.claimed[m.id]===true;});
+  if(legacyCoinMetric){save.daily.claimed.coins=false;persist();}
 }
 function updateDailyMissions(distance){
   ensureDaily();
