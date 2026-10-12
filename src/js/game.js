@@ -321,8 +321,8 @@ function resetRun(){
   P={x:0,alt:85,z:0,vz:0,s:0,a:0.62,roll:0,yaw:0,boostT:0,spin:0,sliding:false,bounces:0,fuel:100,launchT:0,engineOut:false,fuelWarned:false};
   routeTargetMeters=500;
   shots.forEach(s=>scene.remove(s.mesh));shots.length=0;shotCooldown=0;
-  run={coins:0,picked:0,maxAlt:0};
-  objs={coins:[],rings:[],birds:[],enemies:[],enemyShots:[],fuels:[],drafts:[],next:600,nextEnemy:900/M_PER_PX};
+  run={coins:0,picked:0,maxAlt:0,gateCombo:0,bestCombo:0,gates:0,bosses:0};
+  objs={coins:[],rings:[],birds:[],enemies:[],enemyShots:[],fuels:[],drafts:[],next:600,nextEnemy:900/M_PER_PX,nextBoss:1500/M_PER_PX};
   shieldT=0;shieldCooldown=0;shieldMesh.visible=false;
   clearObjs();
   parts.forEach(p=>{p.mesh.visible=false;});parts.length=0;
@@ -351,6 +351,13 @@ function addCoin(x,alt,z){
 }
 const zc=z=>clamp(z,-320,320);
 function spawn(until){
+  while(objs.nextBoss<until){
+    const x=objs.nextBoss;
+    const e={x,alt:250+Math.random()*260,z:zc((Math.random()-.5)*260),phase:Math.random()*6.28,fireT:0.65,hit:false,boss:true,hp:5,maxHp:5,contactHit:false};
+    e.mesh=makeEnemyPlane();e.mesh.scale.setScalar(2.15);e.mesh.position.set(x*S,Y(e.alt),e.z*S);objGroup.add(e.mesh);objs.enemies.push(e);
+    addFloat(x,e.alt+75,'تحذير: زعيم جوي قريب!','#ff9b91',e.z);
+    objs.nextBoss+=2000/M_PER_PX;
+  }
   while(objs.nextEnemy<until){
     const x=objs.nextEnemy;
     const e={x,alt:180+Math.random()*390,z:zc((Math.random()-.5)*420),phase:Math.random()*6.28,fireT:1.2+Math.random()*1.4,hit:false};
@@ -600,8 +607,14 @@ function updateFlight(dt){
     if(!r.on)continue;
     const dx=r.x-P.x,dy=r.alt-P.alt,dz=r.z-P.z;
     if(Math.abs(dx)<30&&dy*dy+dz*dz<r.R*r.R){
-      r.on=false;r.mesh.visible=false;P.s+=220;shake=0.2;addFloat(r.x,r.alt+40,'دفعة!','#fff',r.z);beep(520,.2,'sawtooth',0.04);
+      r.on=false;r.mesh.visible=false;P.s+=220;shake=0.2;
+      run.gateCombo++;run.gates++;run.bestCombo=Math.max(run.bestCombo,run.gateCombo);
+      const gateReward=10*run.gateCombo*(1+save.lv.coin);run.coins+=gateReward;
+      addFloat(r.x,r.alt+40,'بوابة +'+gateReward+' · سلسلة ×'+run.gateCombo,'#fff3a8',r.z);beep(520+Math.min(run.gateCombo,8)*45,.2,'sawtooth',0.04);
       for(let i=0;i<14;i++)addPart(r.x,r.alt,(Math.random()-.5)*260,(Math.random()-.5)*260,0.45,0xfff3a8,3,r.z);
+    }else if(P.x>r.x+45){
+      r.on=false;r.mesh.visible=false;
+      if(run.gateCombo>0){run.gateCombo=0;toast('انتهت السلسلة — استهدف البوابة التالية!');}
     }
   }
   for(const f of objs.fuels){
@@ -622,18 +635,18 @@ function updateFlight(dt){
   }
   for(const e of objs.enemies){
     if(e.hit)continue;
-    e.x-=180*dt;e.phase+=dt*2.1;e.z=zc(e.z+Math.sin(e.phase)*14*dt);
+    e.x-=(e.boss?72:180)*dt;e.phase+=dt*(e.boss?1.15:2.1);e.z=zc(e.z+Math.sin(e.phase)*(e.boss?22:14)*dt);
     e.fireT-=dt;
     if(e.fireT<=0&&e.x>P.x+120&&e.x<P.x+4200){
-      e.fireT=Math.max(0.75,1.65-save.lv.plane*0.06);
+      e.fireT=e.boss?0.82:Math.max(0.75,1.65-save.lv.plane*0.06);
       const mesh=new THREE.Mesh(enemyShotGeo,enemyShotMat);mesh.position.set(e.x*S,Y(e.alt),e.z*S);scene.add(mesh);
       objs.enemyShots.push({x:e.x,alt:e.alt,z:e.z,vx:-(950+P.s*0.45),life:2.5,mesh});
     }
     const dx=e.x-P.x,dy=e.alt-P.alt,dz=e.z-P.z;
-    if(dx*dx+dy*dy+dz*dz<48*48){
-      e.hit=true;e.mesh.visible=false;
+    if(dx*dx+dy*dy+dz*dz<(e.boss?92*92:48*48)&&(!e.boss||!e.contactHit)){
+      if(e.boss)e.contactHit=true;else{e.hit=true;e.mesh.visible=false;}
       if(shieldT>0||shieldCooldown<=0)activateShield(e.x,e.alt,e.z);
-      else{P.s*=0.72;P.alt=Math.max(25,P.alt-45);shake=0.45;addFloat(P.x,P.alt+45,'ضربة معادية!','#ff9b91',P.z);beep(120,.18,'square',0.05);}
+      else{P.s*=e.boss?0.58:0.72;P.alt=Math.max(25,P.alt-(e.boss?70:45));shake=0.45;addFloat(P.x,P.alt+45,e.boss?'اصطدام بالزعيم!':'ضربة معادية!','#ff9b91',P.z);beep(120,.18,'square',0.05);}
     }
   }
   for(let i=objs.enemyShots.length-1;i>=0;i--){
@@ -659,10 +672,18 @@ function updateFlight(dt){
     }
     if(!hit){for(const e of objs.enemies){
       if(e.hit)continue;
-      if(Math.abs(e.x-shot.x)<38&&Math.abs(e.alt-shot.alt)<40&&Math.abs(e.z-shot.z)<45){
-        e.hit=true;e.mesh.visible=false;hit=true;run.coins+=18*(1+save.lv.coin);
-        addFloat(e.x,e.alt+45,'طائرة معادية +18','#ffe27a',e.z);beep(1050,.1,'triangle',0.04);shake=Math.max(shake,0.12);
-        for(let n=0;n<10;n++)addPart(e.x,e.alt,(Math.random()-.5)*180,(Math.random()-.5)*180,0.35,0xff9b4a,3,e.z);
+      const hr=e.boss?82:38;
+      if(Math.abs(e.x-shot.x)<hr&&Math.abs(e.alt-shot.alt)<(e.boss?72:40)&&Math.abs(e.z-shot.z)<(e.boss?80:45)){
+        hit=true;
+        if(e.boss){
+          e.hp--;beep(920,.08,'triangle',0.04);shake=Math.max(shake,0.08);
+          if(e.hp<=0){e.hit=true;e.mesh.visible=false;run.bosses++;const reward=150*(1+save.lv.coin);run.coins+=reward;addFloat(e.x,e.alt+80,'هزمت الزعيم! +'+reward,'#ffe27a',e.z);beep(1050,.1,'triangle',0.05);beep(1320,.18,'triangle',0.05);for(let n=0;n<24;n++)addPart(e.x,e.alt,(Math.random()-.5)*320,(Math.random()-.5)*320,0.55,0xff9b4a,4,e.z);}
+          else{addFloat(e.x,e.alt+70,'درع الزعيم '+e.hp+'/'+e.maxHp,'#ffb2a6',e.z);}
+        }else{
+          e.hit=true;e.mesh.visible=false;run.coins+=18*(1+save.lv.coin);
+          addFloat(e.x,e.alt+45,'طائرة معادية +18','#ffe27a',e.z);beep(1050,.1,'triangle',0.04);shake=Math.max(shake,0.12);
+          for(let n=0;n<10;n++)addPart(e.x,e.alt,(Math.random()-.5)*180,(Math.random()-.5)*180,0.35,0xff9b4a,3,e.z);
+        }
         break;
       }
     }}
@@ -702,6 +723,9 @@ function update(dt){
     const m=Math.max(0,Math.floor(P.x*M_PER_PX));
     if($('dist').dataset.v!==String(m)){$('dist').dataset.v=m;$('dist').innerHTML=m+'<small>م</small>';}
     $('rCoins').textContent=run.coins;
+    const comboHud=$('comboHud');if(comboHud){comboHud.classList.toggle('on',run.gateCombo>0);$('comboValue').textContent='×'+run.gateCombo;}
+    const activeBoss=objs.enemies.find(e=>e.boss&&!e.hit&&e.x>P.x-100&&e.x<P.x+5200);
+    const bossHud=$('bossHud');if(bossHud){bossHud.classList.toggle('on',!!activeBoss);if(activeBoss){$('bossHp').style.width=(activeBoss.hp/activeBoss.maxHp*100)+'%';$('bossHealthText').textContent=activeBoss.hp+'/'+activeBoss.maxHp;}}
     $('alt').textContent='الارتفاع '+Math.floor(P.alt/10)+' م';
     $('boost').classList.toggle('off',save.fuel<=0||P.boostT>0.2);
     $('bFuel').textContent=save.fuel;
@@ -731,6 +755,7 @@ function endRun(){
   if(rec)save.best=m;
   persist();
   $('rDist').textContent=m;$('rPick').textContent=run.coins;$('rBonus').textContent=bonus;$('rTotal').textContent=total;
+  $('rGates').textContent=run.gates;$('rCombo').textContent='×'+run.bestCombo;$('rBosses').textContent=run.bosses;$('rAltitude').textContent=Math.floor(run.maxAlt/10);
   $('rRec').style.display=rec&&m>0?'inline-block':'none';
   show('result');beep(440,.15,'triangle');beep(660,.2,'triangle');
 }
