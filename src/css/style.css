@@ -675,3 +675,133 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
     --aircraft-stats-gap:6px;
   }
 }
+
+
+/* Fixed-size upgrade cards: keep every inner element inside the same card box after upgrades. */
+#hangar #cards{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  align-items:stretch;
+  min-height:0;
+}
+#hangar #cards>.card{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  justify-content:flex-start;
+  width:100%;
+  height:100%;
+  min-width:0;
+  min-height:0;
+  padding:7px 6px 8px;
+  gap:0;
+  contain:layout paint;
+}
+#hangar #cards>.card .ic{
+  flex:0 0 44px;
+  height:44px;
+  min-height:0;
+  margin:0 0 4px;
+}
+#hangar #cards>.card .ic svg{
+  width:38px;
+  height:38px;
+  max-width:100%;
+  max-height:100%;
+}
+#hangar #cards>.card .lv{
+  top:-5px;
+  inset-inline-start:-5px;
+  z-index:2;
+}
+#hangar #cards>.card .nm{
+  flex:0 0 29px;
+  min-height:0;
+  max-height:29px;
+  margin:0;
+  overflow:hidden;
+  overflow-wrap:anywhere;
+  font-size:clamp(10px,2.8vw,13px);
+  line-height:1.2;
+}
+#hangar #cards>.card .upgrade-desc{
+  flex:1 1 auto;
+  min-height:0;
+  max-height:34px;
+  margin:2px 0;
+  overflow:hidden;
+  overflow-wrap:anywhere;
+  font-size:clamp(8px,2.2vw,10px);
+  line-height:1.2;
+}
+#hangar #cards>.card .pips{
+  flex:0 0 14px;
+  min-height:14px;
+  align-items:center;
+  gap:3px;
+  margin:3px 0 5px;
+}
+#hangar #cards>.card .pips b{
+  flex:0 1 12px;
+  min-width:0;
+  height:8px;
+}
+#hangar #cards>.card>.btn{
+  flex:0 0 32px;
+  width:100%;
+  min-width:0;
+  min-height:32px;
+  max-height:32px;
+  margin-top:auto;
+  padding:3px 2px;
+  gap:3px;
+  font-size:clamp(10px,3vw,15px);
+  line-height:1;
+  overflow:hidden;
+}
+#hangar #cards>.card>.btn span{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:clip;
+}
+#hangar #cards>.card>.btn .coin-i{
+  flex:0 0 14px;
+  width:14px;
+  height:14px;
+}
+#hangar #cards>.card>.btn .upgrade-arrow,
+#hangar #cards>.card>.btn .max-mark{
+  flex:0 0 13px;
+  width:13px;
+  height:13px;
+}
+@media(max-width:380px){
+  #hangar #cards>.card{padding:6px 3px 7px}
+  #hangar #cards>.card .ic{flex-basis:38px;height:38px;margin-bottom:3px}
+  #hangar #cards>.card .ic svg{width:32px;height:32px}
+  #hangar #cards>.card .nm{flex-basis:27px;max-height:27px;font-size:10px}
+  #hangar #cards>.card .upgrade-desc{font-size:8px;max-height:30px}
+  #hangar #cards>.card .pips{flex-basis:12px;min-height:12px;gap:2px;margin:2px 0 4px}
+  #hangar #cards>.card .pips b{flex-basis:8px;height:7px}
+  #hangar #cards>.card>.btn{flex-basis:29px;min-height:29px;max-height:29px;font-size:10px}
+  #hangar #cards>.card>.btn .coin-i{flex-basis:11px;width:11px;height:11px}
+}
+@media(max-height:600px){
+  #hangar #cards>.card{padding:5px 4px 6px}
+  #hangar #cards>.card .ic{flex-basis:34px;height:34px;margin-bottom:3px}
+  #hangar #cards>.card .ic svg{width:29px;height:29px}
+  #hangar #cards>.card .nm{flex-basis:24px;max-height:24px;font-size:10px}
+  #hangar #cards>.card .upgrade-desc{max-height:28px;font-size:8px}
+  #hangar #cards>.card .pips{flex-basis:11px;min-height:11px;margin:2px 0 3px}
+  #hangar #cards>.card>.btn{flex-basis:27px;min-height:27px;max-height:27px;font-size:10px}
+}
+@media(max-height:460px){
+  #hangar #cards>.card{padding:3px 2px 4px}
+  #hangar #cards>.card .ic{flex-basis:27px;height:27px;margin-bottom:2px}
+  #hangar #cards>.card .ic svg{width:23px;height:23px}
+  #hangar #cards>.card .nm{flex-basis:21px;max-height:21px;font-size:9px}
+  #hangar #cards>.card .upgrade-desc{display:none}
+  #hangar #cards>.card .pips{flex-basis:9px;min-height:9px;margin:1px 0 3px;gap:2px}
+  #hangar #cards>.card .pips b{flex-basis:7px;height:6px}
+  #hangar #cards>.card>.btn{flex-basis:23px;min-height:23px;max-height:23px;font-size:9px}
+  #hangar #cards>.card>.btn .coin-i{flex-basis:10px;width:10px;height:10px}
+}
