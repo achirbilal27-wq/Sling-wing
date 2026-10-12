@@ -38,6 +38,8 @@
     <div id="fuelGauge" aria-label="وقود المحرك المتبقي"><svg viewBox="0 0 72 72" aria-hidden="true"><circle class="fuel-track" cx="36" cy="36" r="29"></circle><circle id="fuelArc" class="fuel-arc" cx="36" cy="36" r="29"></circle></svg><div class="fuel-readout"><strong id="fuelPercent">100%</strong><small>وقود المحرك</small></div></div>
     <div id="routeInfo"><div class="route-head"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 21l7-4 7 4-7-18Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 3v14" stroke="currentColor" stroke-width="1.8" stroke-dasharray="2 2"/></svg><span>المسافة إلى الوجهة</span></div><div class="route-distance"><strong id="routeRemaining">500</strong><small>م</small></div><div class="route-track"><span id="routeProgressFill"></span></div><div class="route-foot"><span>نقطة الوصول</span><span id="routeProgressText">0%</span></div></div>
     <div id="biomeBadge">السهول الخضراء</div>
+    <div id="comboHud"><span>سلسلة البوابات</span><strong id="comboValue">×0</strong></div>
+    <div id="bossHud" aria-live="polite"><strong>زعيم السماء</strong><div class="boss-track"><span id="bossHp"></span></div><small id="bossHealthText">5/5</small></div>
     <span class="pill" id="runCoins"><i class="coin-i"></i><span id="rCoins">0</span></span>
     <button id="boost" aria-label="تعزيز"><span>تعزيز</span><em id="bFuel">1</em></button>
     <button id="fire" aria-label="إطلاق النار"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M7 26h17l7-7v-5l9 10-9 10v-5l-7-3H7Z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M7 18h8M7 34h8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><span>إطلاق</span></button>
@@ -50,9 +52,15 @@
       <div class="big"><span id="rDist">0</span><small>م</small></div>
       <div class="rec" id="rRec" style="display:none">رقم قياسي جديد</div>
       <div class="rows">
-        <div><span>عملات جمعتها</span><span id="rPick">0</span></div>
+        <div><span>مكافآت أثناء الرحلة</span><span id="rPick">0</span></div>
         <div><span>مكافأة المسافة</span><span id="rBonus">0</span></div>
         <div><span>المجموع</span><span id="rTotal">0</span></div>
+      </div>
+      <div class="result-stats">
+        <div><small>بوابات ناجحة</small><strong id="rGates">0</strong></div>
+        <div><small>أفضل سلسلة</small><strong id="rCombo">×0</strong></div>
+        <div><small>زعماء هُزموا</small><strong id="rBosses">0</strong></div>
+        <div><small>أعلى ارتفاع</small><strong><span id="rAltitude">0</span> م</strong></div>
       </div>
       <button class="go" id="again">حلّق مرة أخرى</button>
     </div>
