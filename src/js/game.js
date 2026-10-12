@@ -423,13 +423,29 @@ function renderHangar(upgradedKey){
     b.addEventListener('click',()=>{if(!unlocked){toast('اقطع '+a.unlock+' م لفتحها');beep(160,.1,'square');return;}save.model=key;persist();appliedModel='';appliedLv=-1;renderHangar();beep(640,.1,'triangle');toast(a.name);});
     fleet.appendChild(b);
   });
+  const selected=aircraft();
+  const stats=$('aircraftStats');
+  if(stats){
+    const speedPct=Math.round(selected.speed*100);
+    const fuelPct=Math.round(100/(selected.fuelUse||1));
+    const shotMs=Math.round(Math.max(0.11,selected.shot-save.lv.plane*0.012)*1000);
+    const shieldSec=Math.max(3.8,selected.shield-save.lv.plane*0.38-(save.model==='guardian'?1.1:0));
+    const rows=[
+      {label:'السرعة',value:speedPct+'%',bar:clamp((speedPct-75)/55*100,0,100),tone:'speed'},
+      {label:'كفاءة الوقود',value:fuelPct+'%',bar:clamp((fuelPct-70)/65*100,0,100),tone:'fuel'},
+      {label:'فاصل الإطلاق',value:shotMs+' ms',bar:clamp((260-shotMs)/160*100,0,100),tone:'fire'},
+      {label:'عودة الدرع',value:shieldSec.toFixed(1)+' ث',bar:clamp((12-shieldSec)/9*100,0,100),tone:'shield'}
+    ];
+    stats.innerHTML='<div class="aircraft-stats-head"><span class="aircraft-stats-icon">✈</span><div><strong>'+selected.name+'</strong><small>'+selected.upgrade+' · مستوى الطائرة '+save.lv.plane+'/'+MAXLV+'</small></div><span class="stats-chip">مواصفات فعلية</span></div><div class="aircraft-stat-grid">'+rows.map(r=>'<div class="aircraft-stat '+r.tone+'"><div><span>'+r.label+'</span><strong>'+r.value+'</strong></div><i><b style="width:'+r.bar+'%"></b></i></div>').join('')+'</div>';
+  }
   const box=$('cards');box.innerHTML='';
   ['sling','plane','coin'].forEach(k=>{
     const l=save.lv[k],max=l>=MAXLV,c=cost(l);
     const d=document.createElement('div');d.className='card'+(k===upgradedKey?' just-upgraded':'');
     let pips='';for(let i=0;i<MAXLV;i++)pips+='<b'+(i<l?' class="f"':'')+'></b>';
     const cardName=k==='plane'?aircraft().short+' · '+aircraft().upgrade:NAMES[k];
-    d.innerHTML='<div class="ic">'+ICONS[k]+'<span class="lv">'+(l+1)+'</span></div><div class="nm">'+cardName+(k==='coin'?' ×'+(l+1):'')+'</div><div class="pips">'+pips+'</div>';
+    const descriptions={sling:'إقلاع أقوى واندفاع أولي أفضل',plane:'نيران أسرع وتعزيز أطول؛ لون الطائرة يتطور كل 3 مستويات',coin:'مكافآت عملات أكبر من البوابات والخصوم'};
+    d.innerHTML='<div class="ic">'+ICONS[k]+'<span class="lv">'+(l+1)+'</span></div><div class="nm">'+cardName+(k==='coin'?' ×'+(l+1):'')+'</div><div class="upgrade-desc">'+descriptions[k]+'</div><div class="pips">'+pips+'</div>';
     const b=document.createElement('button');
     b.className='btn up'+((!max&&save.coins<c)?' no':'');
     b.innerHTML=max?'<span>الأقصى</span><svg class="max-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 8.6l6.2-.9z" fill="currentColor"/></svg>':'<svg class="upgrade-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>تطوير</span><i class="coin-i"></i><span>'+c+'</span>';
