@@ -837,3 +837,17 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
   #specialAbility small{font-size:8px}
 }
 @media(prefers-reduced-motion:reduce){#specialAbility.ready{animation:none}}
+
+
+/* Keep the flight hint clear of all three touch controls. */
+#tapHint{
+  left:50% !important;right:auto !important;inset-inline-start:auto !important;inset-inline-end:auto !important;
+  bottom:104px !important;width:min(78vw,460px) !important;max-width:min(78vw,460px) !important;
+  transform:translateX(-50%);text-align:center !important;
+}
+@media(max-width:380px){
+  #tapHint{bottom:82px !important;width:76vw !important;max-width:76vw !important;font-size:11px !important}
+}
+@media(max-height:560px){
+  #tapHint{bottom:72px !important;width:min(76vw,440px) !important;max-width:min(76vw,440px) !important;font-size:10px !important}
+}
