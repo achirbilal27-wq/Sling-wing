@@ -514,7 +514,7 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
 .upgrade-desc{min-height:25px;margin:3px 0 2px;font-size:10px;line-height:1.3;font-weight:800;color:#ffedce;text-shadow:0 1px 1px rgba(65,28,8,.35);display:flex;align-items:center;justify-content:center}
 .card .nm{min-height:30px;display:flex;align-items:center;justify-content:center;line-height:1.25}
 @media(max-width:600px){
-  #aircraftStats{top:222px;left:7px;right:7px;width:calc(100% - 14px);padding:7px 8px 8px;border-radius:14px}
+  #aircraftStats{top:294px;left:7px;right:7px;width:calc(100% - 14px);padding:7px 8px 8px;border-radius:14px}
   .aircraft-stats-head{gap:6px;margin-bottom:6px}
   .aircraft-stats-icon{flex-basis:29px;height:29px;border-radius:9px;font-size:18px}
   .aircraft-stats-head strong{font-size:12px}
@@ -528,7 +528,7 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
   .upgrade-desc{font-size:9px;min-height:29px;margin:2px 0}
 }
 @media(max-width:380px){
-  #aircraftStats{top:220px;left:5px;right:5px;width:calc(100% - 10px);padding:6px 6px 7px}
+  #aircraftStats{top:294px;left:5px;right:5px;width:calc(100% - 10px);padding:6px 6px 7px}
   .aircraft-stats-head strong{font-size:11px}
   .aircraft-stats-head small{font-size:8px}
   .aircraft-stat-grid{gap:3px}
