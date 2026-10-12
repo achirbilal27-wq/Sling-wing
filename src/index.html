@@ -19,6 +19,17 @@
     <div id="top">
       <span class="pill"><i class="coin-i"></i><span id="hCoins">0</span></span>
       <span class="pill"><i class="fuel-i"></i><span id="hFuel">0</span><button class="plus" id="buyFuel" aria-label="شراء وقود">+</button></span>
+      <button id="missionsToggle" class="missions-toggle" type="button">🎯 مهام اليوم</button>
+    </div>
+    <div id="missionsOverlay" class="missions-overlay" aria-hidden="true">
+      <section class="missions-panel" role="dialog" aria-modal="true" aria-labelledby="missionsTitle">
+        <header class="missions-head">
+          <div><h2 id="missionsTitle">مهام اليوم</h2><p>أنجز أهدافًا قصيرة واربح عملات إضافية</p></div>
+          <button id="missionsClose" class="missions-close" type="button" aria-label="إغلاق المهام">×</button>
+        </header>
+        <div id="missionsList"></div>
+        <p class="missions-foot">تتجدد المهام يوميًا، وتُحفظ مكافآتك على هذا الجهاز.</p>
+      </section>
     </div>
     <div id="title">جناح المقلاع</div>
     <div id="hint">اضغط مطولًا لشدّ المقلاع، واترك عند المنطقة الذهبية</div>
@@ -55,6 +66,7 @@
       <div class="rows">
         <div><span>مكافآت أثناء الرحلة</span><span id="rPick">0</span></div>
         <div><span>مكافأة المسافة</span><span id="rBonus">0</span></div>
+        <div><span>مكافآت مهام اليوم</span><span id="rDaily">0</span></div>
         <div><span>المجموع</span><span id="rTotal">0</span></div>
       </div>
       <div class="result-stats">

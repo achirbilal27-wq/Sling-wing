@@ -18,6 +18,43 @@ try{
 }catch(e){}
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(save));}catch(e){}}
 const cost=l=>Math.round(90*Math.pow(1.7,l));
+const DAILY_MISSIONS=[
+  {id:'distance',metric:'distance',title:'رحلة بعيدة',description:'تجاوز 1000 متر في رحلة واحدة',target:1000,unit:'م',reward:80},
+  {id:'coins',metric:'coins',title:'جامع العملات',description:'اجمع 15 عملة في رحلة واحدة',target:15,unit:'عملة',reward:60},
+  {id:'gates',metric:'gates',title:'خبير البوابات',description:'اجتز 3 بوابات في رحلة واحدة',target:3,unit:'بوابة',reward:100}
+];
+function dailyDateKey(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function ensureDaily(){
+  const date=dailyDateKey();
+  if(!save.daily||save.daily.date!==date){
+    save.daily={date,distance:0,coins:0,gates:0,claimed:{distance:false,coins:false,gates:false}};
+    persist();
+    return;
+  }
+  save.daily.claimed=Object.assign({distance:false,coins:false,gates:false},save.daily.claimed||{});
+  ['distance','coins','gates'].forEach(k=>{if(!Number.isFinite(save.daily[k])||save.daily[k]<0)save.daily[k]=0;});
+}
+function updateDailyMissions(distance){
+  ensureDaily();
+  const daily=save.daily;
+  daily.distance=Math.max(daily.distance,distance);
+  daily.coins=Math.max(daily.coins,run.coins);
+  daily.gates=Math.max(daily.gates,run.gates);
+  let reward=0;
+  const completed=[];
+  DAILY_MISSIONS.forEach(m=>{
+    if(daily[m.metric]>=m.target&&!daily.claimed[m.id]){
+      daily.claimed[m.id]=true;
+      reward+=m.reward;
+      completed.push(m);
+    }
+  });
+  persist();
+  return {reward,completed};
+}
 
 /* ---------- audio ---------- */
 let AC;
@@ -410,7 +447,19 @@ const ICONS={
   coin:'<svg viewBox="0 0 64 64" role="img" aria-label="مضاعف العملات"><defs><linearGradient id="coEdge" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#b66b05"/><stop offset=".45" stop-color="#ffe477"/><stop offset="1" stop-color="#c27b08"/></linearGradient><radialGradient id="coFace" cx=".32" cy=".22" r=".9"><stop stop-color="#fff7b0"/><stop offset=".42" stop-color="#ffd84c"/><stop offset=".78" stop-color="#f4a900"/><stop offset="1" stop-color="#d77a00"/></radialGradient></defs><ellipse cx="33" cy="54" rx="20" ry="4" fill="#8a4b1e" opacity=".18"/><g transform="rotate(-10 32 35)"><ellipse cx="31" cy="43" rx="20" ry="10" fill="#c17a08" stroke="#8b4c09" stroke-width="2"/><path d="M11 34v9c0 6 9 11 20 11s20-5 20-11v-9" fill="url(#coEdge)" stroke="#a76108" stroke-width="2"/><ellipse cx="31" cy="34" rx="20" ry="10" fill="url(#coFace)" stroke="#a76108" stroke-width="2.5"/><ellipse cx="31" cy="34" rx="15" ry="6.8" fill="none" stroke="#fff1a0" stroke-width="1.8"/><path d="M35 25 27 37h6l-4 7 11-13h-7l3-6z" fill="#fff8c7" stroke="#d58b0a" stroke-width="1.2" stroke-linejoin="round"/><path d="M17 29q4-4 9-4" fill="none" stroke="#fffbd6" stroke-width="2.5" stroke-linecap="round"/></g><path d="m48 8 2.5 6 6.5 2.5-6.5 2.5-2.5 6-2.5-6-6.5-2.5 6.5-2.5z" fill="#fff4a1" stroke="#f0b51b" stroke-width="1.3"/></svg>'
 };
 const NAMES={sling:'قوة المقلاع',plane:'الطائرة',coin:'مضاعف العملات'};
+function renderDailyMissions(){
+  const list=$('missionsList');
+  if(!list)return;
+  ensureDaily();
+  list.innerHTML=DAILY_MISSIONS.map(m=>{
+    const progress=Math.min(m.target,Math.floor(save.daily[m.metric]));
+    const done=!!save.daily.claimed[m.id];
+    const pct=Math.round(progress/m.target*100);
+    return '<article class="mission-row'+(done?' completed':'')+'"><div class="mission-row-head"><div><strong>'+m.title+'</strong><small>'+m.description+'</small></div><span class="mission-reward">+'+m.reward+' عملة</span></div><div class="mission-progress"><span style="width:'+pct+'%"></span></div><div class="mission-row-foot"><small>'+progress+' / '+m.target+' '+m.unit+'</small><b>'+(done?'✓ مكتملة':(progress>=m.target?'اكتملت':'قيد الإنجاز'))+'</b></div></article>';
+  }).join('');
+}
 function renderHangar(upgradedKey){
+  renderDailyMissions();
   $('hCoins').textContent=save.coins;
   $('hFuel').textContent=save.fuel;
   $('best').textContent=save.best>0?('أفضل مسافة: '+save.best+' م'):'';
@@ -461,6 +510,17 @@ $('buyFuel').addEventListener('click',()=>{
   if(save.coins<120){toast('تحتاج 120 عملة');beep(160,.12,'square');return;}
   save.coins-=120;save.fuel++;persist();beep(520,.1,'triangle');renderHangar();
 });
+$('missionsToggle').addEventListener('click',()=>{
+  renderDailyMissions();
+  $('missionsOverlay').classList.add('open');
+  $('missionsOverlay').setAttribute('aria-hidden','false');
+});
+function closeMissions(){
+  $('missionsOverlay').classList.remove('open');
+  $('missionsOverlay').setAttribute('aria-hidden','true');
+}
+$('missionsClose').addEventListener('click',closeMissions);
+$('missionsOverlay').addEventListener('click',e=>{if(e.target===$('missionsOverlay'))closeMissions();});
 let toastT;
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('on'),900);}
 function show(id){['hangar','charge','hud','result'].forEach(n=>$(n).classList.toggle('on',n===id));}
@@ -766,14 +826,17 @@ function endRun(){
   const mult=1+save.lv.coin;
   const bonus=Math.floor(m/4)*mult;
   const total=run.coins+bonus;
-  save.coins+=total;
+  const dailyResult=updateDailyMissions(m);
+  save.coins+=total+dailyResult.reward;
   const rec=m>save.best;
   if(rec)save.best=m;
   persist();
-  $('rDist').textContent=m;$('rPick').textContent=run.coins;$('rBonus').textContent=bonus;$('rTotal').textContent=total;
+  $('rDist').textContent=m;$('rPick').textContent=run.coins;$('rBonus').textContent=bonus;$('rDaily').textContent=dailyResult.reward;$('rTotal').textContent=total+dailyResult.reward;
   $('rGates').textContent=run.gates;$('rCombo').textContent='×'+run.bestCombo;$('rBosses').textContent=run.bosses;$('rAltitude').textContent=Math.floor(run.maxAlt/10);
   $('rRec').style.display=rec&&m>0?'inline-block':'none';
-  show('result');beep(440,.15,'triangle');beep(660,.2,'triangle');
+  show('result');
+  if(dailyResult.completed.length)toast('اكتملت مهمة يومية! +'+dailyResult.reward+' عملة');
+  beep(440,.15,'triangle');beep(660,.2,'triangle');
 }
 
 /* ---------- render ---------- */
