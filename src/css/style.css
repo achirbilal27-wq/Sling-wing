@@ -876,3 +876,384 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
     transform:translateX(-50%);
   }
 }
+
+
+/* Claude backup features: story, codex, sound toggle and pause overlays. */
+#storyBtn,#muteBtn{position:absolute;top:60px;z-index:8;pointer-events:auto;font:800 13px var(--font-ui);color:#fff;border:3px solid #fff;border-radius:999px;padding:4px 10px;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.25)}
+#storyBtn{right:12px;background:#7a35c9}
+#muteBtn{left:12px;background:#2f8fe0}
+#pauseBtn{position:absolute;top:12px;right:12px;z-index:8;width:42px;height:42px;border:3px solid #fff;border-radius:50%;background:rgba(0,0,0,.5);color:#fff;font:800 18px var(--font-ui);pointer-events:auto;cursor:pointer}
+.ov{position:absolute;inset:0;z-index:30;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(10,12,32,.72);pointer-events:auto}
+.ov.on{display:flex}
+.sheet{width:min(90vw,420px);max-height:88%;overflow:auto;background:var(--paper);border:5px solid var(--wood-d);border-radius:26px;padding:20px 18px 18px;text-align:center;box-shadow:0 8px 0 var(--wood-d);touch-action:pan-y}
+.sheet.dark{background:linear-gradient(#1d2250,#2c2368);color:#fff;border-color:#8f7bff;box-shadow:0 8px 0 #3d2f8f}
+.sheet h2{margin:0 0 6px;font-family:var(--font-big);font-weight:400;font-size:34px}
+.sheet .kick{font-weight:800;font-size:14px;color:#ffc83d;letter-spacing:.5px}
+.sheet p{font-weight:600;font-size:17px;line-height:1.8;margin:8px 0}
+.sheet .go{margin-top:8px}
+.sheet .go.alt{background:#7a35c9;box-shadow:0 5px 0 #4b1f85}
+.sheet .go.red{background:#c2381f;box-shadow:0 5px 0 #7a1d15}
+.page{background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.2);border-radius:14px;padding:6px 12px;margin:8px 0;text-align:start}
+.page h4{margin:2px 0;font-size:16px;color:#ffc83d}
+.page p{font-size:14px;margin:2px 0}
+.page.lock{opacity:.5;text-align:center}
+@media(max-width:380px){#storyBtn,#muteBtn{top:58px;font-size:11px;padding:3px 7px}#pauseBtn{top:8px;right:8px;width:38px;height:38px}}
+@media(prefers-reduced-motion:reduce){.ov{transition:none}}
+
+/* Combat expansion: guided missiles, storm vortexes and service stations */
+#missile{position:absolute;bottom:128px;inset-inline-start:24px;width:68px;height:68px;border:3px solid #fff;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffb08a,#e5483a 66%,#8d2119);color:#fff;font:800 14px var(--font-ui);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;box-shadow:0 4px 0 #7a1d15;pointer-events:auto;touch-action:none;cursor:pointer;z-index:3}
+#missile em{font-style:normal;font-size:20px;line-height:1}
+#missile.off{filter:grayscale(.9) brightness(.75)}
+#fire{z-index:2}
+.station-sheet .perk{display:flex;gap:12px;align-items:center;text-align:start;width:100%;background:#fff;color:var(--ink);border:3px solid var(--wood-d);border-radius:16px;padding:9px 12px;margin:8px 0;cursor:pointer;font-family:var(--font-ui);box-shadow:0 3px 0 var(--wood-d)}
+.station-sheet .perk .e{font-size:28px;flex:none}
+.station-sheet .perk b{display:block;font-size:17px}
+.station-sheet .perk small{display:block;font-size:12px;font-weight:700;opacity:.82;line-height:1.5}
+.station-sheet{max-height:88%;overflow:auto}
+@media(max-height:700px){#missile{bottom:112px;width:58px;height:58px}#boost{width:68px;height:68px}}
+
+
+/* Field upgrade station — clean tactical console */
+.station-sheet{
+  width:min(620px,94vw);
+  max-height:min(88dvh,820px);
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  padding:clamp(18px,4vw,30px);
+  border:1px solid rgba(140,245,255,.52);
+  border-radius:26px;
+  background:linear-gradient(155deg,rgba(20,35,57,.98),rgba(8,16,31,.98) 70%);
+  color:#f4fbff;
+  box-shadow:0 24px 80px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.08);
+}
+.station-sheet .kick{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 11px;
+  border:1px solid rgba(126,236,255,.34);
+  border-radius:999px;
+  background:rgba(53,190,221,.1);
+  color:#9defff;
+  letter-spacing:.02em;
+}
+.station-sheet h2{
+  margin:12px 0 6px;
+  color:#fff;
+  font-size:clamp(25px,5vw,34px);
+  line-height:1.25;
+  text-shadow:0 2px 22px rgba(69,208,255,.18);
+}
+.station-sheet #stationDesc{
+  margin:0 0 18px;
+  color:#b8c9d9;
+  font-size:14px;
+  line-height:1.8;
+}
+.station-sheet #stationPerks{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:11px;
+}
+.station-sheet .perk{
+  position:relative;
+  display:grid;
+  grid-template-columns:46px minmax(0,1fr) auto;
+  gap:10px;
+  align-items:center;
+  min-height:104px;
+  margin:0;
+  padding:13px 11px;
+  overflow:hidden;
+  text-align:start;
+  color:#edf7ff;
+  border:1px solid rgba(142,188,220,.2);
+  border-radius:17px;
+  background:linear-gradient(145deg,rgba(32,55,79,.94),rgba(18,31,50,.96));
+  box-shadow:0 5px 0 rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.045);
+  transition:transform .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.station-sheet .perk::before{
+  content:"";
+  position:absolute;
+  inset-inline-start:0;
+  top:14px;
+  bottom:14px;
+  width:3px;
+  border-radius:3px;
+  background:linear-gradient(#69eaff,#6c8cff);
+  opacity:.72;
+}
+.station-sheet .perk:hover,
+.station-sheet .perk:focus-visible{
+  outline:none;
+  transform:translateY(-2px);
+  border-color:rgba(105,234,255,.72);
+  background:linear-gradient(145deg,rgba(39,76,103,.98),rgba(18,39,62,.98));
+  box-shadow:0 8px 20px rgba(0,0,0,.2),0 0 0 2px rgba(105,234,255,.08);
+}
+.station-sheet .perk:active{transform:translateY(1px)}
+.station-sheet .perk .perk-icon{
+  display:grid;
+  place-items:center;
+  width:44px;
+  height:44px;
+  border:1px solid rgba(133,228,255,.24);
+  border-radius:13px;
+  background:linear-gradient(145deg,rgba(61,178,213,.22),rgba(78,102,195,.15));
+  font-size:24px;
+  flex:none;
+}
+.station-sheet .perk .perk-copy{min-width:0}
+.station-sheet .perk b{
+  display:block;
+  margin-bottom:4px;
+  color:#f5fbff;
+  font-size:clamp(13px,2.8vw,16px);
+  font-weight:900;
+  line-height:1.4;
+}
+.station-sheet .perk small{
+  display:block;
+  color:#b6c8da;
+  font-size:11px;
+  font-weight:600;
+  line-height:1.6;
+}
+.station-sheet .perk .perk-index{
+  align-self:start;
+  color:#83dff5;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.08em;
+  opacity:.75;
+}
+#fire{touch-action:none;user-select:none;-webkit-user-select:none}
+#fire:active{filter:brightness(1.25);transform:scale(.97)}
+@media(max-width:440px){
+  .station-sheet{width:94vw;padding:16px;border-radius:21px}
+  .station-sheet #stationPerks{gap:8px}
+  .station-sheet .perk{grid-template-columns:36px minmax(0,1fr);gap:8px;min-height:100px;padding:11px 9px}
+  .station-sheet .perk .perk-icon{width:36px;height:36px;border-radius:11px;font-size:21px}
+  .station-sheet .perk .perk-index{display:none}
+  .station-sheet .perk small{font-size:10px}
+}
+@media(max-width:350px){
+  .station-sheet #stationPerks{grid-template-columns:1fr}
+  .station-sheet .perk{grid-template-columns:42px minmax(0,1fr) auto;min-height:82px}
+  .station-sheet .perk .perk-icon{width:40px;height:40px}
+  .station-sheet .perk .perk-index{display:block}
+}
+@media(prefers-reduced-motion:reduce){
+  .station-sheet .perk{transition:none}
+}
+
+.station-sheet .station-tip{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin:0 0 12px;
+  padding:9px 11px;
+  border:1px solid rgba(127,211,242,.16);
+  border-radius:12px;
+  background:rgba(8,20,36,.56);
+  color:#9fb8cb;
+  font-size:11px;
+  font-weight:800;
+}
+.station-sheet .station-tip>span:first-child{color:#78e7ff;font-size:15px}
+.station-sheet .station-live{
+  margin-inline-start:auto;
+  padding:4px 7px;
+  border-radius:7px;
+  background:rgba(79,210,160,.1);
+  color:#83e5ba;
+  white-space:nowrap;
+}
+
+
+/* Boss attack telegraph and modern combo feedback */
+#bossWarning{
+  position:absolute;
+  top:194px;
+  left:50%;
+  z-index:12;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  width:max-content;
+  max-width:min(92vw,360px);
+  padding:9px 14px;
+  transform:translateX(-50%);
+  border:1px solid rgba(255,88,132,.78);
+  border-radius:13px;
+  background:linear-gradient(115deg,rgba(73,12,39,.96),rgba(29,17,43,.94));
+  box-shadow:0 0 0 1px rgba(255,58,117,.12),0 0 24px rgba(255,44,106,.22),0 8px 22px rgba(0,0,0,.3);
+  color:#fff1f5;
+  text-align:center;
+  pointer-events:none;
+  backdrop-filter:blur(8px);
+}
+#bossWarning.on{display:flex;animation:warningPulse .72s ease-in-out infinite alternate}
+#bossWarning .warning-mark{
+  display:grid;
+  place-items:center;
+  flex:none;
+  width:23px;height:23px;
+  border-radius:7px;
+  background:#ff3e78;
+  color:#fff;
+  font:1000 16px/1 var(--font-ui);
+  box-shadow:0 0 14px rgba(255,62,120,.4);
+}
+#bossWarning strong{font-size:clamp(11px,2.8vw,14px);font-weight:950;letter-spacing:.01em}
+#bossWarning .warning-lines{color:#ff7198;font-size:11px;font-weight:1000;letter-spacing:2px}
+#bossWarning.dive{border-color:#ffb26b;background:linear-gradient(115deg,rgba(112,29,25,.98),rgba(62,18,37,.96));box-shadow:0 0 28px rgba(255,79,60,.3),0 8px 22px rgba(0,0,0,.3)}
+#bossWarning.dive .warning-mark{background:#ff6a42}
+#comboHud{
+  gap:10px;
+  padding:7px 15px;
+  border:1px solid rgba(132,224,255,.58);
+  background:linear-gradient(115deg,rgba(12,50,86,.93),rgba(51,34,116,.92));
+  box-shadow:0 0 0 1px rgba(95,210,255,.1),0 0 22px rgba(63,156,255,.2),0 6px 18px rgba(0,0,0,.24);
+}
+#comboHud span{font-size:10px;letter-spacing:.06em;color:#d5f5ff}
+#comboHud strong{font:1000 21px/1 var(--font-ui);color:#a6f5ff;text-shadow:0 0 12px rgba(82,231,255,.55)}
+#comboHud>i{font-style:normal;color:#7beeff;font-size:13px}
+#comboHud.hot{
+  border-color:rgba(255,180,87,.8);
+  background:linear-gradient(115deg,rgba(112,42,26,.96),rgba(103,34,83,.94));
+  box-shadow:0 0 24px rgba(255,115,65,.27),0 6px 18px rgba(0,0,0,.24);
+}
+#comboHud.hot strong,#comboHud.hot>i{color:#ffd18a;text-shadow:0 0 13px rgba(255,156,72,.65)}
+#comboHud.ultra{
+  border-color:rgba(255,237,151,.94);
+  background:linear-gradient(110deg,rgba(105,57,12,.97),rgba(101,27,83,.96),rgba(23,56,118,.96));
+  box-shadow:0 0 28px rgba(255,213,103,.38),0 0 0 1px rgba(255,255,255,.12),0 7px 22px rgba(0,0,0,.3);
+  animation:comboLegendary .8s ease-in-out infinite alternate;
+}
+#comboHud.ultra strong,#comboHud.ultra>i{color:#fff2a9;text-shadow:0 0 15px rgba(255,225,109,.9)}
+#weaponSwitch{
+  position:absolute;
+  left:20px;
+  bottom:126px;
+  z-index:7;
+  width:82px;
+  min-height:61px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:2px;
+  padding:6px 5px;
+  border:1px solid rgba(149,223,255,.7);
+  border-radius:15px;
+  color:#effbff;
+  background:linear-gradient(145deg,rgba(30,76,113,.96),rgba(17,35,76,.96));
+  box-shadow:0 4px 0 rgba(5,20,49,.9),0 7px 18px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.17);
+  font-family:var(--font-ui);
+  line-height:1.15;
+  cursor:pointer;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+#weaponSwitch .weapon-symbol{font-size:18px;color:#8df1ff;line-height:1}
+#weaponSwitch strong{font-size:12px;font-weight:1000}
+#weaponSwitch small{font-size:9px;color:#b9d8ef;font-weight:700;white-space:nowrap}
+#weaponSwitch[data-mode="spread"]{border-color:rgba(154,175,255,.9);background:linear-gradient(145deg,rgba(59,73,143,.98),rgba(32,38,92,.98))}
+#weaponSwitch[data-mode="spread"] .weapon-symbol{color:#b7c5ff}
+#weaponSwitch[data-mode="plasma"]{border-color:rgba(220,151,255,.9);background:linear-gradient(145deg,rgba(99,46,137,.98),rgba(49,29,94,.98))}
+#weaponSwitch[data-mode="plasma"] .weapon-symbol{color:#e9b9ff;text-shadow:0 0 12px rgba(207,120,255,.65)}
+#weaponSwitch:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(5,20,49,.9),0 3px 9px rgba(0,0,0,.2)}
+#weaponSwitch.pulse{animation:weaponPulse .26s ease-out}
+#fire{touch-action:none;user-select:none;-webkit-user-select:none}
+@keyframes warningPulse{from{filter:brightness(.92);opacity:.92}to{filter:brightness(1.18);opacity:1}}
+@keyframes comboLegendary{from{filter:brightness(.96);transform:translateX(-50%) scale(1)}to{filter:brightness(1.16);transform:translateX(-50%) scale(1.045)}}
+@keyframes weaponPulse{0%{filter:brightness(1);transform:scale(1)}55%{filter:brightness(1.45);transform:scale(1.06)}100%{filter:brightness(1);transform:scale(1)}}
+@media(max-width:380px){
+  #bossWarning{top:202px;gap:7px;padding:8px 10px;max-width:94vw}
+  #comboHud{top:249px;gap:7px;padding:6px 10px}
+  #comboHud span{font-size:9px}
+  #comboHud strong{font-size:18px}
+  #weaponSwitch{left:12px;bottom:105px;width:76px;min-height:57px;border-radius:13px}
+  #weaponSwitch strong{font-size:11px}
+  #weaponSwitch small{font-size:8px}
+}
+@media(max-height:560px){
+  #bossWarning{top:130px}
+  #comboHud{top:174px}
+  #bossHud{top:210px}
+  #weaponSwitch{bottom:104px}
+}
+@media(prefers-reduced-motion:reduce){
+  #bossWarning.on,#comboHud.ultra,#weaponSwitch.pulse{animation:none}
+}
+
+
+/* Claude-matched cannon heat and overheat feedback */
+#heat{
+  position:absolute;left:50%;top:238px;transform:translateX(-50%);
+  width:min(190px,42vw);height:13px;border:2px solid rgba(255,255,255,.92);
+  border-radius:999px;background:rgba(20,26,39,.78);overflow:hidden;
+  box-shadow:0 3px 10px rgba(0,0,0,.28);z-index:6;pointer-events:none;
+}
+#heatFill{
+  width:0;height:100%;border-radius:inherit;
+  background:linear-gradient(90deg,#58edac 0%,#ffe15c 58%,#ff613f 100%);
+  transition:width .08s linear;
+}
+#heat span{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  color:#fff;font:800 8px/1 var(--font-ui);text-shadow:0 1px 3px #111;letter-spacing:.2px;
+}
+#heat.hot{border-color:#ffd56b;box-shadow:0 0 12px rgba(255,180,60,.4)}
+#heat.overheat{border-color:#ff4e57;animation:cannonOverheat .42s steps(2,end) infinite}
+#heat.overheat #heatFill{background:#ff3d4e}
+#fire.off{filter:grayscale(.85) brightness(.65);animation:none}
+@keyframes cannonOverheat{50%{box-shadow:0 0 14px rgba(255,50,70,.9)}}
+@media(max-width:380px){#heat{top:216px;width:150px;height:12px}}
+@media(max-height:560px){#heat{top:190px;width:150px;height:11px}}
+
+
+/* Claude-style enemy target lock: screen-space reticle; never intercepts touch controls. */
+.target-lock{
+  position:absolute;left:0;top:0;width:58px;height:58px;z-index:24;
+  pointer-events:none;will-change:transform;color:#9df7ff;
+  filter:drop-shadow(0 0 5px rgba(0,0,0,.8));
+}
+.target-lock[hidden]{display:none!important}
+.target-lock .lock-corner{
+  position:absolute;width:15px;height:15px;border-color:currentColor;border-style:solid;
+}
+.target-lock .tl{left:0;top:0;border-width:3px 0 0 3px;border-top-left-radius:4px}
+.target-lock .tr{right:0;top:0;border-width:3px 3px 0 0;border-top-right-radius:4px}
+.target-lock .bl{left:0;bottom:0;border-width:0 0 3px 3px;border-bottom-left-radius:4px}
+.target-lock .br{right:0;bottom:0;border-width:0 3px 3px 0;border-bottom-right-radius:4px}
+.target-lock .lock-dot{
+  position:absolute;left:50%;top:50%;width:5px;height:5px;
+  border:1px solid currentColor;border-radius:50%;transform:translate(-50%,-50%);
+}
+.target-lock small{
+  position:absolute;top:calc(100% + 5px);left:50%;transform:translateX(-50%);
+  white-space:nowrap;padding:2px 7px;border-radius:6px;
+  background:rgba(8,22,34,.82);border:1px solid currentColor;
+  color:#eaffff;font:800 11px/1.5 var(--font-ui);
+}
+.target-lock.boss-lock{color:#ff7799;animation:targetPulse .65s ease-in-out infinite alternate}
+@keyframes targetPulse{from{opacity:.72}to{opacity:1;filter:drop-shadow(0 0 9px currentColor)}}
+@media(prefers-reduced-motion:reduce){.target-lock.boss-lock{animation:none}}
+
+
+/* Dedicated boss arena HUD: persistent health, phase progression, and weapon state. */
+#bossHud{top:calc(84px + env(safe-area-inset-top,0px));width:min(310px,74vw);gap:6px;padding:10px 13px 9px;border:1px solid rgba(255,120,146,.86);border-radius:15px;background:linear-gradient(135deg,rgba(44,8,24,.94),rgba(17,23,43,.93));box-shadow:0 0 0 1px rgba(255,76,115,.16),0 8px 26px rgba(0,0,0,.28),0 0 22px rgba(255,52,100,.12)}
+#bossHud strong{font-size:14px;color:#fff0f2;letter-spacing:.5px}
+.boss-hud-kicker{font:800 9px/1.2 var(--font-ui);letter-spacing:1.1px;color:#ff9cb3;text-transform:uppercase}
+#bossHud .boss-track{height:10px;border:1px solid rgba(255,255,255,.16);background:rgba(0,0,0,.55)}
+#bossHud .boss-track span{background:linear-gradient(90deg,#ff304f 0%,#ff5d72 48%,#ffc16b 100%);box-shadow:0 0 12px rgba(255,66,98,.62)}
+.boss-hud-meta{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.boss-hud-meta small{font:800 10px/1.3 var(--font-ui);color:#ffe5e9}
+#bossWeaponText{font:800 10px/1.4 var(--font-ui);color:#ffc5d1;padding-top:4px;border-top:1px solid rgba(255,255,255,.12)}
+@media(max-width:380px){#bossHud{top:calc(78px + env(safe-area-inset-top,0px));width:min(278px,76vw);padding:8px 10px}#bossHud strong{font-size:12px}.boss-hud-meta small,#bossWeaponText{font-size:9px}}
+@media(max-height:560px){#bossHud{top:calc(68px + env(safe-area-inset-top,0px));gap:4px;padding:6px 9px}#bossHud .boss-track{height:7px}}
