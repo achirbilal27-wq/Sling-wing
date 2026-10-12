@@ -805,3 +805,35 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
   #hangar #cards>.card>.btn{flex-basis:23px;min-height:23px;max-height:23px;font-size:9px}
   #hangar #cards>.card>.btn .coin-i{flex-basis:10px;width:10px;height:10px}
 }
+
+
+/* Aircraft-specific special ability: compact center control for mobile flight. */
+#specialAbility{
+  position:absolute;left:50%;bottom:27px;transform:translateX(-50%);
+  width:66px;height:66px;z-index:7;pointer-events:auto;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  border:2px solid rgba(255,255,255,.9);border-radius:50%;
+  color:#fff;background:radial-gradient(circle at 32% 20%,#8b9cff,#6255d9 65%,#34258f);
+  box-shadow:0 4px 0 #30227e,0 7px 16px rgba(48,34,126,.28),inset 0 1px 0 rgba(255,255,255,.45);
+  font-family:var(--font-ui);line-height:1;touch-action:manipulation;
+}
+#specialAbility strong{font-size:19px;line-height:1.1}
+#specialAbility span{font-size:11px;font-weight:900}
+#specialAbility small{font-size:9px;font-weight:800;opacity:.9}
+#specialAbility.cooldown{filter:saturate(.45);background:radial-gradient(circle at 32% 20%,#85889a,#55596b 70%,#343746)}
+#specialAbility.ready{animation:abilityReady 2.4s ease-in-out infinite}
+#specialAbility:active{transform:translate(-50%,3px);box-shadow:0 1px 0 #30227e,0 3px 8px rgba(48,34,126,.25)}
+@keyframes abilityReady{0%,100%{box-shadow:0 4px 0 #30227e,0 7px 16px rgba(48,34,126,.28)}50%{box-shadow:0 4px 0 #30227e,0 0 18px rgba(139,156,255,.72)}}
+@media(max-width:380px){
+  #specialAbility{width:58px;height:58px;bottom:19px}
+  #specialAbility strong{font-size:17px}
+  #specialAbility span{font-size:10px}
+  #specialAbility small{font-size:8px}
+}
+@media(max-height:560px){
+  #specialAbility{width:54px;height:54px;bottom:12px}
+  #specialAbility strong{font-size:16px}
+  #specialAbility span{font-size:9px}
+  #specialAbility small{font-size:8px}
+}
+@media(prefers-reduced-motion:reduce){#specialAbility.ready{animation:none}}
