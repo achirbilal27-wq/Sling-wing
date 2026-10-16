@@ -359,7 +359,81 @@ function makeBird(){
   return g;
 }
 const BOSS_PROFILES=[{name:'النسر الحديدي',hull:0x27333c,armor:0x71818b,glow:0xffc857,glass:0xffedb2,emissive:0x9b5d12},{name:'قاذفة العاصفة',hull:0x252b43,armor:0x596b91,glow:0x78d9ff,glass:0xc9f6ff,emissive:0x245c9b},{name:'أفعى التيارات',hull:0x3c283f,armor:0x87527f,glow:0xff75c8,glass:0xffd1f0,emissive:0x7c245f},{name:'حارس السحاب',hull:0x263c50,armor:0x6f9bb8,glow:0x8feaff,glass:0xe1fbff,emissive:0x286da0},{name:'الحاكم الرمادي',hull:0x292d35,armor:0x666b73,glow:0xff4f66,glass:0xffd6c7,emissive:0x81283b}];
+function makeStormBomberBoss(){
+  // Boss B: broad, orange Rebel-Flagship-inspired bomber with cyan energy markings.
+  // Keep this model isolated so the other four boss silhouettes remain unchanged.
+  const g=new THREE.Group();
+  const hull=matS(0xf28b18,0.18,{metalness:0.58,roughness:0.3});
+  const armor=matS(0xffa72b,0.16,{metalness:0.52,roughness:0.32});
+  const panel=matS(0xd96d0b,0.18,{metalness:0.62,roughness:0.3});
+  const dark=matS(0x303640,0.12,{metalness:0.78,roughness:0.28});
+  const cyan=new THREE.MeshBasicMaterial({color:0x53efff});
+  const cyanGlow=new THREE.MeshStandardMaterial({color:0x7beeff,emissive:0x159db8,emissiveIntensity:1.35,metalness:0.3,roughness:0.22});
+  const cockpitMat=new THREE.MeshStandardMaterial({color:0x303c4b,emissive:0x142d42,emissiveIntensity:0.55,metalness:0.72,roughness:0.22});
+
+  // Heavy central fuselage and long tapered prow.
+  const fuselage=new THREE.Mesh(new THREE.SphereGeometry(1,12,8),hull);
+  fuselage.scale.set(5.2,1.08,2.15);fuselage.position.set(0.25,0,0);g.add(fuselage);
+  const prow=new THREE.Mesh(new THREE.ConeGeometry(2.35,7.6,8),armor);
+  prow.rotation.z=-Math.PI/2;prow.position.set(4.25,0.02,0);g.add(prow);
+  const noseArmor=new THREE.Mesh(new THREE.BoxGeometry(2.1,0.18,2.45),panel);
+  noseArmor.position.set(3.15,0.93,0);g.add(noseArmor);
+
+  // Wide, nearly symmetric swept wings and reinforced outer wing tips.
+  const mainWing=new THREE.Mesh(new THREE.BoxGeometry(5.6,0.38,18.4),armor);
+  mainWing.position.set(-0.65,-0.08,0);g.add(mainWing);
+  [-1,1].forEach(side=>{
+    const outer=new THREE.Mesh(new THREE.BoxGeometry(3.8,0.32,4.3),hull);
+    outer.position.set(-1.35,0.02,side*8.25);outer.rotation.y=side*0.22;g.add(outer);
+    const edge=new THREE.Mesh(new THREE.BoxGeometry(2.0,0.28,1.35),panel);
+    edge.position.set(-2.2,0.02,side*9.05);edge.rotation.y=side*0.22;g.add(edge);
+    const wingPlate=new THREE.Mesh(new THREE.BoxGeometry(3.55,0.13,3.9),panel);
+    wingPlate.position.set(-0.35,0.24,side*5.85);wingPlate.rotation.y=side*0.1;g.add(wingPlate);
+    const wingStripe=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.075,5.6),cyan);
+    wingStripe.position.set(1.12,0.255,side*5.65);g.add(wingStripe);
+    const wingInnerStripe=new THREE.Mesh(new THREE.BoxGeometry(0.13,0.07,2.3),cyanGlow);
+    wingInnerStripe.position.set(-1.1,0.245,side*2.65);g.add(wingInnerStripe);
+  });
+
+  // Broad rear stabilizer gives the silhouette the heavy flagship profile.
+  const tailWing=new THREE.Mesh(new THREE.BoxGeometry(2.4,0.3,7.4),hull);
+  tailWing.position.set(-4.45,-0.05,0);g.add(tailWing);
+  [-1,1].forEach(side=>{
+    const tailFin=new THREE.Mesh(new THREE.BoxGeometry(2.0,0.26,1.5),armor);
+    tailFin.position.set(-4.7,0.12,side*3.0);tailFin.rotation.y=side*0.18;g.add(tailFin);
+  });
+
+  // Six visible engine pods (three per side) with dark housings and cyan exhaust cores.
+  [-1,1].forEach(side=>{
+    [-2.7,-5.15,-7.45].forEach((z,index)=>{
+      const engine=new THREE.Mesh(new THREE.CylinderGeometry(0.53,0.68,2.9,10),dark);
+      engine.rotation.z=Math.PI/2;engine.position.set(-2.85,-0.48,side*Math.abs(z));g.add(engine);
+      const nozzle=new THREE.Mesh(new THREE.CylinderGeometry(0.38,0.44,0.28,10),panel);
+      nozzle.rotation.z=Math.PI/2;nozzle.position.set(-4.43,-0.48,side*Math.abs(z));g.add(nozzle);
+      const exhaust=new THREE.Mesh(new THREE.CylinderGeometry(0.24,0.3,0.18,10),cyanGlow);
+      exhaust.rotation.z=Math.PI/2;exhaust.position.set(-4.64,-0.48,side*Math.abs(z));g.add(exhaust);
+      const mount=new THREE.Mesh(new THREE.BoxGeometry(1.25,0.22,0.78),panel);
+      mount.position.set(-2.65,-0.25,side*(Math.abs(z)-0.02));g.add(mount);
+    });
+  });
+
+  // Dark raised cockpit, center energy stripe, and a small cyan insignia.
+  const cockpit=new THREE.Mesh(new THREE.BoxGeometry(2.25,0.82,2.15),cockpitMat);
+  cockpit.position.set(0.65,1.0,0);g.add(cockpit);
+  const cockpitGlass=new THREE.Mesh(new THREE.BoxGeometry(1.5,0.16,1.6),cyanGlow);
+  cockpitGlass.position.set(0.82,1.44,0);g.add(cockpitGlass);
+  const centerStripe=new THREE.Mesh(new THREE.BoxGeometry(6.8,0.075,0.2),cyan);
+  centerStripe.position.set(0.75,1.12,0);g.add(centerStripe);
+  const insignia=new THREE.Mesh(new THREE.OctahedronGeometry(0.48,0),cyanGlow);
+  insignia.position.set(-0.55,1.18,0);g.add(insignia);
+
+  g.rotation.y=Math.PI;
+  g.userData.boss=true;
+  g.userData.bossType='storm-bomber';
+  return g;
+}
 function makeBossPlane(biomeIndex){
+  if(biomeIndex===1)return makeStormBomberBoss();
   const g=new THREE.Group(),palette=BOSS_PROFILES[biomeIndex%BOSS_PROFILES.length];
   const hull=matS(palette.hull,0.22,{metalness:0.78,roughness:0.24});
   const armor=matS(palette.armor,0.24,{metalness:0.68,roughness:0.28});
