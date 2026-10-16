@@ -825,6 +825,34 @@ function openCodex(){
   $('codex').classList.add('on');paused=true;
 }
 $('storyBtn').addEventListener('click',openCodex);
+
+// Route Android/system Back to the current game screen instead of leaving the app.
+function closeStoryView(){
+  if(!$('story').classList.contains('on'))return false;
+  $('story').classList.remove('on');storyCb=null;paused=false;last=performance.now();return true;
+}
+function closeCodexView(){
+  if(!$('codex').classList.contains('on'))return false;
+  $('codex').classList.remove('on');paused=false;last=performance.now();return true;
+}
+function handleGameBack(){
+  if(!$('cinematicIntro').hidden){$('cinematicSkip').click();return true;}
+  if(closeCodexView())return true;
+  if(closeStoryView())return true;
+  if($('pause').classList.contains('on')){closePause();return true;}
+  if($('station').classList.contains('on')){toast('اختر ترقية للعودة إلى الرحلة');return true;}
+  if($('missionsOverlay').classList.contains('on')){$('missionsOverlay').classList.remove('on');$('missionsOverlay').setAttribute('aria-hidden','true');return true;}
+  if(state==='flight'&&!paused){openPause();return true;}
+  if(state==='charge'){state='ready';show('hangar');return true;}
+  if(state==='ready'){if(!$('hangar').classList.contains('on'))show('hangar');toast('أنت في القائمة الرئيسية');return true;}
+  if(state==='result'){toReady();return true;}
+  return true;
+}
+$('storyBack').addEventListener('click',closeStoryView);
+$('cxBack').addEventListener('click',closeCodexView);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'||e.key==='Backspace'){e.preventDefault();handleGameBack();}});
+window.history.pushState({slingWing:true},'',window.location.href);
+window.addEventListener('popstate',()=>{handleGameBack();window.history.pushState({slingWing:true},'',window.location.href);});
 function muteLabel(){
   const label=save.mute?'الصوت: متوقف':'الصوت: يعمل';
   $('muteBtn').textContent=label;$('pSound').textContent=label;
@@ -846,7 +874,7 @@ function closePause(){
 $('pauseBtn').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();openPause();});
 $('pResume').addEventListener('click',closePause);
 $('pEnd').addEventListener('click',()=>{closePause();endRun();});
-$('cxClose').addEventListener('click',()=>{$('codex').classList.remove('on');paused=false;last=performance.now();});
+$('cxClose').addEventListener('click',closeCodexView);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)openPause();});
 function toReady(){
   state='ready';paused=false;resetRun();renderHangar();muteLabel();show('hangar');
