@@ -2,8 +2,8 @@
 
 Place reusable binary glTF models in `src/assets/models/glb/`. The game copies this directory into the Android web assets during `npm run prepare-www`.
 
-The small enemy aircraft model is loaded from:
+## Current mapping
 
-`src/assets/models/glb/plane_pc.glb`
+- `plane_pc.glb` — used by all small enemy aircraft.
 
-The runtime keeps the procedural aircraft as a fallback until that file exists or if loading fails. Keep any model textures embedded in the GLB when exporting, and make sure you have permission to use each model in the game.
+The model is loaded through Three.js `GLTFLoader`. The runtime normalizes the model's position and size and adjusts its orientation to the game's coordinate system. A procedural aircraft remains as a runtime fallback if the model cannot load. Keep textures embedded in GLB when exporting, and make sure each model's license permits use in the game.
