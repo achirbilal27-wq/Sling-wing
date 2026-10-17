@@ -45,7 +45,7 @@ const assetRefs = [...decodedJs.matchAll(/assets\/[^'"\s)]+?\.(?:png|jpe?g|webp|
 for (const url of [...new Set(assetRefs)]) {
   // The starter GLB is optional in the repo until the user adds their model.
   // The runtime keeps the original procedural enemy plane as a safe fallback.
-  if (url === 'assets/models/enemies/plane_pc.glb') {
+  if (url === 'assets/models/glb/plane_pc.glb') {
     check(exists('assets/models/README.md'), 'Missing 3D model folder instructions.');
     continue;
   }
@@ -61,7 +61,7 @@ check(html.includes(threeCdn), 'Expected Three.js source URL is missing from src
 check(prep.includes('threeCdnPattern') && prep.includes("'js/three.min.js'"), 'prepare.js does not validate and replace the Three.js CDN reference.');
 check(html.includes('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js'), 'GLTFLoader script is missing from src/index.html.');
 check(prep.includes('GLTFLoader.js') && prep.includes("'js/GLTFLoader.js'"), 'prepare.js does not bundle GLTFLoader for offline Android use.');
-check(js.includes("assets/models/enemies/plane_pc.glb") && js.includes('loadEnemyPlaneModel'), 'Enemy GLB loading is not configured.');
+check(js.includes("assets/models/glb/plane_pc.glb") && js.includes('loadEnemyPlaneModel'), 'Enemy GLB loading is not configured.');
 const preparedHtmlPath = path.join(root, 'www', 'index.html');
 if (fs.existsSync(preparedHtmlPath)) {
   const preparedHtml = fs.readFileSync(preparedHtmlPath, 'utf8');
