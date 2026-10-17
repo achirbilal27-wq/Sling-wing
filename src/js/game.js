@@ -107,6 +107,87 @@ function beep(f,d,type,v){
   }catch(e){}
 }
 
+/* ---------- real audio assets ---------- */
+const MUSIC_URLS={
+  menu:'assets/audio/music/menu-theme.ogg',
+  flight:'assets/audio/music/flight-theme.ogg',
+  boss:'assets/audio/music/boss-battle.ogg',
+  finale:'assets/audio/music/finale-theme.ogg'
+};
+// Some legacy SFX filenames contain invisible U+200C characters; preserve their exact Git paths.
+const SFX_URLS={
+  'ui-confirm':'assets/audio/sfx/\u200cui-confirm.ogg',
+  launch:'assets/audio/sfx/\u200claunch.ogg',
+  'engine-loop':'assets/audio/sfx/\u200cengine-loop.ogg',
+  'weapon-fire':'assets/audio/sfx/\u200c\u200cweapon-fire.ogg',
+  'missile-launch':'assets/audio/sfx/\u200cmissile-launch.ogg',
+  'missile-impact':'assets/audio/sfx/\u200cmissile-impact.ogg',
+  'boss-warning':'assets/audio/sfx/\u200cboss-warning.ogg',
+  'boss-hit':'assets/audio/sfx/\u200cboss-hit.ogg',
+  'boss-defeat':'assets/audio/sfx/\u200cvictory-stinger.ogg',
+  'fuel-pickup':'assets/audio/sfx/\u200cfuel-pickup.ogg',
+  shield:'assets/audio/sfx/\u200cshield.ogg',
+  explosion:'assets/audio/sfx/\u200cexplosion.ogg',
+  'victory-stinger':'assets/audio/sfx/\u200cvictory-stinger.ogg',
+  coin:'assets/audio/music/coin-collect.ogg',
+  laser:'assets/audio/music/laser.ogg'
+};
+const sfxPools=Object.create(null),sfxCursor=Object.create(null),sfxLastPlayed=Object.create(null);
+const SFX_THROTTLE={'weapon-fire':0.065,'boss-hit':0.12,laser:0.08,coin:0.045};
+let audioUnlocked=false,currentMusicKey='',musicAudio=null,engineAudio=null;
+try{
+  if(typeof Audio!=='undefined'){
+    musicAudio=new Audio();musicAudio.loop=true;musicAudio.preload='auto';musicAudio.volume=0.34;
+    engineAudio=new Audio(SFX_URLS['engine-loop']);engineAudio.loop=true;engineAudio.preload='auto';engineAudio.volume=0.28;
+  }
+}catch(_){}
+function playSfx(key,volume){
+  if(save.mute||!audioUnlocked||typeof Audio==='undefined')return;
+  const url=SFX_URLS[key];if(!url)return;
+  const now=performance.now(),wait=SFX_THROTTLE[key]||0;
+  if(now-(sfxLastPlayed[key]||0)<wait)return;
+  sfxLastPlayed[key]=now;
+  try{
+    let pool=sfxPools[key];
+    if(!pool){pool=sfxPools[key]=[new Audio(url),new Audio(url),new Audio(url)];pool.forEach(a=>{a.preload='auto';a.volume=volume===undefined?0.78:volume;});}
+    const index=sfxCursor[key]||0,a=pool[index%pool.length];sfxCursor[key]=index+1;
+    a.pause();a.currentTime=0;a.volume=volume===undefined?0.78:volume;
+    const promise=a.play();if(promise&&promise.catch)promise.catch(()=>{});
+  }catch(_){}
+}
+function syncAudioState(){
+  if(typeof Audio==='undefined')return;
+  const finalReveal=state==='flight'&&paused&&run&&run.bosses>=5&&!save.campaignEndingSeen;
+  let desired='menu';
+  if(state==='flight')desired=finalReveal?'finale':(run&&run.bossBattle?'boss':'flight');
+  else if(state==='result'&&run&&run.bosses>=5)desired='finale';
+  const shouldPlayMusic=audioUnlocked&&!save.mute&&(!paused||finalReveal);
+  if(musicAudio){
+    const url=MUSIC_URLS[desired];
+    if(url&&currentMusicKey!==desired){
+      musicAudio.pause();musicAudio.src=url;musicAudio.currentTime=0;currentMusicKey=desired;
+    }
+    if(shouldPlayMusic&&url&&musicAudio.paused){const p=musicAudio.play();if(p&&p.catch)p.catch(()=>{});}
+    else if(!shouldPlayMusic&&!musicAudio.paused)musicAudio.pause();
+  }
+  const engineOn=audioUnlocked&&!save.mute&&state==='flight'&&!paused&&P&&P.fuel>0&&!P.engineOut;
+  if(engineAudio){
+    if(engineOn&&engineAudio.paused){const p=engineAudio.play();if(p&&p.catch)p.catch(()=>{});}
+    else if(!engineOn&&!engineAudio.paused)engineAudio.pause();
+  }
+}
+function unlockAudio(){
+  if(audioUnlocked)return;
+  audioUnlocked=true;
+  if(AC&&AC.state==='suspended'&&AC.resume)AC.resume().catch(()=>{});
+  syncAudioState();
+}
+if(typeof document!=='undefined'){
+  document.addEventListener('pointerdown',unlockAudio,{once:true,passive:true});
+  document.addEventListener('keydown',unlockAudio,{once:true});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden){if(musicAudio)musicAudio.pause();if(engineAudio)engineAudio.pause();}else syncAudioState();});
+}
+
 /* ---------- three.js setup ---------- */
 const cv=$('c'),app=$('app'),fx=$('fx');
 let renderer;
@@ -611,7 +692,7 @@ function spawn(until){
     e.mesh=makeBossPlane(biomeIndex);e.mesh.scale.setScalar(2.15);e.mesh.position.set(x*S,Y(e.alt),e.z*S);objGroup.add(e.mesh);objs.enemies.push(e);
     const portrait=$('bossPortrait');
     if(portrait){portrait.hidden=true;portrait.onerror=()=>{portrait.hidden=true;};portrait.onload=()=>{portrait.hidden=false;};portrait.src='assets/images/bosses/'+['iron-eagle','storm-bomber','Current-serpent','cloud-warden','grey-ruler'][biomeIndex]+'.png';}
-    run.bossBattle=true;addFloat(x,e.alt+75,'دخول ساحة '+e.bossName+' — اهزمه للمتابعة!','#ff9b91',e.z);
+    run.bossBattle=true;playSfx('boss-warning');addFloat(x,e.alt+75,'دخول ساحة '+e.bossName+' — اهزمه للمتابعة!','#ff9b91',e.z);
     objs.nextBoss=bossDistanceMeters(stage+1)/M_PER_PX;return;
   }
   while(objs.nextEnemy<until){
@@ -688,7 +769,7 @@ function renderHangar(upgradedKey){
     const b=document.createElement('button');b.type='button';
     b.className='fleet-btn'+(save.model===key?' selected':'')+(!unlocked?' locked':'');
     b.innerHTML='<span class="fleet-icon">'+({trainer:'✈',interceptor:'➤',guardian:'⬟',phantom:'✦'}[key])+'</span><span class="fleet-name">'+a.short+'</span><small>'+(unlocked?(save.model===key?'محددة':'اختيار'):(a.unlock+' م'))+'</small>';
-    b.addEventListener('click',()=>{if(!unlocked){toast('اقطع '+a.unlock+' م لفتحها');beep(160,.1,'square');return;}save.model=key;persist();appliedModel='';appliedLv=-1;renderHangar();beep(640,.1,'triangle');toast(a.name);});
+    b.addEventListener('click',()=>{if(!unlocked){toast('اقطع '+a.unlock+' م لفتحها');beep(160,.1,'square');return;}save.model=key;persist();appliedModel='';appliedLv=-1;renderHangar();playSfx('ui-confirm');toast(a.name);});
     fleet.appendChild(b);
   });
   const selected=aircraft();
@@ -720,14 +801,14 @@ function renderHangar(upgradedKey){
     b.addEventListener('click',()=>{
       if(max)return;
       if(save.coins<c){toast('العملات غير كافية');beep(160,.12,'square');return;}
-      save.coins-=c;save.lv[k]++;persist();beep(660,.1,'triangle');beep(880,.14,'triangle');renderHangar(k);toast('تم التطوير! ✨');
+      save.coins-=c;save.lv[k]++;persist();playSfx('ui-confirm');renderHangar(k);toast('تم التطوير! ✨');
     });
     d.appendChild(b);box.appendChild(d);
   });
 }
 $('buyFuel').addEventListener('click',()=>{
   if(save.coins<120){toast('تحتاج 120 عملة');beep(160,.12,'square');return;}
-  save.coins-=120;save.fuel++;persist();beep(520,.1,'triangle');renderHangar();
+  save.coins-=120;save.fuel++;persist();playSfx('fuel-pickup');renderHangar();
 });
 $('missionsToggle').addEventListener('click',()=>{
   renderDailyMissions();
@@ -859,7 +940,7 @@ function muteLabel(){
 }
 function toggleMute(){
   save.mute=!save.mute;persist();muteLabel();
-  if(!save.mute)beep(660,.08,'triangle');
+  if(!save.mute){playSfx('ui-confirm');syncAudioState();}else syncAudioState();
 }
 $('muteBtn').addEventListener('click',toggleMute);
 $('pSound').addEventListener('click',toggleMute);
@@ -945,12 +1026,12 @@ function doAbility(){
   P.abilityCooldown=12;
   if(key==='trainer'){
     shieldT=Math.max(shieldT,2.4);shieldCooldown=Math.max(shieldCooldown,1.2);shieldMesh.visible=true;
-    addFloat(P.x,P.alt+48,'درع الصقر!','#a7f4ff',P.z);beep(760,.1,'sine',.04);beep(1080,.15,'triangle',.03);
+    addFloat(P.x,P.alt+48,'درع الصقر!','#a7f4ff',P.z);playSfx('shield');
   }else if(key==='interceptor'){
     P.boostT=Math.max(P.boostT,2.25);addFloat(P.x,P.alt+48,'اندفاع فائق!','#ffe27a',P.z);shake=Math.max(shake,.18);beep(180,.24,'sawtooth',.04);
   }else if(key==='guardian'){
     P.fuel=Math.min(100,P.fuel+38);P.engineOut=P.fuel<=0;P.fuelWarned=false;updateFuelGauge();
-    addFloat(P.x,P.alt+48,'إمداد وقود +38٪','#baf6ff',P.z);beep(500,.12,'triangle');beep(750,.14,'triangle');
+    addFloat(P.x,P.alt+48,'إمداد وقود +38٪','#baf6ff',P.z);playSfx('fuel-pickup');
   }else{
     P.magnetT=6;addFloat(P.x,P.alt+48,'مغناطيس العملات!','#ffe27a',P.z);beep(820,.12,'triangle');beep(1040,.15,'triangle');
   }
@@ -969,7 +1050,7 @@ function doShoot(){
   if(target){dx=target.x-mx;dy=target.alt-my;dz=target.z-mz;const L=Math.hypot(dx,dy,dz)||1;dx/=L;dy/=L;dz/=L;}
   const offsets=mode==='spread'?[-0.18,0,0.18]:(run.tri?[-0.06,0,0.06]:[0]);
   for(const off of offsets){const mesh=new THREE.Mesh(shotGeo,shotMat);mesh.position.set(mx*S,Y(my),mz*S);scene.add(mesh);let vx=dx,vy=dy,vz=dz+off;const L=Math.hypot(vx,vy,vz)||1;vx/=L;vy/=L;vz/=L;const speed=1900;shots.push({x:mx,alt:my,z:mz,vx:vx*speed+P.s*Math.cos(P.a)*0.5,vy:vy*speed+P.s*Math.sin(P.a)*0.5,vz:vz*speed+P.vz*0.5,damage:10*run.damage,life:target?clamp((target.x-mx)/speed+0.8,2,7):1.9,mesh,target:target||null,aimMode:mode});}
-  if(run.fireSfxTimer<=0){beep(520,.06,'square',.025);run.fireSfxTimer=0.07;}
+  if(run.fireSfxTimer<=0){playSfx('weapon-fire',0.56);run.fireSfxTimer=0.07;}
 }
 function missileTarget(){
   // Use the same forward-cone acquisition as the Claude backup's target lock.
@@ -1001,7 +1082,7 @@ function defeatBoss(e,source){
   save.bosses=Math.max(0,Number(save.bosses)||0)+1;persist();
   const reward=150*(1+save.lv.coin);run.coins+=reward;
   addFloat(e.x,e.alt+95,(source==='missile'?'إسقاط صاروخي — هُزم الزعيم! +':'هُزم الزعيم! +')+reward,'#ffe27a',e.z);
-  beep(1050,.1,'triangle',0.05);beep(1320,.18,'triangle',0.05);shake=Math.max(shake,0.28);
+  if(run.bosses>=5)playSfx('victory-stinger');else playSfx('boss-defeat');shake=Math.max(shake,0.28);
   for(let n=0;n<32;n++)addPart(e.x,e.alt,(Math.random()-.5)*320,(Math.random()-.5)*320,0.55,0xff9b4a,4,e.z);
   objs.enemyShots.forEach(b=>scene.remove(b.mesh));objs.enemyShots.length=0;
   const discoveries=[
@@ -1026,7 +1107,7 @@ function doMissile(){
   if(!target){toast('لا يوجد هدف أمامك الآن');return;}
   const mesh=new THREE.Mesh(missileGeo,missileMat);mesh.position.set((P.x+24)*S,Y(P.alt),P.z*S);scene.add(mesh);
   missiles.push({x:P.x+24,alt:P.alt,z:P.z,vx:Math.max(850,P.s+650),vy:0,vz:0,life:4.2,smoke:0,target,mesh});
-  run.missiles--;missileCooldown=0.7;beep(250,.12,'sawtooth',0.04);toast('صاروخ موجّه!');
+  run.missiles--;missileCooldown=0.7;playSfx('missile-launch');toast('صاروخ موجّه!');
 }
 function updateFuelGauge(){
   const p=clamp(P&&Number.isFinite(P.fuel)?P.fuel:100,0,100);
@@ -1057,11 +1138,11 @@ function launch(){
   P.fuel=100;P.launchT=1.65;P.engineOut=false;P.fuelWarned=false;
   // The slingshot gives the aircraft a strong automatic climb before handing control to the pilot.
   s*=perfect?1.32:1.12;
-  if(perfect){addFloat(P.x+60,P.alt+60,'إطلاق ذهبي بكامل القوة!','#ffe27a',0);run.perfectLaunch=true;run.coins+=25*(1+save.lv.coin);beep(880,.2,'triangle');beep(1120,.18,'triangle');}
+  if(perfect){addFloat(P.x+60,P.alt+60,'إطلاق ذهبي بكامل القوة!','#ffe27a',0);run.perfectLaunch=true;run.coins+=25*(1+save.lv.coin);playSfx('ui-confirm');}
   else{addFloat(P.x+50,P.alt+45,'إقلاع قوي!','#baf6ff',0);}
   P.s=s;P.a=0.76;
   state='flight';
-  beep(240,.25,'sawtooth',0.05);shake=0.25;
+  playSfx('launch');shake=0.25;
   $('bFuel').textContent=save.fuel;
   $('tapHint').textContent='الإقلاع الآلي جارٍ… بعدها اسحب يمينًا ويسارًا وواصل الضغط للصعود';
   $('tapHint').style.opacity=1;
@@ -1164,7 +1245,7 @@ function updateFlight(dt){
     const pickupRange=P.magnetT>0?125:50;
     if(Math.abs(dx)<(P.magnetT>0?155:50)&&dy*dy+dz*dz<pickupRange*pickupRange){
       c.on=false;c.mesh.visible=false;run.coins+=5*mult;run.picked++;
-      beep(900+Math.min(run.picked,20)*25,.07,'triangle',0.04);
+      playSfx('coin',0.72);
       for(let i=0;i<5;i++)addPart(c.x,c.alt,(Math.random()-.5)*180,(Math.random()-.5)*180,0.35,0xffd84a,3,c.z);
     }
   }
@@ -1185,7 +1266,7 @@ function updateFlight(dt){
   for(const f of objs.fuels){
     if(!f.on)continue;
     const dx=f.x-P.x,dy=f.alt-P.alt,dz=f.z-P.z;
-    if(dx*dx+dy*dy+dz*dz<54*54){f.on=false;f.mesh.visible=false;P.fuel=Math.min(100,P.fuel+24);P.fuelWarned=false;addFloat(f.x,f.alt+40,'+24٪ وقود','#baf6ff',f.z);beep(500,.12,'triangle');beep(750,.14,'triangle');updateFuelGauge();}
+    if(dx*dx+dy*dy+dz*dz<54*54){f.on=false;f.mesh.visible=false;P.fuel=Math.min(100,P.fuel+24);P.fuelWarned=false;addFloat(f.x,f.alt+40,'+24٪ وقود','#baf6ff',f.z);playSfx('fuel-pickup');updateFuelGauge();}
   }
   for(const b of objs.birds){
     b.x+=b.vx*dt;b.t+=dt*9;
@@ -1216,7 +1297,7 @@ function updateFlight(dt){
         e.alt=clamp(e.alt+(clamp(P.alt+Math.sin(e.phase*0.7)*105,130,640)-e.alt)*Math.min(1,dt*0.72),110,660);
         e.z=zc(e.z+(clamp(P.z+Math.sin(e.phase*0.85)*135,-300,300)-e.z)*Math.min(1,dt*1.35));
         e.attackTimer-=dt;
-        if(e.attackTimer<=0&&e.x>P.x+430){e.attackState='warning';e.diveWarning=1.55;e.diveTargetAlt=P.alt;e.diveTargetZ=P.z;addFloat(e.x,e.alt+95,'تحذير أحمر: انقضاض وشيك!','#ff648e',e.z);beep(260,.12,'square',.045);e.attackTimer=0;}
+        if(e.attackTimer<=0&&e.x>P.x+430){e.attackState='warning';e.diveWarning=1.55;e.diveTargetAlt=P.alt;e.diveTargetZ=P.z;addFloat(e.x,e.alt+95,'تحذير أحمر: انقضاض وشيك!','#ff648e',e.z);playSfx('boss-warning',0.68);e.attackTimer=0;}
       }else if(e.attackState==='warning'){
         const duelX=P.x+740+Math.sin(e.phase*.42)*100;
         e.x+=(duelX-e.x)*Math.min(1,dt*1.1);e.alt+=(P.alt+Math.sin(e.phase)*60-e.alt)*Math.min(1,dt*.5);e.z+=(P.z-e.z)*Math.min(1,dt*.65);
@@ -1300,12 +1381,12 @@ function updateFlight(dt){
       if(Math.abs(e.x-shot.x)<hr&&Math.abs(e.alt-shot.alt)<(e.boss?72:40)&&Math.abs(e.z-shot.z)<(e.boss?80:45)){
         hit=true;
         if(e.boss){
-          e.hp-=Math.max(1,(shot.damage||10)/10);beep(920,.08,'triangle',0.04);shake=Math.max(shake,0.08);
+          e.hp-=Math.max(1,(shot.damage||10)/10);playSfx('boss-hit',0.7);shake=Math.max(shake,0.08);
           if(e.hp<=0)defeatBoss(e,'cannon');
           else{addFloat(e.x,e.alt+70,'طاقة الزعيم '+Math.ceil(e.hp)+'/'+e.maxHp,'#ffb2a6',e.z);}
         }else{
           e.hit=true;e.mesh.visible=false;run.coins+=18*(1+save.lv.coin);
-          addFloat(e.x,e.alt+45,'طائرة معادية +18','#ffe27a',e.z);beep(1050,.1,'triangle',0.04);shake=Math.max(shake,0.12);
+          addFloat(e.x,e.alt+45,'طائرة معادية +18','#ffe27a',e.z);playSfx('laser',0.7);playSfx('explosion',0.58);shake=Math.max(shake,0.12);
           for(let n=0;n<10;n++)addPart(e.x,e.alt,(Math.random()-.5)*180,(Math.random()-.5)*180,0.35,0xff9b4a,3,e.z);
         }
         break;
@@ -1321,9 +1402,9 @@ function updateFlight(dt){
     m.x+=m.vx*dt;m.alt+=m.vy*dt;m.z+=m.vz*dt;m.smoke-=dt;
     if(m.smoke<=0){addPart(m.x,m.alt,0,0,0.34,0xb9c4d4,4,m.z,0);m.smoke=0.045;}
     const v=new THREE.Vector3(m.vx,m.vy,m.vz);m.mesh.position.set(m.x*S,Y(m.alt),m.z*S);m.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(1,0,0),v.normalize());
-    let hit=m.life<=0||m.alt<0;
-    if(!hit){for(const e of objs.enemies){if(e.hit)continue;const dx=e.x-m.x,dy=e.alt-m.alt,dz=e.z-m.z;if(dx*dx+dy*dy+dz*dz<(e.boss?125:70)**2){hit=true;if(e.boss){e.hp=Math.max(0,e.hp-26);addFloat(e.x,e.alt+70,'صاروخ أصاب الزعيم! طاقة '+Math.ceil(e.hp)+'/'+e.maxHp,'#ffe27a',e.z);if(e.hp<=0)defeatBoss(e,'missile');} else{e.hit=true;e.mesh.visible=false;run.coins+=18*(1+save.lv.coin);addFloat(e.x,e.alt+45,'إسقاط صاروخي +18','#ffe27a',e.z);}for(let n=0;n<24;n++)addPart(e.x,e.alt,(Math.random()-.5)*300,(Math.random()-.5)*240,0.55,0xff9b4a,4,e.z);shake=Math.max(shake,0.3);beep(120,.2,'sawtooth',0.05);break;}}}
-    if(hit){scene.remove(m.mesh);missiles.splice(i,1);}
+    let hit=m.life<=0||m.alt<0,impacted=false;
+    if(!hit){for(const e of objs.enemies){if(e.hit)continue;const dx=e.x-m.x,dy=e.alt-m.alt,dz=e.z-m.z;if(dx*dx+dy*dy+dz*dz<(e.boss?125:70)**2){hit=true;impacted=true;if(e.boss){e.hp=Math.max(0,e.hp-26);playSfx('boss-hit',0.78);addFloat(e.x,e.alt+70,'صاروخ أصاب الزعيم! طاقة '+Math.ceil(e.hp)+'/'+e.maxHp,'#ffe27a',e.z);if(e.hp<=0)defeatBoss(e,'missile');} else{e.hit=true;e.mesh.visible=false;run.coins+=18*(1+save.lv.coin);addFloat(e.x,e.alt+45,'إسقاط صاروخي +18','#ffe27a',e.z);}for(let n=0;n<24;n++)addPart(e.x,e.alt,(Math.random()-.5)*300,(Math.random()-.5)*240,0.55,0xff9b4a,4,e.z);shake=Math.max(shake,0.3);break;}}}
+    if(hit){if(impacted){playSfx('missile-impact');playSfx('explosion',0.72);}scene.remove(m.mesh);missiles.splice(i,1);}
   }
 }
 
@@ -1391,7 +1472,7 @@ const VIEW_AHEAD=14000;
 function activateShield(x,alt,z){
   shieldT=1.15;
   shieldCooldown=Math.max(3.8,aircraft().shield-save.lv.plane*0.38-(save.model==='guardian'?1.1:0));
-  shake=Math.max(shake,0.12);beep(760,.1,'sine',0.035);beep(1080,.12,'triangle',0.025);
+  shake=Math.max(shake,0.12);playSfx('shield');
   addFloat(x,alt+48,'الدرع التلقائي!','#8cf5ff',z);
   for(let i=0;i<12;i++)addPart(x,alt,(Math.random()-.5)*220,(Math.random()-.5)*220,0.35,0x7ff5ff,3,z);
 }
@@ -1622,6 +1703,7 @@ let last=performance.now();
 function frame(t){
   const dt=Math.min(0.033,(t-last)/1000);last=t;
   if(!paused)update(dt);
+  syncAudioState();
   render(paused?0:dt);
   requestAnimationFrame(frame);
 }
