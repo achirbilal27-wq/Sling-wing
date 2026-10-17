@@ -43,6 +43,9 @@ jobs:
       - name: Check game JavaScript syntax
         run: node --check src/js/game.js
 
+      - name: Run game integrity checks
+        run: npm test
+
       - name: Generate Android project
         run: npx cap add android
 
