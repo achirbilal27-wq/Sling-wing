@@ -124,7 +124,7 @@ const SFX_URLS={
   'missile-impact':'assets/audio/sfx/\u200cmissile-impact.ogg',
   'boss-warning':'assets/audio/sfx/\u200cboss-warning.ogg',
   'boss-hit':'assets/audio/sfx/\u200cboss-hit.ogg',
-  'boss-defeat':'assets/audio/sfx/\u200cvictory-stinger.ogg',
+  'boss-defeat':'assets/audio/sfx/\u200cexplosion.ogg',
   'fuel-pickup':'assets/audio/sfx/\u200cfuel-pickup.ogg',
   shield:'assets/audio/sfx/\u200cshield.ogg',
   explosion:'assets/audio/sfx/\u200cexplosion.ogg',
