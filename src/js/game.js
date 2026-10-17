@@ -416,7 +416,7 @@ function applyPlaneColors(){
   if(model!==appliedModel){appliedModel=model;Object.keys(variantKits).forEach(k=>variantKits[k].visible=k===model);}
 }
 
-const bossImageLoader=new THREE.TextureLoader();
+const bossImageLoader=new THREE.TextureLoader(),bossImageTextures=Object.create(null),bossSpriteMaterials=Object.create(null);
 /* ---------- objects ---------- */
 const objGroup=new THREE.Group();scene.add(objGroup);
 const coinGeo=new THREE.CylinderGeometry(1.5,1.5,0.35,18);coinGeo.rotateZ(Math.PI/2);
@@ -573,15 +573,15 @@ function makeBossPlane(biomeIndex){
   fallback.scale.setScalar(biomeIndex===4?2.85:2.15);
   fallback.visible=true;
   g.add(fallback);
-  const material=new THREE.SpriteMaterial({transparent:true,alphaTest:0.015,depthWrite:false,depthTest:true});
+  const path='assets/images/bosses/'+names[biomeIndex]+'.png';
+  const material=bossSpriteMaterials[path]||(bossSpriteMaterials[path]=new THREE.SpriteMaterial({transparent:true,alphaTest:0.015,depthWrite:false,depthTest:true}));
   const image=new THREE.Sprite(material);
   image.center.set(0.5,0.5);
   image.visible=false;
   g.add(image);
   g.userData.boss=true;
   g.userData.imageBoss=true;
-  const path='assets/images/bosses/'+names[biomeIndex]+'.png';
-  bossImageLoader.load(path,texture=>{
+  const applyBossTexture=texture=>{
     texture.minFilter=THREE.LinearMipmapLinearFilter;
     texture.magFilter=THREE.LinearFilter;
     material.map=texture;
@@ -593,6 +593,12 @@ function makeBossPlane(biomeIndex){
     image.scale.set(height*aspect,height,1);
     image.visible=true;
     fallback.visible=false;
+  };
+  const cachedTexture=bossImageTextures[path];
+  if(cachedTexture)applyBossTexture(cachedTexture);
+  else bossImageLoader.load(path,texture=>{
+    bossImageTextures[path]=texture;
+    applyBossTexture(texture);
   },undefined,()=>{
     image.visible=false;
     fallback.visible=true;
