@@ -727,7 +727,7 @@ function spawn(until){
     const e={x,alt:250+Math.random()*260,z:zc((Math.random()-.5)*260),phase:Math.random()*6.28,fireT:2.3,hit:false,boss:true,hp:bossHp,maxHp:bossHp,contactHit:false,attackState:'ranged',attackTimer:3.2+Math.random()*1.5,diveWarning:0,diveTimer:0,weaponCycle:0,diveTargetAlt:300,diveTargetZ:0,combatPhase:1,biomeIndex,bossName:BOSS_PROFILES[biomeIndex].name,bossStage:stage+1};
     e.finalBoss=biomeIndex===4;e.mesh=makeBossPlane(biomeIndex);e.mesh.scale.setScalar(e.finalBoss?2.85:2.15);e.mesh.position.set(x*S,Y(e.alt),e.z*S);objGroup.add(e.mesh);objs.enemies.push(e);
     const portrait=$('bossPortrait');
-    if(portrait){portrait.hidden=true;portrait.onerror=()=>{portrait.hidden=true;};portrait.onload=()=>{portrait.hidden=false;};if(biomeIndex<4)portrait.src='assets/images/bosses/'+['iron-eagle','storm-bomber','Current-serpent','cloud-warden'][biomeIndex]+'.png';else portrait.removeAttribute('src');}
+    if(portrait){portrait.hidden=true;portrait.onerror=()=>{portrait.hidden=true;};portrait.onload=()=>{portrait.hidden=false;};portrait.src='assets/images/bosses/'+['iron-eagle','storm-bomber','Current-serpent','cloud-warden','grey-ruler'][biomeIndex]+'.png';}
     run.bossBattle=true;playSfx('boss-warning');addFloat(x,e.alt+75,'دخول ساحة '+e.bossName+' — اهزمه للمتابعة!','#ff9b91',e.z);
     objs.nextBoss=bossDistanceMeters(stage+1)/M_PER_PX;return;
   }
