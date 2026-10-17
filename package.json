@@ -8,7 +8,8 @@
     "sync": "npm run prepare-www && npx cap sync android",
     "open": "npx cap open android",
     "apk": "npm run sync && cd android && ./gradlew assembleDebug",
-    "bundle": "npm run sync && cd android && ./gradlew bundleRelease"
+    "bundle": "npm run sync && cd android && ./gradlew bundleRelease",
+    "test": "node scripts/check-game.js"
   },
   "dependencies": {
     "@capacitor/android": "^6.1.0",
