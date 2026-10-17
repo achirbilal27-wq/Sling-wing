@@ -43,6 +43,12 @@ const decodedJs = js.replace(/\\u([0-9a-f]{4})/gi, (_, hex) => String.fromCharCo
 const assetRefs = [...decodedJs.matchAll(/assets\/[^'"\s)]+?\.(?:png|jpe?g|webp|ogg|mp3|wav|mp4|json|glb|gltf)(?=['"\s)]|$)/gi)]
   .map((match) => match[0]);
 for (const url of [...new Set(assetRefs)]) {
+  // The starter GLB is optional in the repo until the user adds their model.
+  // The runtime keeps the original procedural enemy plane as a safe fallback.
+  if (url === 'assets/models/enemies/plane_pc.glb') {
+    check(exists('assets/models/README.md'), 'Missing 3D model folder instructions.');
+    continue;
+  }
   check(exists(url), 'Missing local JavaScript asset: src/' + url);
 }
 
@@ -53,10 +59,14 @@ check(bosses.every((name) => js.includes(name.replace(/\.png$/, ''))), 'The boss
 const threeCdn = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
 check(html.includes(threeCdn), 'Expected Three.js source URL is missing from src/index.html.');
 check(prep.includes('threeCdnPattern') && prep.includes("'js/three.min.js'"), 'prepare.js does not validate and replace the Three.js CDN reference.');
+check(html.includes('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js'), 'GLTFLoader script is missing from src/index.html.');
+check(prep.includes('GLTFLoader.js') && prep.includes("'js/GLTFLoader.js'"), 'prepare.js does not bundle GLTFLoader for offline Android use.');
+check(js.includes("assets/models/enemies/plane_pc.glb") && js.includes('loadEnemyPlaneModel'), 'Enemy GLB loading is not configured.');
 const preparedHtmlPath = path.join(root, 'www', 'index.html');
 if (fs.existsSync(preparedHtmlPath)) {
   const preparedHtml = fs.readFileSync(preparedHtmlPath, 'utf8');
   check(preparedHtml.includes('src="js/three.min.js"'), 'Prepared Android HTML does not load local Three.js.');
+  check(preparedHtml.includes('src="js/GLTFLoader.js"'), 'Prepared Android HTML does not load local GLTFLoader.');
   check(!preparedHtml.includes(threeCdn), 'Prepared Android HTML still references the Three.js CDN.');
   check(fs.existsSync(path.join(root, 'www', 'js', 'three.min.js')), 'Prepared Android build is missing www/js/three.min.js.');
 }
