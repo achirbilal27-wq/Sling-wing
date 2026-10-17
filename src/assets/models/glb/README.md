@@ -1,5 +1,7 @@
 # GLB assets
 
-This directory is reserved for binary `.glb` models. Add `plane_pc.glb` here to replace the small enemy aircraft with the provided plane model. Additional models can be stored here and mapped to specific enemies or bosses in the game code.
+This directory stores the game's ready-to-use binary `.glb` models.
 
-The `.glb` file itself is not committed yet; upload the model binary into this directory.
+- `plane_pc.glb` — the current model for all small enemy aircraft.
+
+Add future GLB files here, then map each filename to its intended aircraft or boss in `src/js/game.js`. Android preparation copies the folder into the packaged game, and the integrity test checks that the enemy model is included.
