@@ -53,6 +53,13 @@ check(bosses.every((name) => js.includes(name.replace(/\.png$/, ''))), 'The boss
 const threeCdn = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
 check(html.includes(threeCdn), 'Expected Three.js source URL is missing from src/index.html.');
 check(prep.includes('threeCdnPattern') && prep.includes("'js/three.min.js'"), 'prepare.js does not validate and replace the Three.js CDN reference.');
+const preparedHtmlPath = path.join(root, 'www', 'index.html');
+if (fs.existsSync(preparedHtmlPath)) {
+  const preparedHtml = fs.readFileSync(preparedHtmlPath, 'utf8');
+  check(preparedHtml.includes('src="js/three.min.js"'), 'Prepared Android HTML does not load local Three.js.');
+  check(!preparedHtml.includes(threeCdn), 'Prepared Android HTML still references the Three.js CDN.');
+  check(fs.existsSync(path.join(root, 'www', 'js', 'three.min.js')), 'Prepared Android build is missing www/js/three.min.js.');
+}
 check(fs.existsSync(path.join(root, 'package.json')), 'package.json is missing.');
 
 if (failures.length) {
