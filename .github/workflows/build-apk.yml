@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 # Prevent rapid consecutive pushes from consuming runner time and artifact quota.
 concurrency:
@@ -63,10 +63,26 @@ jobs:
           cd android
           ./gradlew assembleDebug --no-daemon
 
-      - name: Upload APK
+      - name: Upload APK artifact
+        id: upload_apk
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: sling-wing-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 1
+
+      # Actions artifact storage can be exhausted independently of Android build capacity.
+      # Publish the APK as a prerelease asset only when artifact upload fails on the main game branch.
+      - name: Publish APK fallback release
+        if: steps.upload_apk.outcome == 'failure' && github.event_name == 'push' && github.ref == 'refs/heads/Games'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="ci-apk-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}"
+          gh release create "$TAG" android/app/build/outputs/apk/debug/app-debug.apk \
+            --repo "$GITHUB_REPOSITORY" \
+            --prerelease \
+            --title "Sling Wing APK build ${GITHUB_RUN_NUMBER}" \
+            --notes "Fallback APK because GitHub Actions artifact upload failed. Commit: ${GITHUB_SHA}"
