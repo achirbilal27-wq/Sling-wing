@@ -439,7 +439,7 @@ function makeBird(){
   g.scale.setScalar(1.35);g.userData.wings=[g.children[3],g.children[4]];
   return g;
 }
-const BOSS_PROFILES=[{name:'النسر الحديدي',hull:0x27333c,armor:0x71818b,glow:0xffc857,glass:0xffedb2,emissive:0x9b5d12},{name:'قاذفة العاصفة',hull:0x252b43,armor:0x596b91,glow:0x78d9ff,glass:0xc9f6ff,emissive:0x245c9b},{name:'أفعى التيارات',hull:0x3c283f,armor:0x87527f,glow:0xff75c8,glass:0xffd1f0,emissive:0x7c245f},{name:'حارس السحاب',hull:0x263c50,armor:0x6f9bb8,glow:0x8feaff,glass:0xe1fbff,emissive:0x286da0},{name:'الحاكم الرمادي',hull:0x292d35,armor:0x666b73,glow:0xff4f66,glass:0xffd6c7,emissive:0x81283b}];
+const BOSS_PROFILES=[{name:'النسر الحديدي',hull:0x27333c,armor:0x71818b,glow:0xffc857,glass:0xffedb2,emissive:0x9b5d12},{name:'قاذفة العاصفة',hull:0x252b43,armor:0x596b91,glow:0x78d9ff,glass:0xc9f6ff,emissive:0x245c9b},{name:'أفعى التيارات',hull:0x3c283f,armor:0x87527f,glow:0xff75c8,glass:0xffd1f0,emissive:0x7c245f},{name:'حارس السحاب',hull:0x263c50,armor:0x6f9bb8,glow:0x8feaff,glass:0xe1fbff,emissive:0x286da0},{name:'الحاكم الرمادي · سيد العاصفة',hull:0x292d35,armor:0x666b73,glow:0xff4f66,glass:0xffd6c7,emissive:0x81283b}];
 function makeStormBomberBoss(){
   // Boss B: broad, orange Rebel-Flagship-inspired bomber with cyan energy markings.
   // Keep this model isolated so the other four boss silhouettes remain unchanged.
@@ -513,7 +513,43 @@ function makeStormBomberBoss(){
   g.userData.bossType='storm-bomber';
   return g;
 }
+function makeGreyRulerBoss(){
+  // The campaign's final flagship: a heavy, multi-weapon silhouette unlike the other bosses.
+  const g=new THREE.Group();
+  const hull=matS(0x252b3b,0.16,{metalness:0.86,roughness:0.24});
+  const armor=matS(0x606b7e,0.2,{metalness:0.82,roughness:0.22});
+  const dark=matS(0x141b2a,0.18,{metalness:0.72,roughness:0.3});
+  const red=new THREE.MeshBasicMaterial({color:0xff365f});
+  const cyan=new THREE.MeshBasicMaterial({color:0x67f5ff});
+  const coreMat=new THREE.MeshStandardMaterial({color:0xffb4d0,emissive:0xff174f,emissiveIntensity:2.2,metalness:0.45,roughness:0.18});
+  const body=new THREE.Mesh(new THREE.SphereGeometry(1,16,10),hull);body.scale.set(7.4,1.65,3.15);body.position.set(-0.1,0,0);g.add(body);
+  const prow=new THREE.Mesh(new THREE.ConeGeometry(2.9,11,10),armor);prow.rotation.z=-Math.PI/2;prow.position.set(6.7,0.1,0);g.add(prow);
+  const keel=new THREE.Mesh(new THREE.BoxGeometry(10,0.55,4.9),dark);keel.position.set(-0.4,-1.35,0);g.add(keel);
+  const wing=new THREE.Mesh(new THREE.BoxGeometry(7.8,0.6,29),armor);wing.position.set(-1.25,-0.22,0);g.add(wing);
+  const rearWing=new THREE.Mesh(new THREE.BoxGeometry(4.5,0.45,19),dark);rearWing.position.set(-5.1,0.15,0);g.add(rearWing);
+  [-1,1].forEach(side=>{
+    const tip=new THREE.Mesh(new THREE.BoxGeometry(4.8,0.42,5.4),hull);tip.position.set(-2.1,0.08,side*14);tip.rotation.y=side*0.19;g.add(tip);
+    const blade=new THREE.Mesh(new THREE.BoxGeometry(5.6,0.34,2.1),red);blade.position.set(-3.2,0.42,side*12.2);blade.rotation.y=side*0.2;g.add(blade);
+    const engine=new THREE.Mesh(new THREE.CylinderGeometry(0.8,1.05,4.5,12),dark);engine.rotation.z=Math.PI/2;engine.position.set(-5.6,-0.65,side*5.7);g.add(engine);
+    const exhaust=new THREE.Mesh(new THREE.CylinderGeometry(0.48,0.62,0.28,12),cyan);exhaust.rotation.z=Math.PI/2;exhaust.position.set(-7.95,-0.65,side*5.7);g.add(exhaust);
+    [-1,1].forEach(row=>{
+      const mount=new THREE.Mesh(new THREE.BoxGeometry(2.5,0.6,1.35),dark);mount.position.set(1.25,0.45,side*(7.1+row*2.5));g.add(mount);
+      const barrel=new THREE.Mesh(new THREE.CylinderGeometry(0.27,0.34,5.8,10),armor);barrel.rotation.z=Math.PI/2;barrel.position.set(3.85,0.56,side*(7.1+row*2.5));g.add(barrel);
+      const muzzle=new THREE.Mesh(new THREE.CylinderGeometry(0.36,0.38,0.35,10),red);muzzle.rotation.z=Math.PI/2;muzzle.position.set(6.78,0.56,side*(7.1+row*2.5));g.add(muzzle);
+    });
+    const shoulder=new THREE.Mesh(new THREE.BoxGeometry(4.2,1,3.2),armor);shoulder.position.set(-0.25,0.7,side*4);g.add(shoulder);
+    const rack=new THREE.Mesh(new THREE.BoxGeometry(3.3,0.65,2.1),dark);rack.position.set(-1.75,0.92,side*8.7);g.add(rack);
+    for(let n=0;n<3;n++){const missile=new THREE.Mesh(new THREE.CylinderGeometry(0.19,0.22,2.3,8),red);missile.rotation.z=Math.PI/2;missile.position.set(-0.3-n*0.72,1.22,side*8.7);g.add(missile);}
+  });
+  const cockpit=new THREE.Mesh(new THREE.BoxGeometry(3.6,1.15,3.4),dark);cockpit.position.set(1.2,1.45,0);g.add(cockpit);
+  const core=new THREE.Mesh(new THREE.SphereGeometry(1.25,16,12),coreMat);core.scale.set(1.15,1.2,1.15);core.position.set(-1.05,1.3,0);g.add(core);
+  const crown=new THREE.Mesh(new THREE.ConeGeometry(1.25,4.8,8),red);crown.rotation.z=-Math.PI/2;crown.position.set(0.3,2.35,0);g.add(crown);
+  const rings=[];
+  [3.5,4.7].forEach((r,i)=>{const ring=new THREE.Mesh(new THREE.TorusGeometry(r,0.14,8,36),i?red:cyan);ring.position.set(-1.05,1.3,0);ring.rotation.y=Math.PI/2;g.add(ring);rings.push(ring);});
+  g.userData.energyRings=rings;g.userData.boss=true;g.userData.bossType='grey-ruler';g.rotation.y=Math.PI;return g;
+}
 function makeBossPlane(biomeIndex){
+  if(biomeIndex===4)return makeGreyRulerBoss();
   if(biomeIndex===1)return makeStormBomberBoss();
   const g=new THREE.Group(),palette=BOSS_PROFILES[biomeIndex%BOSS_PROFILES.length];
   const hull=matS(palette.hull,0.22,{metalness:0.78,roughness:0.24});
@@ -578,7 +614,7 @@ let routeTargetMeters=500;
 let P,run,objs,shake=0,time=0,power=0,powerDir=1,night=0,snapCam=true;
 const down=new Set(),ptr=new Map(),keys={left:false,right:false};
 let fireHeld=false;
-const parts=[],floats=[],shots=[],missiles=[];
+const parts=[],floats=[],shots=[],missiles=[],bossBlastRings=[];
 const shotGeo=new THREE.CylinderGeometry(0.35,0.35,4.5,6);shotGeo.rotateZ(Math.PI/2);
 const shotMat=new THREE.MeshBasicMaterial({color:0xfff27a});
 const missileGeo=new THREE.ConeGeometry(3.2,18,8);missileGeo.rotateZ(-Math.PI/2);
@@ -683,15 +719,15 @@ function spawn(until){
     const x=objs.nextBoss,stage=Math.max(0,run.bosses),biomeIndex=stage%BOSS_PROFILES.length;
     // Let the player finish the approach before the boss enters the arena.
     if(x>P.x+4000)return;
-    const bossHp=420+stage*90;
+    const bossHp=[70,95,125,155,220][biomeIndex]||220;
     objs.enemies.forEach(other=>{if(!other.boss&&!other.hit){other.hit=true;objGroup.remove(other.mesh);}});
     objs.enemies=objs.enemies.filter(other=>other.boss&&!other.hit);
     objs.enemyShots.forEach(b=>scene.remove(b.mesh));objs.enemyShots.length=0;
     ['coins','rings','birds','fuels','drafts','storms','stations'].forEach(key=>{objs[key].forEach(o=>{if(o.mesh)objGroup.remove(o.mesh);});objs[key]=[];});
     const e={x,alt:250+Math.random()*260,z:zc((Math.random()-.5)*260),phase:Math.random()*6.28,fireT:2.3,hit:false,boss:true,hp:bossHp,maxHp:bossHp,contactHit:false,attackState:'ranged',attackTimer:3.2+Math.random()*1.5,diveWarning:0,diveTimer:0,weaponCycle:0,diveTargetAlt:300,diveTargetZ:0,combatPhase:1,biomeIndex,bossName:BOSS_PROFILES[biomeIndex].name,bossStage:stage+1};
-    e.mesh=makeBossPlane(biomeIndex);e.mesh.scale.setScalar(2.15);e.mesh.position.set(x*S,Y(e.alt),e.z*S);objGroup.add(e.mesh);objs.enemies.push(e);
+    e.finalBoss=biomeIndex===4;e.mesh=makeBossPlane(biomeIndex);e.mesh.scale.setScalar(e.finalBoss?2.85:2.15);e.mesh.position.set(x*S,Y(e.alt),e.z*S);objGroup.add(e.mesh);objs.enemies.push(e);
     const portrait=$('bossPortrait');
-    if(portrait){portrait.hidden=true;portrait.onerror=()=>{portrait.hidden=true;};portrait.onload=()=>{portrait.hidden=false;};portrait.src='assets/images/bosses/'+['iron-eagle','storm-bomber','Current-serpent','cloud-warden','grey-ruler'][biomeIndex]+'.png';}
+    if(portrait){portrait.hidden=true;portrait.onerror=()=>{portrait.hidden=true;};portrait.onload=()=>{portrait.hidden=false;};if(biomeIndex<4)portrait.src='assets/images/bosses/'+['iron-eagle','storm-bomber','Current-serpent','cloud-warden'][biomeIndex]+'.png';else portrait.removeAttribute('src');}
     run.bossBattle=true;playSfx('boss-warning');addFloat(x,e.alt+75,'دخول ساحة '+e.bossName+' — اهزمه للمتابعة!','#ff9b91',e.z);
     objs.nextBoss=bossDistanceMeters(stage+1)/M_PER_PX;return;
   }
@@ -1076,14 +1112,33 @@ function updateTargetLock(){
   el.style.transform='translate('+((_v.x*0.5+0.5)*W)+'px,'+((-_v.y*0.5+0.5)*Hh)+'px) translate(-50%,-50%)';
 }
 
+function triggerBossDestruction(e){
+  const finalBoss=!!(e&&e.bossStage>=5);
+  const overlay=$('bossBlastOverlay');
+  if(overlay){overlay.classList.remove('on','final');void overlay.offsetWidth;overlay.classList.add('on');if(finalBoss)overlay.classList.add('final');}
+  const colors=finalBoss?[0xff365f,0xffb347,0x72f6ff,0xf6e8ff]:[0xff9b4a,0xffdf79,0xff5d42];
+  const count=finalBoss?96:52;
+  for(let n=0;n<count;n++){
+    const angle=Math.random()*Math.PI*2,speed=(finalBoss?180:125)+Math.random()*(finalBoss?420:270);
+    addPart(e.x,e.alt,Math.cos(angle)*speed+(Math.random()-.5)*100,Math.sin(angle)*speed+(Math.random()-.5)*100,finalBoss?0.95+Math.random()*0.65:0.62+Math.random()*0.42,colors[n%colors.length],finalBoss?5+Math.random()*8:3+Math.random()*5,e.z,(Math.random()-.5)*(finalBoss?520:300));
+  }
+  for(let i=0;i<(finalBoss?4:2);i++){
+    const mat=new THREE.MeshBasicMaterial({color:colors[i%colors.length],transparent:true,opacity:0.88,side:THREE.DoubleSide,depthWrite:false});
+    const mesh=new THREE.Mesh(new THREE.TorusGeometry(7+i*3,finalBoss?0.7:0.48,8,36),mat);
+    mesh.position.set(e.x*S,Y(e.alt),e.z*S);mesh.rotation.x=Math.PI/2;scene.add(mesh);
+    const life=(finalBoss?1.05:0.72)+i*0.08;bossBlastRings.push({mesh,life,maxLife:life,maxScale:(finalBoss?8.5:5.2)+i*1.3});
+  }
+  shake=Math.max(shake,finalBoss?0.92:0.48);
+  addFloat(e.x,e.alt+(finalBoss?150:95),finalBoss?'انهيار عرش العاصفة!':'انفجار الزعيم!','#ffe27a',e.z);
+}
 function defeatBoss(e,source){
   if(!e||e.hit)return;
   e.hit=true;e.mesh.visible=false;run.bossBattle=false;run.bosses++;
   save.bosses=Math.max(0,Number(save.bosses)||0)+1;persist();
   const reward=150*(1+save.lv.coin);run.coins+=reward;
   addFloat(e.x,e.alt+95,(source==='missile'?'إسقاط صاروخي — هُزم الزعيم! +':'هُزم الزعيم! +')+reward,'#ffe27a',e.z);
-  if(run.bosses>=5)playSfx('victory-stinger');else playSfx('boss-defeat');shake=Math.max(shake,0.28);
-  for(let n=0;n<32;n++)addPart(e.x,e.alt,(Math.random()-.5)*320,(Math.random()-.5)*320,0.55,0xff9b4a,4,e.z);
+  if(run.bosses>=5)playSfx('victory-stinger');else playSfx('boss-defeat');
+  triggerBossDestruction(e);
   objs.enemyShots.forEach(b=>scene.remove(b.mesh));objs.enemyShots.length=0;
   const discoveries=[
     ['سجل الوادي','السجل أقدم من العاصفة','يجد الطيار سجلًا يثبت أن أبراج السيطرة بُنيت قبل الكارثة بسنوات.'],
@@ -1323,19 +1378,20 @@ function updateFlight(dt){
     if(e.fireT<=0&&e.x>P.x+180&&e.x<P.x+(e.boss?1900:4200)&&(!e.boss||e.attackState==='ranged')){
       if(e.boss){
         const phase=e.combatPhase||1;
-        const pattern=e.weaponCycle++%(phase===3?4:3);
-        const aimed=pattern===1,radial=pattern===3,pulse=pattern===0||radial;
-        const count=aimed?1:pattern===0?(phase===3?7:phase===2?5:4):pattern===2?(phase===3?4:phase===2?3:2):5;
+        const finalBoss=e.bossStage>=5;
+        const pattern=e.weaponCycle++%(finalBoss&&phase===3?6:phase===3?4:finalBoss?4:3);
+        const aimed=pattern===1||pattern===4,radial=pattern===3||pattern===5,pulse=pattern===0||radial;
+        const count=pattern===4?3:pattern===5?9:aimed?1:pattern===0?(phase===3?7:phase===2?5:4):pattern===2?(phase===3?4:phase===2?3:2):5;
         e.fireT=aimed?(phase===3?2.0:phase===2?2.4:2.8):pattern===0?(phase===3?1.8:phase===2?2.2:2.6):pattern===2?(phase===3?1.7:phase===2?2.1:2.5):2.2;
         for(let k=0;k<count;k++){
           const offset=k-(count-1)/2;
           const mesh=new THREE.Mesh(aimed?bossLanceGeo:(pulse?bossPulseGeo:enemyShotGeo),aimed?bossLanceMat:(pulse?bossPulseMat:enemyShotBossMat));
           mesh.position.set(e.x*S,Y(e.alt),e.z*S);scene.add(mesh);
-          const tx=P.x-e.x,ty=P.alt-e.alt+(aimed?0:offset*(radial?44:pattern===0?30:52)),tz=P.z-e.z+(aimed?0:offset*(radial?52:pattern===0?44:68)),L=Math.hypot(tx,ty,tz)||1;
+          const tx=P.x-e.x,ty=P.alt-e.alt+(aimed?(pattern===4?offset*34:0):offset*(radial?44:pattern===0?30:52)),tz=P.z-e.z+(aimed?(pattern===4?offset*42:0):offset*(radial?52:pattern===0?44:68)),L=Math.hypot(tx,ty,tz)||1;
           const spd=aimed?(phase===3?1580:phase===2?1460:1360):pattern===0?(phase===3?1240:phase===2?1160:1080):radial?980:1120;
           objs.enemyShots.push({x:e.x,alt:e.alt,z:e.z,vx:tx/L*spd,vy:ty/L*spd,vz:tz/L*spd,life:3.8,mesh,bossShot:true,bossWeapon:aimed?'lance':radial?'radial-burst':pattern===0?'plasma-fan':'spread'});
         }
-        const weaponLabel=aimed?'مدفع الطاقة الموجّه':pattern===0?'وابل البلازما':pattern===2?'انتشار طاقي':'انفجار شعاعي';
+        const weaponLabel=pattern===4?'ثلاثي مدافع العرش':pattern===5?'عاصفة المقذوفات':aimed?'مدفع الطاقة الموجّه':pattern===0?'وابل البلازما':pattern===2?'انتشار طاقي':'انفجار شعاعي';
         e.lastWeaponLabel=weaponLabel;
         addFloat(e.x,e.alt+48,weaponLabel,aimed?'#ff70ba':'#ffbd70',e.z);
       }else{
@@ -1346,7 +1402,7 @@ function updateFlight(dt){
       }
     }
     const dx=e.x-P.x,dy=e.alt-P.alt,dz=e.z-P.z;
-    if(dx*dx+dy*dy+dz*dz<(e.boss?92*92:48*48)&&(!e.boss||!e.contactHit)){
+    if(dx*dx+dy*dy+dz*dz<(e.boss?(e.bossStage>=5?118*118:92*92):48*48)&&(!e.boss||!e.contactHit)){
       if(e.boss)e.contactHit=true;else{e.hit=true;e.mesh.visible=false;}
       if(shieldT>0||shieldCooldown<=0)activateShield(e.x,e.alt,e.z);
       else{P.s*=e.boss?0.58:0.72;P.alt=Math.max(25,P.alt-(e.boss?70:45));shake=0.45;addFloat(P.x,P.alt+45,e.boss?'اصطدام بالزعيم!':'ضربة معادية!','#ff9b91',P.z);beep(120,.18,'square',0.05);}
@@ -1377,8 +1433,8 @@ function updateFlight(dt){
     }
     if(!hit){for(const e of objs.enemies){
       if(e.hit)continue;
-      const hr=e.boss?82:38;
-      if(Math.abs(e.x-shot.x)<hr&&Math.abs(e.alt-shot.alt)<(e.boss?72:40)&&Math.abs(e.z-shot.z)<(e.boss?80:45)){
+      const hr=e.boss?(e.bossStage>=5?118:82):38;
+      if(Math.abs(e.x-shot.x)<hr&&Math.abs(e.alt-shot.alt)<(e.bossStage>=5?94:e.boss?72:40)&&Math.abs(e.z-shot.z)<(e.bossStage>=5?108:e.boss?80:45)){
         hit=true;
         if(e.boss){
           e.hp-=Math.max(1,(shot.damage||10)/10);playSfx('boss-hit',0.7);shake=Math.max(shake,0.08);
@@ -1403,7 +1459,7 @@ function updateFlight(dt){
     if(m.smoke<=0){addPart(m.x,m.alt,0,0,0.34,0xb9c4d4,4,m.z,0);m.smoke=0.045;}
     const v=new THREE.Vector3(m.vx,m.vy,m.vz);m.mesh.position.set(m.x*S,Y(m.alt),m.z*S);m.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(1,0,0),v.normalize());
     let hit=m.life<=0||m.alt<0,impacted=false;
-    if(!hit){for(const e of objs.enemies){if(e.hit)continue;const dx=e.x-m.x,dy=e.alt-m.alt,dz=e.z-m.z;if(dx*dx+dy*dy+dz*dz<(e.boss?125:70)**2){hit=true;impacted=true;if(e.boss){e.hp=Math.max(0,e.hp-26);playSfx('boss-hit',0.78);addFloat(e.x,e.alt+70,'صاروخ أصاب الزعيم! طاقة '+Math.ceil(e.hp)+'/'+e.maxHp,'#ffe27a',e.z);if(e.hp<=0)defeatBoss(e,'missile');} else{e.hit=true;e.mesh.visible=false;run.coins+=18*(1+save.lv.coin);addFloat(e.x,e.alt+45,'إسقاط صاروخي +18','#ffe27a',e.z);}for(let n=0;n<24;n++)addPart(e.x,e.alt,(Math.random()-.5)*300,(Math.random()-.5)*240,0.55,0xff9b4a,4,e.z);shake=Math.max(shake,0.3);break;}}}
+    if(!hit){for(const e of objs.enemies){if(e.hit)continue;const dx=e.x-m.x,dy=e.alt-m.alt,dz=e.z-m.z;if(dx*dx+dy*dy+dz*dz<(e.boss?(e.bossStage>=5?148:125):70)**2){hit=true;impacted=true;if(e.boss){e.hp=Math.max(0,e.hp-26);playSfx('boss-hit',0.78);addFloat(e.x,e.alt+70,'صاروخ أصاب الزعيم! طاقة '+Math.ceil(e.hp)+'/'+e.maxHp,'#ffe27a',e.z);if(e.hp<=0)defeatBoss(e,'missile');} else{e.hit=true;e.mesh.visible=false;run.coins+=18*(1+save.lv.coin);addFloat(e.x,e.alt+45,'إسقاط صاروخي +18','#ffe27a',e.z);}for(let n=0;n<24;n++)addPart(e.x,e.alt,(Math.random()-.5)*300,(Math.random()-.5)*240,0.55,0xff9b4a,4,e.z);shake=Math.max(shake,0.3);break;}}}
     if(hit){if(impacted){playSfx('missile-impact');playSfx('explosion',0.72);}scene.remove(m.mesh);missiles.splice(i,1);}
   }
 }
@@ -1425,6 +1481,12 @@ function update(dt){
     const p=parts[i];p.life-=dt;
     if(p.life<=0){p.mesh.visible=false;parts.splice(i,1);continue;}
     p.x+=p.vx*dt;p.alt+=p.vy*dt;p.z+=p.vz*dt;
+  }
+  for(let i=bossBlastRings.length-1;i>=0;i--){
+    const b=bossBlastRings[i];b.life-=dt;
+    const progress=clamp(1-b.life/b.maxLife,0,1);
+    b.mesh.scale.setScalar(0.35+progress*b.maxScale);b.mesh.material.opacity=0.88*(1-progress);
+    if(b.life<=0){scene.remove(b.mesh);b.mesh.geometry.dispose();b.mesh.material.dispose();bossBlastRings.splice(i,1);}
   }
   for(let i=floats.length-1;i>=0;i--){const f=floats[i];f.t+=dt;if(f.t>1.1){f.el.remove();floats.splice(i,1);}}
   // cull
@@ -1663,6 +1725,7 @@ function render(dt){
   for(const r of objs.rings)if(r.on)r.mesh.rotation.x=time*0.8;
   for(const e of objs.enemies){
     e.mesh.position.set(e.x*S,Y(e.alt),e.z*S);
+    if(e.mesh.userData.energyRings)e.mesh.userData.energyRings.forEach((ring,i)=>{ring.rotation.z=time*(i?1.8:-1.25);});
     e.mesh.visible=!e.hit;
     e.mesh.rotation.z=e.boss?Math.sin(e.phase*0.9)*0.13:Math.sin(e.phase)*0.06;
     e.mesh.rotation.x=e.boss?Math.sin(e.phase*0.7)*0.08:0;
