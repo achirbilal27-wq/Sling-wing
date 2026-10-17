@@ -3,7 +3,6 @@
 const $=id=>document.getElementById(id);
 function fail(msg){document.getElementById('app').innerHTML='<p style="padding:28px;font:800 20px Cairo,sans-serif;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.4)">'+msg+'</p>';}
 if(typeof THREE==='undefined'){fail('تعذّر تحميل محرك الثلاثي الأبعاد. تحقق من الاتصال ثم أعد التحميل.');return;}
-loadEnemyPlaneModel();
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const lerp=(a,b,t)=>a+(b-a)*t;
 const MAXLV=6, M_PER_PX=1/40, S=0.1, YOFF=2.6;
@@ -676,6 +675,7 @@ function loadEnemyPlaneModel(){
     console.warn('Enemy GLB unavailable; using procedural aircraft until assets/models/glb/plane_pc.glb is added.',error);
   });
 }
+loadEnemyPlaneModel();
 function makeCan(){
   const g=new THREE.Group();
   const b=new THREE.Mesh(new THREE.BoxGeometry(2.6,3.2,1.2),canMat);g.add(b);
