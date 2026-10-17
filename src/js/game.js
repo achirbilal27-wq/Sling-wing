@@ -610,30 +610,48 @@ function makeBossPlane(biomeIndex){
 let enemyModelTemplate=null;
 let enemyModelLoadStarted=false;
 function prepareEnemyModel(root){
-  root.updateMatrixWorld(true);
-  const originalBox=new THREE.Box3().setFromObject(root);
+  // Wrap the imported scene so normalization never changes the GLTF's
+  // original hierarchy or relies on its root node being at world origin.
+  const normalized=new THREE.Group();
+  normalized.add(root);
+  normalized.updateMatrixWorld(true);
+  const originalBox=new THREE.Box3().setFromObject(normalized);
   if(originalBox.isEmpty()) return null;
-  const center=originalBox.getCenter(new THREE.Vector3());
-  const size=originalBox.getSize(new THREE.Vector3());
-  root.position.sub(center);
-  // Most aircraft files use X for wingspan and Z for fuselage length.
-  // Rotate the model so the wingspan runs along this game's Z axis.
-  if(size.x>size.z) root.rotation.y=Math.PI/2;
-  root.updateMatrixWorld(true);
-  const fittedBox=new THREE.Box3().setFromObject(root);
+  const originalSize=originalBox.getSize(new THREE.Vector3());
+  const originalCenter=originalBox.getCenter(new THREE.Vector3());
+  root.position.sub(originalCenter);
+
+  // In this game, aircraft nose points along X and wingspan runs along Z.
+  // Common GLB aircraft use Z for nose direction and X for wingspan.
+  if(originalSize.x>originalSize.z) normalized.rotation.y=Math.PI/2;
+  normalized.updateMatrixWorld(true);
+
+  let fittedBox=new THREE.Box3().setFromObject(normalized);
   const fittedSize=fittedBox.getSize(new THREE.Vector3());
   const span=Math.max(fittedSize.x,fittedSize.z);
   if(!Number.isFinite(span)||span<0.001) return null;
-  root.scale.multiplyScalar(12/span);
-  root.position.y-=fittedBox.getCenter(new THREE.Vector3()).y;
-  root.traverse(node=>{
+  normalized.scale.setScalar(12/span);
+  normalized.updateMatrixWorld(true);
+  fittedBox=new THREE.Box3().setFromObject(normalized);
+  // Center the scaled model in all three axes so its origin is stable for
+  // enemy movement, hit detection, and camera-relative rotations.
+  normalized.position.sub(fittedBox.getCenter(new THREE.Vector3()));
+  normalized.updateMatrixWorld(true);
+
+  normalized.traverse(node=>{
     if(node.isMesh){
       node.castShadow=true;
       node.receiveShadow=true;
-      if(node.material){node.material.side=THREE.DoubleSide;node.material.needsUpdate=true;}
+      if(node.material){
+        const materials=Array.isArray(node.material)?node.material:[node.material];
+        materials.forEach(material=>{
+          material.side=THREE.DoubleSide;
+          material.needsUpdate=true;
+        });
+      }
     }
   });
-  return root;
+  return normalized;
 }
 function makeEnemyPlane(){
   const g=new THREE.Group();
