@@ -43,14 +43,9 @@ const decodedJs = js.replace(/\\u([0-9a-f]{4})/gi, (_, hex) => String.fromCharCo
 const assetRefs = [...decodedJs.matchAll(/assets\/[^'"\s)]+?\.(?:png|jpe?g|webp|ogg|mp3|wav|mp4|json|glb|gltf)(?=['"\s)]|$)/gi)]
   .map((match) => match[0]);
 for (const url of [...new Set(assetRefs)]) {
-  // The starter GLB is optional in the repo until the user adds their model.
-  // The runtime keeps the original procedural enemy plane as a safe fallback.
-  if (url === 'assets/models/glb/plane_pc.glb') {
-    check(exists('assets/models/README.md'), 'Missing 3D model folder instructions.');
-    continue;
-  }
   check(exists(url), 'Missing local JavaScript asset: src/' + url);
 }
+check(exists('assets/models/glb/plane_pc.glb'), 'The enemy aircraft GLB model is missing from the dedicated model directory.');
 
 const bosses = ['iron-eagle.png', 'storm-bomber.png', 'Current-serpent.png', 'cloud-warden.png', 'grey-ruler.png'];
 for (const name of bosses) check(exists('assets/images/bosses/' + name), 'Missing boss portrait: ' + name);
@@ -69,6 +64,8 @@ if (fs.existsSync(preparedHtmlPath)) {
   check(preparedHtml.includes('src="js/GLTFLoader.js"'), 'Prepared Android HTML does not load local GLTFLoader.');
   check(!preparedHtml.includes(threeCdn), 'Prepared Android HTML still references the Three.js CDN.');
   check(fs.existsSync(path.join(root, 'www', 'js', 'three.min.js')), 'Prepared Android build is missing www/js/three.min.js.');
+  check(fs.existsSync(path.join(root, 'www', 'js', 'GLTFLoader.js')), 'Prepared Android build is missing www/js/GLTFLoader.js.');
+  check(fs.existsSync(path.join(root, 'www', 'assets', 'models', 'glb', 'plane_pc.glb')), 'Prepared Android build is missing the enemy aircraft GLB asset.');
 }
 check(fs.existsSync(path.join(root, 'package.json')), 'package.json is missing.');
 
