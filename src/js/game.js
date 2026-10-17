@@ -582,7 +582,9 @@ function makeBossPlane(biomeIndex){
   g.userData.boss=true;
   g.userData.imageBoss=true;
   const applyBossTexture=texture=>{
-    texture.minFilter=THREE.LinearMipmapLinearFilter;
+    texture.encoding=THREE.sRGBEncoding;
+    texture.generateMipmaps=false;
+    texture.minFilter=THREE.LinearFilter;
     texture.magFilter=THREE.LinearFilter;
     material.map=texture;
     material.needsUpdate=true;
