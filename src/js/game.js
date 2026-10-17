@@ -618,8 +618,6 @@ function prepareEnemyModel(root){
   const originalBox=new THREE.Box3().setFromObject(normalized);
   if(originalBox.isEmpty()) return null;
   const originalSize=originalBox.getSize(new THREE.Vector3());
-  const originalCenter=originalBox.getCenter(new THREE.Vector3());
-  root.position.sub(originalCenter);
 
   // In this game, aircraft nose points along X and wingspan runs along Z.
   // Common GLB aircraft use Z for nose direction and X for wingspan.
