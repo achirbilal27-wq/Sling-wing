@@ -654,7 +654,7 @@ function loadEnemyPlaneModel(){
   if(enemyModelLoadStarted||typeof THREE.GLTFLoader!=='function') return;
   enemyModelLoadStarted=true;
   const loader=new THREE.GLTFLoader();
-  loader.load('assets/models/enemies/plane_pc.glb',gltf=>{
+  loader.load('assets/models/glb/plane_pc.glb',gltf=>{
     const model=prepareEnemyModel(gltf.scene);
     if(!model){console.warn('Enemy GLB has no usable geometry; keeping procedural aircraft.');return;}
     enemyModelTemplate=model;
@@ -673,7 +673,7 @@ function loadEnemyPlaneModel(){
     }
     console.info('Enemy aircraft GLB loaded successfully.');
   },undefined,error=>{
-    console.warn('Enemy GLB unavailable; using procedural aircraft until assets/models/enemies/plane_pc.glb is added.',error);
+    console.warn('Enemy GLB unavailable; using procedural aircraft until assets/models/glb/plane_pc.glb is added.',error);
   });
 }
 function makeCan(){
