@@ -629,7 +629,7 @@ const G=560;
 function clearObjs(){while(objGroup.children.length)objGroup.remove(objGroup.children[0]);}
 function resetRun(){
   if(objs&&objs.enemyShots)objs.enemyShots.forEach(b=>scene.remove(b.mesh));
-  P={x:0,alt:85,z:0,vz:0,s:0,a:0.62,roll:0,yaw:0,boostT:0,spin:0,sliding:false,bounces:0,fuel:100,launchT:0,engineOut:false,fuelWarned:false,abilityCooldown:0,magnetT:0};
+  P={x:0,alt:85,z:0,vz:0,s:0,a:0.62,roll:0,yaw:0,boostT:0,spin:0,sliding:false,bounces:0,fuel:100,hp:100,maxHp:100,hitCooldown:0,damageFlash:0,launchT:0,engineOut:false,fuelWarned:false,abilityCooldown:0,magnetT:0};
   routeTargetMeters=500;
   shots.forEach(s=>scene.remove(s.mesh));shots.length=0;
   missiles.forEach(m=>scene.remove(m.mesh));missiles.length=0;missileCooldown=0;
@@ -719,7 +719,7 @@ function spawn(until){
     const x=objs.nextBoss,stage=Math.max(0,run.bosses),biomeIndex=stage%BOSS_PROFILES.length;
     // Let the player finish the approach before the boss enters the arena.
     if(x>P.x+4000)return;
-    const bossHp=[70,95,125,155,220][biomeIndex]||220;
+    const bossHp=[250,360,490,650,900][biomeIndex]||250;
     objs.enemies.forEach(other=>{if(!other.boss&&!other.hit){other.hit=true;objGroup.remove(other.mesh);}});
     objs.enemies=objs.enemies.filter(other=>other.boss&&!other.hit);
     objs.enemyShots.forEach(b=>scene.remove(b.mesh));objs.enemyShots.length=0;
@@ -1209,6 +1209,7 @@ function launch(){
 function updateFlight(dt){
   run.fireCd=Math.max(0,run.fireCd-dt);
   run.fireSfxTimer-=dt;
+  P.hitCooldown=Math.max(0,(P.hitCooldown||0)-dt);P.damageFlash=Math.max(0,(P.damageFlash||0)-dt);
   const canFire=fireHeld&&!run.overheat;
   if(canFire&&run.fireCd<=0){
     doShoot();
@@ -1377,23 +1378,31 @@ function updateFlight(dt){
     e.fireT-=dt;
     if(e.fireT<=0&&e.x>P.x+180&&e.x<P.x+(e.boss?1900:4200)&&(!e.boss||e.attackState==='ranged')){
       if(e.boss){
-        const phase=e.combatPhase||1;
-        const finalBoss=e.bossStage>=5;
-        const pattern=e.weaponCycle++%(finalBoss&&phase===3?6:phase===3?4:finalBoss?4:3);
-        const aimed=pattern===1||pattern===4,radial=pattern===3||pattern===5,pulse=pattern===0||radial;
-        const count=pattern===4?3:pattern===5?9:aimed?1:pattern===0?(phase===3?7:phase===2?5:4):pattern===2?(phase===3?4:phase===2?3:2):5;
-        e.fireT=aimed?(phase===3?2.0:phase===2?2.4:2.8):pattern===0?(phase===3?1.8:phase===2?2.2:2.6):pattern===2?(phase===3?1.7:phase===2?2.1:2.5):2.2;
+        const phase=e.combatPhase||1,stageIndex=Math.max(0,(e.bossStage||1)-1);
+        const styles=[
+          {cycle:4,color:0xffc857,label:'النسر الحديدي',speed:1420},
+          {cycle:3,color:0xff8b36,label:'قاذفة العاصفة',speed:940},
+          {cycle:4,color:0xff5ed2,label:'أفعى التيارات',speed:1050},
+          {cycle:4,color:0x6eeaff,label:'حارس السحاب',speed:1320},
+          {cycle:phase===3?6:4,color:0xff365f,label:'الحاكم الرمادي',speed:1450}
+        ];
+        const style=styles[stageIndex]||styles[0],pattern=e.weaponCycle++%(style.cycle+(stageIndex===4&&phase===3?2:0)),finalBoss=stageIndex===4;
+        const aimed=stageIndex===0?pattern===1:stageIndex===1?pattern===2:stageIndex===2?pattern===1||pattern===3:stageIndex===3?pattern===0||pattern===3:pattern===1||pattern===4;
+        const radial=stageIndex===2?pattern===0:stageIndex===3?pattern===2:stageIndex===4?(pattern===3||pattern===5):pattern===3;
+        const pulse=stageIndex===1||radial||(finalBoss&&pattern===0);
+        const count=stageIndex===0?(pattern===0?5:pattern===2?3:pattern===3?7:1):stageIndex===1?(pattern===0?3:pattern===1?5:2):stageIndex===2?(pattern===0?8:pattern===2?5:pattern===3?7:1):stageIndex===3?(pattern===0?2:pattern===1?6:pattern===2?8:pattern===3?3:1):pattern===4?3:pattern===5?9:pattern===3?7:pattern===0?5:aimed?1:6;
+        e.fireT=(stageIndex===1?2.5:stageIndex===2?2.15:finalBoss&&phase===3?1.45:2.0)+(count>5?.28:0);
+        const projectileMat=bossWeaponMaterials[stageIndex];
+        const weaponLabel=stageIndex===0?(pattern===1?'مدفع قنّاص النسر':pattern===2?'رشقة الجناحين':'رشقة النسر الحديدي'):stageIndex===1?(pattern===0?'قنابل العاصفة الثقيلة':pattern===1?'وابل القاذفة':'انفجار حمولة العاصفة'):stageIndex===2?(pattern===0?'لولب أفعى التيارات':pattern===1?'لدغة الطاقة':'حلقة التيارات'):stageIndex===3?(pattern===0?'شفرتا السحاب':pattern===1?'مروحة الرياح':pattern===2?'دوامة السحاب':'رمح البرق'):pattern===4?'ثلاثي مدافع العرش':pattern===5?'عاصفة المقذوفات':pattern===3?'انفجار شعاعي':pattern===0?'وابل البلازما':'مدفع الطاقة الموجّه';
         for(let k=0;k<count;k++){
-          const offset=k-(count-1)/2;
-          const mesh=new THREE.Mesh(aimed?bossLanceGeo:(pulse?bossPulseGeo:enemyShotGeo),aimed?bossLanceMat:(pulse?bossPulseMat:enemyShotBossMat));
-          mesh.position.set(e.x*S,Y(e.alt),e.z*S);scene.add(mesh);
-          const tx=P.x-e.x,ty=P.alt-e.alt+(aimed?(pattern===4?offset*34:0):offset*(radial?44:pattern===0?30:52)),tz=P.z-e.z+(aimed?(pattern===4?offset*42:0):offset*(radial?52:pattern===0?44:68)),L=Math.hypot(tx,ty,tz)||1;
-          const spd=aimed?(phase===3?1580:phase===2?1460:1360):pattern===0?(phase===3?1240:phase===2?1160:1080):radial?980:1120;
-          objs.enemyShots.push({x:e.x,alt:e.alt,z:e.z,vx:tx/L*spd,vy:ty/L*spd,vz:tz/L*spd,life:3.8,mesh,bossShot:true,bossWeapon:aimed?'lance':radial?'radial-burst':pattern===0?'plasma-fan':'spread'});
+          const offset=k-(count-1)/2,useLance=aimed&&stageIndex!==1,geo=useLance?bossLanceGeo:(pulse?bossPulseGeo:enemyShotGeo);
+          const mesh=new THREE.Mesh(geo,projectileMat);mesh.position.set(e.x*S,Y(e.alt),e.z*S);scene.add(mesh);
+          const spread=stageIndex===2?(radial?52:38):stageIndex===1?28:stageIndex===3?44:stageIndex===4?50:32;
+          const tx=P.x-e.x,ty=P.alt-e.alt+(aimed?offset*(stageIndex===4?34:stageIndex===3?25:14):offset*(radial?spread:pattern===0?30:spread)),tz=P.z-e.z+(aimed?offset*(stageIndex===4?42:stageIndex===3?32:20):offset*(radial?spread:pattern===0?44:spread)),L=Math.hypot(tx,ty,tz)||1;
+          const spd=(stageIndex===1?900:style.speed)*(phase===3?1.12:phase===2?1.05:1);
+          objs.enemyShots.push({x:e.x,alt:e.alt,z:e.z,vx:tx/L*spd,vy:ty/L*spd,vz:tz/L*spd,life:3.8,mesh,bossShot:true,bossWeapon:weaponLabel,damage:[9,11,13,15,18][stageIndex]});
         }
-        const weaponLabel=pattern===4?'ثلاثي مدافع العرش':pattern===5?'عاصفة المقذوفات':aimed?'مدفع الطاقة الموجّه':pattern===0?'وابل البلازما':pattern===2?'انتشار طاقي':'انفجار شعاعي';
-        e.lastWeaponLabel=weaponLabel;
-        addFloat(e.x,e.alt+48,weaponLabel,aimed?'#ff70ba':'#ffbd70',e.z);
+        e.lastWeaponLabel=weaponLabel;addFloat(e.x,e.alt+48,weaponLabel,'#'+style.color.toString(16).padStart(6,'0'),e.z);
       }else{
         e.fireT=Math.max(0.75,1.65-save.lv.plane*0.06);
         const mesh=new THREE.Mesh(enemyShotGeo,enemyShotMat);mesh.position.set(e.x*S,Y(e.alt),e.z*S);scene.add(mesh);
@@ -1405,14 +1414,14 @@ function updateFlight(dt){
     if(dx*dx+dy*dy+dz*dz<(e.boss?(e.bossStage>=5?118*118:92*92):48*48)&&(!e.boss||!e.contactHit)){
       if(e.boss)e.contactHit=true;else{e.hit=true;e.mesh.visible=false;}
       if(shieldT>0||shieldCooldown<=0)activateShield(e.x,e.alt,e.z);
-      else{P.s*=e.boss?0.58:0.72;P.alt=Math.max(25,P.alt-(e.boss?70:45));shake=0.45;addFloat(P.x,P.alt+45,e.boss?'اصطدام بالزعيم!':'ضربة معادية!','#ff9b91',P.z);beep(120,.18,'square',0.05);}
+      else{damagePlayer(e.boss?[16,20,24,28,32][Math.max(0,(e.bossStage||1)-1)]:8,e.x,e.alt,e.z,e.boss?'boss':'enemy');P.alt=Math.max(25,P.alt-(e.boss?55:35));beep(120,.18,'square',0.05);}
     }
   }
   for(let i=objs.enemyShots.length-1;i>=0;i--){
     const b=objs.enemyShots[i];b.x+=b.vx*dt;b.alt+=(b.vy||0)*dt;b.z+=(b.vz||0)*dt;b.life-=dt;b.mesh.position.set(b.x*S,Y(b.alt),b.z*S);
     if(Math.abs(b.x-P.x)<34&&Math.abs(b.alt-P.alt)<32&&Math.abs(b.z-P.z)<40){
       if(shieldT>0||shieldCooldown<=0)activateShield(b.x,b.alt,b.z);
-      else{P.s*=b.bossShot?0.72:0.86;P.alt=Math.max(20,P.alt-(b.bossShot?36:20));shake=b.bossShot?0.35:0.22;addFloat(P.x,P.alt+35,b.bossShot?'ضربة زعيم!':'إصابة!','#ff9b91',P.z);}
+      else{const stageIndex=Math.max(0,Math.min(4,(objs.enemies.find(e=>e.boss&&!e.hit)?.bossStage||1)-1));damagePlayer(b.bossShot?(b.damage||[9,11,13,15,18][stageIndex]):6,b.x,b.alt,b.z,b.bossShot?'boss':'enemy');P.alt=Math.max(20,P.alt-(b.bossShot?24:12));}
       b.life=0;
     }
     if(b.life<=0){scene.remove(b.mesh);objs.enemyShots.splice(i,1);}
@@ -1503,6 +1512,7 @@ function update(dt){
     const m=Math.max(0,Math.floor(P.x*M_PER_PX));
     if($('dist').dataset.v!==String(m)){$('dist').dataset.v=m;$('dist').innerHTML=m+'<small>م</small>';}
     $('rCoins').textContent=run.coins;
+    updatePlayerHealthUI();
     const comboHud=$('comboHud');if(comboHud){comboHud.classList.toggle('on',run.gateCombo>0);comboHud.classList.toggle('hot',run.gateCombo>=5);comboHud.classList.toggle('ultra',run.gateCombo>=10);$('comboValue').textContent='×'+run.gateCombo;const label=$('comboLabel');if(label)label.textContent=run.gateCombo>=10?'أسطوري · LEGENDARY':run.gateCombo>=5?'سلسلة نارية · ON FIRE':'سلسلة البوابات';}
     const activeBoss=objs.enemies.find(e=>e.boss&&!e.hit);
     const bossHud=$('bossHud');if(bossHud){bossHud.classList.toggle('on',!!activeBoss);if(activeBoss){
@@ -1531,6 +1541,21 @@ function update(dt){
 }
 const VIEW_AHEAD=14000;
 
+function updatePlayerHealthUI(){
+  const el=$('playerHealth');if(!el||!P)return;
+  const hp=clamp(Number.isFinite(P.hp)?P.hp:100,0,100),fill=$('playerHealthFill'),label=$('playerHealthText');
+  if(fill)fill.style.width=hp+'%';if(label)label.textContent=Math.ceil(hp)+'%';
+  el.classList.toggle('low',hp<=35&&hp>0);el.classList.toggle('critical',hp<=18&&hp>0);el.classList.toggle('hit',!!(P.damageFlash&&P.damageFlash>0));el.setAttribute('aria-valuenow',String(Math.ceil(hp)));
+}
+function damagePlayer(amount,x,alt,z,source){
+  if(!P||state!=='flight'||run.dead||P.hitCooldown>0)return false;
+  if(shieldT>0){shake=Math.max(shake,.12);playSfx('shield');for(let n=0;n<8;n++)addPart(x===undefined?P.x:x,alt===undefined?P.alt:alt,(Math.random()-.5)*150,(Math.random()-.5)*150,.28,0x7ff5ff,3,z===undefined?P.z:z);return false;}
+  if(shieldCooldown<=0){activateShield(x===undefined?P.x:x,alt===undefined?P.alt:alt,z===undefined?P.z:z);return false;}
+  P.hp=Math.max(0,(Number.isFinite(P.hp)?P.hp:100)-amount);P.hitCooldown=.48;P.damageFlash=.28;shake=Math.max(shake,source==='boss'?.34:.22);P.s*=source==='boss'?.84:.92;
+  addFloat(P.x,P.alt+42,P.hp<=0?'تعطّل نظام الطائرة!':'-'+amount+' صحة',P.hp<=25?'#ff455f':'#ff9b91',P.z);
+  for(let n=0;n<(source==='boss'?15:8);n++)addPart(P.x,P.alt,(Math.random()-.5)*160,(Math.random()-.5)*140,.32,source==='boss'?0xff526e:0xff9b4a,3+Math.random()*2,P.z);
+  updatePlayerHealthUI();if(P.hp<=0){run.dead=true;addFloat(P.x,P.alt+90,'فشل نظام الطائرة','#ff455f',P.z);endRun();}return true;
+}
 function activateShield(x,alt,z){
   shieldT=1.15;
   shieldCooldown=Math.max(3.8,aircraft().shield-save.lv.plane*0.38-(save.model==='guardian'?1.1:0));
@@ -1539,6 +1564,7 @@ function activateShield(x,alt,z){
   for(let i=0;i<12;i++)addPart(x,alt,(Math.random()-.5)*220,(Math.random()-.5)*220,0.35,0x7ff5ff,3,z);
 }
 const enemyShotGeo=new THREE.SphereGeometry(1.6,8,6),enemyShotMat=new THREE.MeshBasicMaterial({color:0xff635f}),enemyShotBossMat=new THREE.MeshBasicMaterial({color:0xffb04a,emissive:0x8a2d00});
+const bossWeaponMaterials=[0xffc857,0xff8b36,0xff5ed2,0x6eeaff,0xff365f].map(color=>new THREE.MeshBasicMaterial({color}));
 function openStation(station){
   paused=true;fireHeld=false;down.clear();ptr.clear();keys.left=keys.right=false;run.stationCount++;
   const root=$('stationPerks');root.replaceChildren();
@@ -1706,6 +1732,8 @@ function render(dt){
   updateRoute(Math.max(0,P.x*M_PER_PX));
   // plane
   planeG.position.set(P.x*S,Y(P.alt),P.z*S);
+  const healthEl=$('playerHealth');
+  if(healthEl){if(state==='flight'){_v.set(P.x*S,Y(P.alt+52),P.z*S).project(camera);const onScreen=_v.z>-1&&_v.z<1&&_v.x>-1.08&&_v.x<1.08&&_v.y>-1.08&&_v.y<1.08;healthEl.style.display=onScreen?'flex':'none';if(onScreen){healthEl.style.left=((_v.x*.5+.5)*W)+'px';healthEl.style.top=((-_v.y*.5+.5)*Hh)+'px';}}else healthEl.style.display='none';}
   planeG.rotation.set(P.roll,P.yaw,P.a);
   prop.rotation.x=P.spin;
   flame.visible=P.boostT>0;if(flame.visible)flame.scale.set(0.8+Math.random()*0.5,1,1);
