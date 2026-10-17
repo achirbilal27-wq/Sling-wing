@@ -416,6 +416,7 @@ function applyPlaneColors(){
   if(model!==appliedModel){appliedModel=model;Object.keys(variantKits).forEach(k=>variantKits[k].visible=k===model);}
 }
 
+const bossImageLoader=new THREE.TextureLoader();
 /* ---------- objects ---------- */
 const objGroup=new THREE.Group();scene.add(objGroup);
 const coinGeo=new THREE.CylinderGeometry(1.5,1.5,0.35,18);coinGeo.rotateZ(Math.PI/2);
@@ -548,7 +549,7 @@ function makeGreyRulerBoss(){
   [3.5,4.7].forEach((r,i)=>{const ring=new THREE.Mesh(new THREE.TorusGeometry(r,0.14,8,36),i?red:cyan);ring.position.set(-1.05,1.3,0);ring.rotation.y=Math.PI/2;g.add(ring);rings.push(ring);});
   g.userData.energyRings=rings;g.userData.boss=true;g.userData.bossType='grey-ruler';g.rotation.y=Math.PI;return g;
 }
-function makeBossPlane(biomeIndex){
+function makeProceduralBossPlane(biomeIndex){
   if(biomeIndex===4)return makeGreyRulerBoss();
   if(biomeIndex===1)return makeStormBomberBoss();
   const g=new THREE.Group(),palette=BOSS_PROFILES[biomeIndex%BOSS_PROFILES.length];
@@ -564,6 +565,39 @@ function makeBossPlane(biomeIndex){
   const cockpit=new THREE.Mesh(new THREE.SphereGeometry(1,12,8),glass);cockpit.scale.set(1.45,0.72,0.82);cockpit.position.set(1.05,1.05,0);g.add(cockpit);
   const crest=new THREE.Mesh(new THREE.ConeGeometry(0.65,3.6,6),glow);crest.rotation.z=-Math.PI/2;crest.position.set(3.8,0.5,0);g.add(crest);
   g.rotation.y=Math.PI;g.userData.boss=true;return g;
+}
+function makeBossPlane(biomeIndex){
+  const names=['iron-eagle','storm-bomber','Current-serpent','cloud-warden','grey-ruler'];
+  const g=new THREE.Group();
+  const fallback=makeProceduralBossPlane(biomeIndex);
+  fallback.scale.setScalar(biomeIndex===4?2.85:2.15);
+  fallback.visible=true;
+  g.add(fallback);
+  const material=new THREE.SpriteMaterial({transparent:true,alphaTest:0.015,depthWrite:false,depthTest:true});
+  const image=new THREE.Sprite(material);
+  image.center.set(0.5,0.5);
+  image.visible=false;
+  g.add(image);
+  g.userData.boss=true;
+  g.userData.imageBoss=true;
+  const path='assets/images/bosses/'+names[biomeIndex]+'.png';
+  bossImageLoader.load(path,texture=>{
+    texture.minFilter=THREE.LinearMipmapLinearFilter;
+    texture.magFilter=THREE.LinearFilter;
+    material.map=texture;
+    material.needsUpdate=true;
+    const aspect=(texture.image&&texture.image.width&&texture.image.height)?texture.image.width/texture.image.height:1;
+    const maxWidth=biomeIndex===4?52:46;
+    const maxHeight=biomeIndex===4?36:33;
+    const height=Math.min(maxHeight,maxWidth/Math.max(0.1,aspect));
+    image.scale.set(height*aspect,height,1);
+    image.visible=true;
+    fallback.visible=false;
+  },undefined,()=>{
+    image.visible=false;
+    fallback.visible=true;
+  });
+  return g;
 }
 function makeEnemyPlane(){
   const g=new THREE.Group();
@@ -725,7 +759,7 @@ function spawn(until){
     objs.enemyShots.forEach(b=>scene.remove(b.mesh));objs.enemyShots.length=0;
     ['coins','rings','birds','fuels','drafts','storms','stations'].forEach(key=>{objs[key].forEach(o=>{if(o.mesh)objGroup.remove(o.mesh);});objs[key]=[];});
     const e={x,alt:250+Math.random()*260,z:zc((Math.random()-.5)*260),phase:Math.random()*6.28,fireT:2.3,hit:false,boss:true,hp:bossHp,maxHp:bossHp,contactHit:false,attackState:'ranged',attackTimer:3.2+Math.random()*1.5,diveWarning:0,diveTimer:0,weaponCycle:0,diveTargetAlt:300,diveTargetZ:0,combatPhase:1,biomeIndex,bossName:BOSS_PROFILES[biomeIndex].name,bossStage:stage+1};
-    e.finalBoss=biomeIndex===4;e.mesh=makeBossPlane(biomeIndex);e.mesh.scale.setScalar(e.finalBoss?2.85:2.15);e.mesh.position.set(x*S,Y(e.alt),e.z*S);objGroup.add(e.mesh);objs.enemies.push(e);
+    e.finalBoss=biomeIndex===4;e.mesh=makeBossPlane(biomeIndex);e.mesh.position.set(x*S,Y(e.alt),e.z*S);objGroup.add(e.mesh);objs.enemies.push(e);
     const portrait=$('bossPortrait');
     if(portrait){portrait.hidden=true;portrait.onerror=()=>{portrait.hidden=true;};portrait.onload=()=>{portrait.hidden=false;};portrait.src='assets/images/bosses/'+['iron-eagle','storm-bomber','Current-serpent','cloud-warden','grey-ruler'][biomeIndex]+'.png';}
     run.bossBattle=true;playSfx('boss-warning');addFloat(x,e.alt+75,'دخول ساحة '+e.bossName+' — اهزمه للمتابعة!','#ff9b91',e.z);
