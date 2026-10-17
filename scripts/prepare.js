@@ -26,9 +26,15 @@ fs.copyFileSync(threeFile, path.join(www, 'js', 'three.min.js'));
 
 const idx = path.join(www, 'index.html');
 let html = fs.readFileSync(idx, 'utf8');
-html = html.replace(
-  /https:\/\/cdnjs\.cloudflare\.com\/ajax\/libs\/three\.js\/r128\/three\.min\.js/,
-  'js/three.min.js'
-);
+const threeCdnPattern = /https:\/\/cdnjs\.cloudflare\.com\/ajax\/libs\/three\.js\/r128\/three\.min\.js/;
+if (!threeCdnPattern.test(html)) {
+  console.error('Expected Three.js CDN script was not found in src/index.html.');
+  process.exit(1);
+}
+html = html.replace(threeCdnPattern, 'js/three.min.js');
+if (/https:\/\/cdnjs\.cloudflare\.com\/ajax\/libs\/three\.js\/r128\/three\.min\.js/.test(html)) {
+  console.error('Three.js CDN reference remained in www/index.html; APK would depend on the network.');
+  process.exit(1);
+}
 fs.writeFileSync(idx, html);
 console.log('www/ is ready.');
