@@ -1303,3 +1303,19 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
 @keyframes bossBlastFlash{0%{opacity:0}12%{opacity:1}40%{opacity:.72}100%{opacity:0}}
 @keyframes bossFinalBlast{0%{opacity:0;filter:brightness(1)}10%{opacity:1;filter:brightness(1.9)}28%{opacity:.9;filter:brightness(1.45)}60%{opacity:.42;filter:brightness(1.1)}100%{opacity:0;filter:brightness(1)}}
 @media(prefers-reduced-motion:reduce){#bossBlastOverlay.on,#bossBlastOverlay.final.on{animation-duration:.25s}}
+
+
+/* Pilot aircraft health indicator, projected directly above the aircraft. */
+#playerHealth{position:absolute;z-index:10;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:7px;width:174px;padding:7px 9px;border:1px solid rgba(143,238,255,.72);border-radius:12px;background:linear-gradient(135deg,rgba(8,24,46,.92),rgba(15,62,81,.8));box-shadow:0 0 14px rgba(75,217,255,.2),inset 0 1px 0 rgba(255,255,255,.16);color:#fff;pointer-events:none;backdrop-filter:blur(6px);transition:border-color .15s,box-shadow .15s;will-change:left,top}
+.player-health-icon{display:grid;place-items:center;flex:0 0 25px;height:25px;border-radius:8px;background:rgba(90,220,255,.18);color:#8ff4ff;font-size:19px;text-shadow:0 0 8px rgba(105,237,255,.65)}
+.player-health-copy{flex:1;min-width:0}.player-health-copy b{display:block;font:800 9px/1.2 var(--font-ui);letter-spacing:.02em;color:#d9f8ff;margin-bottom:5px}
+.player-health-track{height:6px;border-radius:8px;overflow:hidden;background:rgba(255,255,255,.17);box-shadow:inset 0 1px 2px rgba(0,0,0,.35)}
+#playerHealthFill{display:block;width:100%;height:100%;border-radius:8px;background:linear-gradient(90deg,#42f0bd,#91ffdd);box-shadow:0 0 8px rgba(66,240,189,.55);transition:width .18s ease,background .18s}
+#playerHealthText{font:900 11px/1 var(--font-ui);min-width:31px;text-align:right;color:#d9fff3}
+#playerHealth.low{border-color:rgba(255,190,85,.9);box-shadow:0 0 15px rgba(255,166,57,.26)}
+#playerHealth.low #playerHealthFill{background:linear-gradient(90deg,#ff9f43,#ffe17a)}
+#playerHealth.critical{border-color:#ff4e68;box-shadow:0 0 20px rgba(255,52,91,.5);animation:playerHealthPulse .55s ease-in-out infinite alternate}
+#playerHealth.critical #playerHealthFill{background:linear-gradient(90deg,#ff3155,#ff8b77)}
+#playerHealth.hit{box-shadow:0 0 24px rgba(255,55,79,.78);border-color:#ff4e68}
+@keyframes playerHealthPulse{from{filter:brightness(.88)}to{filter:brightness(1.35)}}
+@media(max-width:380px){#playerHealth{width:150px;padding:6px 7px;gap:5px}.player-health-icon{flex-basis:22px;height:22px}.player-health-copy b{font-size:8px}}
