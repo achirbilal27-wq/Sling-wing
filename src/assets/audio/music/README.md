@@ -1,10 +1,12 @@
-# Music drop folder
+# Music and gameplay audio
 
-Place supplied background music here. Suggested filenames:
+The music tracks are connected to the game audio manager in `src/js/game.js`.
 
-- `menu-theme.ogg` — hangar/menu
-- `flight-theme.ogg` — standard flight
-- `boss-battle.ogg` — boss arena
-- `finale-theme.ogg` — final reveal and credits
+- `menu-theme.ogg` — hangar, menu, and pre-flight screens
+- `flight-theme.ogg` — normal flight
+- `boss-battle.ogg` — boss encounters
+- `finale-theme.ogg` — final reveal and ending
+- `coin-collect.ogg` — coin pickup sound effect (stored here for compatibility)
+- `laser.ogg` — regular enemy-hit sound effect (stored here for compatibility)
 
-The files are not yet connected to playback; they are organized for the next integration pass after you upload them. OGG Vorbis is recommended for Android size/performance.
+Playback starts after the player's first interaction to comply with browser and Android WebView audio policies. Music follows game state and respects the mute control.
