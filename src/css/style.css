@@ -1291,3 +1291,15 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
 .overlay-back:active{transform:translateY(1px)}
 .overlay-back:focus-visible{outline:3px solid #ffc83d;outline-offset:3px}
 #story .sheet,#codex .sheet{overscroll-behavior:contain}
+
+
+/* Keep pause between the fuel gauge and coin counter without covering either. */
+#pauseBtn{top:14px;left:50%;right:auto;transform:translateX(-50%);z-index:9;border-color:rgba(255,255,255,.96);background:linear-gradient(145deg,rgba(24,44,72,.92),rgba(7,15,30,.9));box-shadow:0 0 0 3px rgba(95,214,255,.12),0 4px 14px rgba(0,0,0,.3)}
+#pauseBtn:active{transform:translateX(-50%) scale(.94)}
+@media(max-width:380px){#pauseBtn{top:10px;left:50%;right:auto;width:38px;height:38px}}
+#bossBlastOverlay{position:fixed;inset:0;z-index:18;pointer-events:none;opacity:0;background:radial-gradient(circle at 54% 46%,rgba(255,248,207,.86) 0%,rgba(255,126,65,.34) 24%,rgba(24,10,36,0) 72%);mix-blend-mode:screen}
+#bossBlastOverlay.on{animation:bossBlastFlash .76s ease-out both}
+#bossBlastOverlay.final.on{background:radial-gradient(circle at 54% 46%,rgba(255,255,255,.98) 0%,rgba(255,78,112,.62) 18%,rgba(108,52,255,.22) 43%,rgba(0,0,0,0) 76%);animation:bossFinalBlast 1.12s cubic-bezier(.16,.72,.24,1) both}
+@keyframes bossBlastFlash{0%{opacity:0}12%{opacity:1}40%{opacity:.72}100%{opacity:0}}
+@keyframes bossFinalBlast{0%{opacity:0;filter:brightness(1)}10%{opacity:1;filter:brightness(1.9)}28%{opacity:.9;filter:brightness(1.45)}60%{opacity:.42;filter:brightness(1.1)}100%{opacity:0;filter:brightness(1)}}
+@media(prefers-reduced-motion:reduce){#bossBlastOverlay.on,#bossBlastOverlay.final.on{animation-duration:.25s}}
