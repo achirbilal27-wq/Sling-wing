@@ -3,6 +3,7 @@
 const $=id=>document.getElementById(id);
 function fail(msg){document.getElementById('app').innerHTML='<p style="padding:28px;font:800 20px Cairo,sans-serif;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.4)">'+msg+'</p>';}
 if(typeof THREE==='undefined'){fail('تعذّر تحميل محرك الثلاثي الأبعاد. تحقق من الاتصال ثم أعد التحميل.');return;}
+loadEnemyPlaneModel();
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const lerp=(a,b,t)=>a+(b-a)*t;
 const MAXLV=6, M_PER_PX=1/40, S=0.1, YOFF=2.6;
@@ -607,13 +608,73 @@ function makeBossPlane(biomeIndex){
   });
   return g;
 }
+let enemyModelTemplate=null;
+let enemyModelLoadStarted=false;
+function prepareEnemyModel(root){
+  root.updateMatrixWorld(true);
+  const originalBox=new THREE.Box3().setFromObject(root);
+  if(originalBox.isEmpty()) return null;
+  const center=originalBox.getCenter(new THREE.Vector3());
+  const size=originalBox.getSize(new THREE.Vector3());
+  root.position.sub(center);
+  // Most aircraft files use X for wingspan and Z for fuselage length.
+  // Rotate the model so the wingspan runs along this game's Z axis.
+  if(size.x>size.z) root.rotation.y=Math.PI/2;
+  root.updateMatrixWorld(true);
+  const fittedBox=new THREE.Box3().setFromObject(root);
+  const fittedSize=fittedBox.getSize(new THREE.Vector3());
+  const span=Math.max(fittedSize.x,fittedSize.z);
+  if(!Number.isFinite(span)||span<0.001) return null;
+  root.scale.multiplyScalar(12/span);
+  root.position.y-=fittedBox.getCenter(new THREE.Vector3()).y;
+  root.traverse(node=>{
+    if(node.isMesh){
+      node.castShadow=true;
+      node.receiveShadow=true;
+      if(node.material){node.material.side=THREE.DoubleSide;node.material.needsUpdate=true;}
+    }
+  });
+  return root;
+}
 function makeEnemyPlane(){
   const g=new THREE.Group();
+  if(enemyModelTemplate){
+    g.add(enemyModelTemplate.clone(true));
+    g.rotation.y=Math.PI;
+    return g;
+  }
+  // Safe fallback while the GLB loads or if it is not present.
   const hull=new THREE.Mesh(new THREE.SphereGeometry(1,12,8),matS(0x3a4058,0.42,{metalness:0.3}));hull.scale.set(4.5,1.35,1.4);g.add(hull);
   const wings=new THREE.Mesh(new THREE.BoxGeometry(4.8,0.28,12),matS(0xe5483a,0.4,{metalness:0.18}));wings.position.set(-0.4,-0.1,0);g.add(wings);
   const cockpit=new THREE.Mesh(new THREE.SphereGeometry(1,10,7),matS(0xffa4a4,0.2,{transparent:true,opacity:0.85}));cockpit.scale.set(1.25,0.7,0.8);cockpit.position.set(1.1,1.05,0);g.add(cockpit);
   [-3.3,3.3].forEach(z=>{const pod=new THREE.Mesh(new THREE.CylinderGeometry(0.55,0.7,3.8,8),matS(0x252a3b,0.5));pod.rotation.z=Math.PI/2;pod.position.set(-1.2,-0.5,z);g.add(pod);});
   g.rotation.y=Math.PI;return g;
+}
+function loadEnemyPlaneModel(){
+  if(enemyModelLoadStarted||typeof THREE.GLTFLoader!=='function') return;
+  enemyModelLoadStarted=true;
+  const loader=new THREE.GLTFLoader();
+  loader.load('assets/models/enemies/plane_pc.glb',gltf=>{
+    const model=prepareEnemyModel(gltf.scene);
+    if(!model){console.warn('Enemy GLB has no usable geometry; keeping procedural aircraft.');return;}
+    enemyModelTemplate=model;
+    if(typeof objs!=='undefined'&&objs&&Array.isArray(objs.enemies)){
+      objs.enemies.forEach(enemy=>{
+        if(!enemy.mesh||!enemy.mesh.parent) return;
+        const old=enemy.mesh;
+        const replacement=makeEnemyPlane();
+        replacement.position.copy(old.position);
+        replacement.rotation.copy(old.rotation);
+        replacement.visible=old.visible;
+        old.parent.add(replacement);
+        old.parent.remove(old);
+        enemy.mesh=replacement;
+      });
+    }
+    console.info('Enemy aircraft GLB loaded successfully.');
+  },undefined,error=>{
+    console.warn('Enemy GLB unavailable; using procedural aircraft until assets/models/enemies/plane_pc.glb is added.',error);
+  });
 }
 function makeCan(){
   const g=new THREE.Group();
