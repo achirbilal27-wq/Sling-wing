@@ -46,6 +46,17 @@ for (const url of [...new Set(assetRefs)]) {
   check(exists(url), 'Missing local JavaScript asset: src/' + url);
 }
 check(exists('assets/models/glb/plane_pc.glb'), 'The enemy aircraft GLB model is missing from the dedicated model directory.');
+const enemyModelPath = path.join(src, 'assets', 'models', 'glb', 'plane_pc.glb');
+if (fs.existsSync(enemyModelPath)) {
+  const glb = fs.readFileSync(enemyModelPath);
+  check(glb.length >= 20, 'Enemy aircraft GLB is unexpectedly small or truncated.');
+  check(glb.toString('ascii', 0, 4) === 'glTF', 'Enemy aircraft model is not a valid binary glTF file.');
+  check(glb.readUInt32LE(4) === 2, 'Enemy aircraft GLB must use glTF binary version 2.');
+  check(glb.readUInt32LE(8) === glb.length, 'Enemy aircraft GLB header length does not match the actual file size.');
+}
+const loaderScriptIndex = html.indexOf('GLTFLoader.js');
+const gameScriptIndex = html.indexOf('js/game.js');
+check(loaderScriptIndex >= 0 && gameScriptIndex > loaderScriptIndex, 'GLTFLoader must be loaded before game.js.');
 
 const bosses = ['iron-eagle.png', 'storm-bomber.png', 'Current-serpent.png', 'cloud-warden.png', 'grey-ruler.png'];
 for (const name of bosses) check(exists('assets/images/bosses/' + name), 'Missing boss portrait: ' + name);
