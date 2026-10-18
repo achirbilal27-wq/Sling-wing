@@ -666,7 +666,11 @@ function makeEnemyPlane(){
   g.rotation.y=Math.PI;return g;
 }
 function loadEnemyPlaneModel(){
-  if(enemyModelLoadStarted||typeof THREE.GLTFLoader!=='function') return;
+  if(enemyModelLoadStarted) return;
+  if(typeof THREE.GLTFLoader!=='function'){
+    console.warn('GLTFLoader is unavailable; keeping procedural enemy aircraft.');
+    return;
+  }
   enemyModelLoadStarted=true;
   const loader=new THREE.GLTFLoader();
   loader.load('assets/models/glb/plane_pc.glb',gltf=>{
