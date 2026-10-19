@@ -745,7 +745,8 @@ function loadEnemyPlaneModel(){
     enemyModelTemplate=model;
     if(typeof objs!=='undefined'&&objs&&Array.isArray(objs.enemies)){
       objs.enemies.forEach(enemy=>{
-        if(!enemy.mesh||!enemy.mesh.parent) return;
+        // Do not replace a boss mesh with a regular enemy aircraft if the GLB finishes loading mid-battle.
+        if(enemy.boss||!enemy.mesh||!enemy.mesh.parent) return;
         const old=enemy.mesh;
         const replacement=makeEnemyPlane();
         replacement.position.copy(old.position);
