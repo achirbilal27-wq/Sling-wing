@@ -75,6 +75,7 @@ check(prep.includes('threeCdnPattern') && prep.includes("'js/three.min.js'"), 'p
 check(html.includes('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js'), 'GLTFLoader script is missing from src/index.html.');
 check(prep.includes('GLTFLoader.js') && prep.includes("'js/GLTFLoader.js'"), 'prepare.js does not bundle GLTFLoader for offline Android use.');
 check(js.includes("assets/models/glb/plane_pc.glb") && js.includes('loadEnemyPlaneModel'), 'Enemy GLB loading is not configured.');
+check(js.includes('if(enemy.boss||!enemy.mesh||!enemy.mesh.parent) return;'), 'Enemy GLB loading must preserve active boss meshes.');
 const preparedHtmlPath = path.join(root, 'www', 'index.html');
 if (fs.existsSync(preparedHtmlPath)) {
   const preparedHtml = fs.readFileSync(preparedHtmlPath, 'utf8');
