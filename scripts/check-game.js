@@ -78,8 +78,8 @@ check(html.includes('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/load
 check(prep.includes('GLTFLoader.js') && prep.includes("'js/GLTFLoader.js'"), 'prepare.js does not bundle GLTFLoader for offline Android use.');
 check(js.includes("assets/models/glb/plane_pc.glb") && js.includes('loadEnemyPlaneModel'), 'Enemy GLB loading is not configured.');
 check(js.includes('if(enemy.boss||!enemy.mesh||!enemy.mesh.parent) return;'), 'Enemy GLB loading must preserve active boss meshes.');
-check(js.includes("phantom:{name:'الشبح النفاث',short:'الشبح',unlock:1500"), 'Phantom must unlock before Guardian at 1500 m.');
-check(js.includes("guardian:{name:'الحارس المدرع',short:'الحارس',unlock:3000"), 'Guardian must be the final aircraft unlocked at 3000 m.');
+check(js.includes("phantom:{name:'الشبح النفاث',short:'الشبح',unlock:3000"), 'Phantom must unlock at 3000 m and before Guardian.');
+check(js.includes("guardian:{name:'الحارس المدرع',short:'الحارس',unlock:4000"), 'Guardian must be the final aircraft unlocked at 4000 m.');
 check(js.includes("['phantom','assets/models/aircraft/phantom.glb']") && js.includes("['guardian','assets/models/aircraft/guardian.glb']"), 'Distinct Phantom and Guardian GLB loading must be configured.');
 check(js.includes("}else if(key==='phantom'){") && js.includes("'الشبح: إمداد وقود +38٪'"), 'Phantom must own the fuel-supply ability.');
 check(js.includes("}else if(key==='guardian'){") && js.includes('P.guardianOverdriveT=4'), 'Guardian must have its temporary heavy-cannon combat ability.');
