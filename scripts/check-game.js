@@ -45,7 +45,14 @@ for (const match of css.matchAll(/url\(["']?([^"')]+)["']?\)/g)) {
 const decodedJs = js.replace(/\\u([0-9a-f]{4})/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
 const assetRefs = [...decodedJs.matchAll(/assets\/[^'"\s)]+?\.(?:png|jpe?g|webp|ogg|mp3|wav|mp4|json|glb|gltf)(?=['"\s)]|$)/gi)]
   .map((match) => match[0]);
+// Phantom and Guardian are user-supplied optional GLB models. Their absence is
+// expected until the developer adds their own files; game.js keeps a procedural fallback.
+const optionalCustomAircraft = new Set([
+  'assets/models/aircraft/phantom.glb',
+  'assets/models/aircraft/guardian.glb',
+]);
 for (const url of [...new Set(assetRefs)]) {
+  if (optionalCustomAircraft.has(url)) continue;
   check(exists(url), 'Missing local JavaScript asset: src/' + url);
 }
 const glbModels = [
