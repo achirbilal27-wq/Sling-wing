@@ -45,14 +45,21 @@ const assetRefs = [...decodedJs.matchAll(/assets\/[^'"\s)]+?\.(?:png|jpe?g|webp|
 for (const url of [...new Set(assetRefs)]) {
   check(exists(url), 'Missing local JavaScript asset: src/' + url);
 }
-check(exists('assets/models/glb/plane_pc.glb'), 'The enemy aircraft GLB model is missing from the dedicated model directory.');
-const enemyModelPath = path.join(src, 'assets', 'models', 'glb', 'plane_pc.glb');
-if (fs.existsSync(enemyModelPath)) {
-  const glb = fs.readFileSync(enemyModelPath);
-  check(glb.length >= 20, 'Enemy aircraft GLB is unexpectedly small or truncated.');
-  check(glb.toString('ascii', 0, 4) === 'glTF', 'Enemy aircraft model is not a valid binary glTF file.');
-  check(glb.readUInt32LE(4) === 2, 'Enemy aircraft GLB must use glTF binary version 2.');
-  check(glb.readUInt32LE(8) === glb.length, 'Enemy aircraft GLB header length does not match the actual file size.');
+const glbModels = [
+  { path: 'assets/models/glb/plane_pc.glb', label: 'Enemy aircraft' },
+  { path: 'assets/models/bosses/iron_eagle.glb', label: 'Iron Eagle boss' }
+];
+for (const model of glbModels) {
+  check(exists(model.path), model.label + ' GLB model is missing: src/' + model.path);
+  const modelPath = path.join(src, model.path);
+  if (!fs.existsSync(modelPath)) continue;
+  const glb = fs.readFileSync(modelPath);
+  check(glb.length >= 20, model.label + ' GLB is unexpectedly small or truncated.');
+  if (glb.length >= 12) {
+    check(glb.toString('ascii', 0, 4) === 'glTF', model.label + ' model is not a valid binary glTF file.');
+    check(glb.readUInt32LE(4) === 2, model.label + ' GLB must use glTF binary version 2.');
+    check(glb.readUInt32LE(8) === glb.length, model.label + ' GLB header length does not match the actual file size.');
+  }
 }
 const loaderScriptIndex = html.indexOf('GLTFLoader.js');
 const gameScriptIndex = html.indexOf('js/game.js');
@@ -76,7 +83,9 @@ if (fs.existsSync(preparedHtmlPath)) {
   check(!preparedHtml.includes(threeCdn), 'Prepared Android HTML still references the Three.js CDN.');
   check(fs.existsSync(path.join(root, 'www', 'js', 'three.min.js')), 'Prepared Android build is missing www/js/three.min.js.');
   check(fs.existsSync(path.join(root, 'www', 'js', 'GLTFLoader.js')), 'Prepared Android build is missing www/js/GLTFLoader.js.');
-  check(fs.existsSync(path.join(root, 'www', 'assets', 'models', 'glb', 'plane_pc.glb')), 'Prepared Android build is missing the enemy aircraft GLB asset.');
+  for (const model of glbModels) {
+    check(fs.existsSync(path.join(root, 'www', model.path)), 'Prepared Android build is missing GLB asset: www/' + model.path);
+  }
 }
 check(fs.existsSync(path.join(root, 'package.json')), 'package.json is missing.');
 
