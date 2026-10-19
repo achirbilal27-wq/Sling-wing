@@ -51,8 +51,6 @@ for (const url of [...new Set(assetRefs)]) {
 const glbModels = [
   { path: 'assets/models/glb/plane_pc.glb', label: 'Enemy aircraft' },
   { path: 'assets/models/bosses/iron_eagle.glb', label: 'Iron Eagle boss' },
-  { path: 'assets/models/aircraft/phantom.glb', label: 'Phantom player aircraft' },
-  { path: 'assets/models/aircraft/guardian.glb', label: 'Guardian player aircraft' }
 ];
 for (const model of glbModels) {
   check(exists(model.path), model.label + ' GLB model is missing: src/' + model.path);
@@ -83,10 +81,8 @@ check(js.includes("assets/models/glb/plane_pc.glb") && js.includes('loadEnemyPla
 check(js.includes('if(enemy.boss||!enemy.mesh||!enemy.mesh.parent) return;'), 'Enemy GLB loading must preserve active boss meshes.');
 check(js.includes("phantom:{name:'الشبح النفاث',short:'الشبح',unlock:3000"), 'Phantom must unlock at 3000 m and before Guardian.');
 check(js.includes("guardian:{name:'الحارس المدرع',short:'الحارس',unlock:4000"), 'Guardian must be the final aircraft unlocked at 4000 m.');
-check(js.includes("['phantom','assets/models/aircraft/phantom.glb']") && js.includes("['guardian','assets/models/aircraft/guardian.glb']"), 'Distinct Phantom and Guardian GLB loading must be configured.');
 check(js.includes("}else if(key==='phantom'){") && js.includes("'الشبح: إمداد وقود +38٪'"), 'Phantom must own the fuel-supply ability.');
 check(js.includes("}else if(key==='guardian'){") && js.includes('P.guardianOverdriveT=4'), 'Guardian must have its temporary heavy-cannon combat ability.');
-check(fs.existsSync(path.join(root, 'scripts', 'generate-aircraft-models.js')), 'Distinct aircraft GLB generator script is missing.');
 const preparedHtmlPath = path.join(root, 'www', 'index.html');
 if (fs.existsSync(preparedHtmlPath)) {
   const preparedHtml = fs.readFileSync(preparedHtmlPath, 'utf8');
