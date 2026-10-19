@@ -800,7 +800,7 @@ function prepareAircraftModel(root){
 }
 function loadPlayerAircraftModels(){
   if(aircraftModelLoadStarted)return;
-  if(typeof THREE.GLTFLoader!=='function'){console.warn('GLTFLoader unavailable; keeping procedural phantom and guardian aircraft.');return;}
+  if(typeof THREE.GLTFLoader!=='function'){console.warn('GLTFLoader unavailable; custom Phantom and Guardian GLB models cannot load; keeping procedural fallback.');return;}
   aircraftModelLoadStarted=true;
   const loader=new THREE.GLTFLoader();
   [['phantom','assets/models/aircraft/phantom.glb'],['guardian','assets/models/aircraft/guardian.glb']].forEach(([key,url])=>{
