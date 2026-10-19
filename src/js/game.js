@@ -353,8 +353,8 @@ const PAL=[[0x8bd13a,0x5a9a1c],[0x4aa8ff,0x2476c9],[0xffc83d,0xd18a00],[0xb46bff
 const AIRCRAFT={
  trainer:{name:'الصقر التدريبي',short:'الصقر',unlock:0,shield:9.5,shot:0.24,boost:1,speed:1,fuelUse:1,upgrade:'خزان وقود موسّع'},
  interceptor:{name:'المعترض السريع',short:'المعترض',unlock:500,shield:9,shot:0.17,boost:1,speed:1.12,fuelUse:1.08,upgrade:'خزان وقود للرحلات الطويلة'},
- guardian:{name:'الحارس المدرع',short:'الحارس',unlock:1500,shield:6.8,shot:0.25,boost:0.95,speed:0.94,fuelUse:0.78,upgrade:'خزان اقتصادي ممتد المدى'},
- phantom:{name:'الشبح النفاث',short:'الشبح',unlock:3000,shield:8,shot:0.2,boost:1.35,speed:1.08,fuelUse:1.12,upgrade:'خزان نفاث عالي السعة'}
+ phantom:{name:'الشبح النفاث',short:'الشبح',unlock:1500,shield:8.4,shot:0.2,boost:1.35,speed:1.08,fuelUse:1.12,upgrade:'قدرة إمداد الوقود +38٪'},
+ guardian:{name:'الحارس المدرع',short:'الحارس',unlock:3000,shield:14.5,shot:0.115,boost:1.2,speed:1.15,fuelUse:0.9,upgrade:'مدفع ثقيل ودرع قتالي للزعيم الأخير'}
 };
 function aircraft(){return AIRCRAFT[save.model]||AIRCRAFT.trainer;}
 const bodyMat=matS(0x8bd13a,0.5),accMat=matS(0x5a9a1c,0.6);
@@ -381,6 +381,7 @@ prop.add(new THREE.Mesh(new THREE.BoxGeometry(0.2,6.4,0.5),matS(0x2b2b2b,0.5)));
 planeG.add(prop);
 const flame=new THREE.Mesh(new THREE.ConeGeometry(1.1,5,8),new THREE.MeshBasicMaterial({color:0xffa83d}));
 flame.rotation.z=Math.PI/2;flame.position.set(-7.5,0,0);flame.visible=false;planeG.add(flame);
+const planeCoreChildren=planeG.children.slice();
 scene.add(planeG);
 /* Distinct silhouette kits make every unlocked aircraft visually recognizable. */
 const variantKits={};
@@ -407,13 +408,20 @@ addKit('phantom',0xb46bff,[
 ]);
 const shieldMesh=new THREE.Mesh(new THREE.SphereGeometry(9,18,12),new THREE.MeshBasicMaterial({color:0x7ff5ff,wireframe:true,transparent:true,opacity:0.68,depthWrite:false}));
 shieldMesh.scale.set(1.15,0.62,0.9);shieldMesh.visible=false;planeG.add(shieldMesh);
+const aircraftModelHolder=new THREE.Group();aircraftModelHolder.visible=false;planeG.add(aircraftModelHolder);
+const aircraftModelTemplates=Object.create(null);
+let aircraftModelLoadStarted=false;
 let shieldT=0,shieldCooldown=0,appliedLv=-1,appliedModel='';
 function applyPlaneColors(){
   const model=save.model in AIRCRAFT?save.model:'trainer';
-  const colorIndex={trainer:0,interceptor:1,guardian:2,phantom:3}[model];
+  const colorIndex={trainer:0,interceptor:1,phantom:2,guardian:3}[model];
   const l=Math.min(colorIndex+Math.floor(save.lv.plane/3),PAL.length-1);
   if(l!==appliedLv){appliedLv=l;bodyMat.color.setHex(PAL[l][0]);accMat.color.setHex(PAL[l][1]);}
-  if(model!==appliedModel){appliedModel=model;Object.keys(variantKits).forEach(k=>variantKits[k].visible=k===model);}
+  const customModel=(model==='phantom'||model==='guardian')&&!!aircraftModelTemplates[model];
+  aircraftModelHolder.visible=customModel;
+  planeCoreChildren.forEach(child=>{if(child!==prop&&child!==flame)child.visible=!customModel;});
+  Object.keys(variantKits).forEach(k=>{variantKits[k].visible=!customModel&&k===model;});
+  if(model!==appliedModel)appliedModel=model;
 }
 
 const bossImageLoader=new THREE.TextureLoader(),bossImageTextures=Object.create(null),bossSpriteMaterials=Object.create(null);
@@ -763,6 +771,49 @@ function loadEnemyPlaneModel(){
   });
 }
 loadEnemyPlaneModel();
+function prepareAircraftModel(root){
+  const normalized=new THREE.Group();
+  normalized.add(root);
+  normalized.updateMatrixWorld(true);
+  let bounds=new THREE.Box3().setFromObject(normalized);
+  if(bounds.isEmpty())return null;
+  let size=bounds.getSize(new THREE.Vector3());
+  const span=Math.max(size.x,size.z);
+  if(!Number.isFinite(span)||span<0.001)return null;
+  normalized.scale.setScalar(18/span);
+  normalized.updateMatrixWorld(true);
+  bounds=new THREE.Box3().setFromObject(normalized);
+  normalized.position.sub(bounds.getCenter(new THREE.Vector3()));
+  normalized.updateMatrixWorld(true);
+  normalized.traverse(node=>{
+    if(!node.isMesh)return;
+    node.castShadow=true;node.receiveShadow=true;
+    const materials=node.material?(Array.isArray(node.material)?node.material:[node.material]):[];
+    materials.forEach(material=>{material.side=THREE.DoubleSide;material.needsUpdate=true;});
+  });
+  return normalized;
+}
+function loadPlayerAircraftModels(){
+  if(aircraftModelLoadStarted)return;
+  if(typeof THREE.GLTFLoader!=='function'){console.warn('GLTFLoader unavailable; keeping procedural phantom and guardian aircraft.');return;}
+  aircraftModelLoadStarted=true;
+  const loader=new THREE.GLTFLoader();
+  [['phantom','assets/models/aircraft/phantom.glb'],['guardian','assets/models/aircraft/guardian.glb']].forEach(([key,url])=>{
+    loader.load(url,gltf=>{
+      const model=prepareAircraftModel(gltf.scene);
+      if(!model){console.warn('Invalid '+key+' GLB; keeping procedural fallback.');return;}
+      aircraftModelTemplates[key]=model;
+      if(save.model===key){
+        aircraftModelHolder.clear();
+        aircraftModelHolder.add(model.clone(true));
+        appliedModel='';
+        applyPlaneColors();
+      }
+      console.info(key+' aircraft GLB loaded successfully.');
+    },undefined,error=>console.warn(key+' GLB unavailable; using the procedural fallback.',error));
+  });
+}
+loadPlayerAircraftModels();
 function makeCan(){
   const g=new THREE.Group();
   const b=new THREE.Mesh(new THREE.BoxGeometry(2.6,3.2,1.2),canMat);g.add(b);
@@ -819,7 +870,7 @@ const G=560;
 function clearObjs(){while(objGroup.children.length)objGroup.remove(objGroup.children[0]);}
 function resetRun(){
   if(objs&&objs.enemyShots)objs.enemyShots.forEach(b=>scene.remove(b.mesh));
-  P={x:0,alt:85,z:0,vz:0,s:0,a:0.62,roll:0,yaw:0,boostT:0,spin:0,sliding:false,bounces:0,fuel:100,hp:100,maxHp:100,hitCooldown:0,damageFlash:0,launchT:0,engineOut:false,fuelWarned:false,abilityCooldown:0,magnetT:0};
+  P={x:0,alt:85,z:0,vz:0,s:0,a:0.62,roll:0,yaw:0,boostT:0,spin:0,sliding:false,bounces:0,fuel:100,hp:100,maxHp:100,hitCooldown:0,damageFlash:0,launchT:0,engineOut:false,fuelWarned:false,abilityCooldown:0,magnetT:0,guardianOverdriveT:0};
   routeTargetMeters=500;
   shots.forEach(s=>scene.remove(s.mesh));shots.length=0;
   missiles.forEach(m=>scene.remove(m.mesh));missiles.length=0;missileCooldown=0;
@@ -1233,14 +1284,14 @@ $('specialAbility').addEventListener('pointerdown',e=>{e.preventDefault();e.stop
 const ABILITIES={
   trainer:{name:'درع',icon:'🛡'},
   interceptor:{name:'اندفاع',icon:'⚡'},
-  guardian:{name:'إمداد',icon:'⛽'},
-  phantom:{name:'مغناطيس',icon:'🧲'}
+  phantom:{name:'وقود',icon:'⛽'},
+  guardian:{name:'مدفع ثقيل',icon:'💥'}
 };
 function updateAbilityUI(){
   const key=save.model||'trainer',a=ABILITIES[key]||ABILITIES.trainer;
   $('abilityIcon').textContent=a.icon;$('abilityName').textContent=a.name;
   const cd=P&&Number.isFinite(P.abilityCooldown)?P.abilityCooldown:0;
-  $('abilityCooldown').textContent=P&&P.magnetT>0?'مغناطيس '+Math.ceil(P.magnetT)+'ث':(cd>0?Math.ceil(cd)+'ث':'جاهزة');
+  $('abilityCooldown').textContent=P&&P.magnetT>0?'مغناطيس '+Math.ceil(P.magnetT)+'ث':(P&&P.guardianOverdriveT>0?'مدفع ×2.5 '+Math.ceil(P.guardianOverdriveT)+'ث':(cd>0?Math.ceil(cd)+'ث':'جاهزة'));
   $('specialAbility').classList.toggle('cooldown',cd>0);
   $('specialAbility').classList.toggle('ready',cd<=0);
 }
@@ -1248,18 +1299,20 @@ function doAbility(){
   if(state!=='flight'||paused||run.dead)return;
   if(P.abilityCooldown>0.01){toast('القدرة بعد '+Math.ceil(P.abilityCooldown)+' ث');return;}
   const key=save.model||'trainer';
-  if(key==='guardian'&&P.fuel>=90){toast('الوقود شبه ممتلئ؛ احتفظ بقدرة الإمداد');return;}
-  P.abilityCooldown=12;
+  if(key==='phantom'&&P.fuel>=90){toast('الوقود شبه ممتلئ؛ احتفظ بقدرة الإمداد');return;}
+  P.abilityCooldown=key==='guardian'?18:12;
   if(key==='trainer'){
     shieldT=Math.max(shieldT,2.4);shieldCooldown=Math.max(shieldCooldown,1.2);shieldMesh.visible=true;
     addFloat(P.x,P.alt+48,'درع الصقر!','#a7f4ff',P.z);playSfx('shield');
   }else if(key==='interceptor'){
     P.boostT=Math.max(P.boostT,2.25);addFloat(P.x,P.alt+48,'اندفاع فائق!','#ffe27a',P.z);shake=Math.max(shake,.18);beep(180,.24,'sawtooth',.04);
-  }else if(key==='guardian'){
+  }else if(key==='phantom'){
     P.fuel=Math.min(100,P.fuel+38);P.engineOut=P.fuel<=0;P.fuelWarned=false;updateFuelGauge();
-    addFloat(P.x,P.alt+48,'إمداد وقود +38٪','#baf6ff',P.z);playSfx('fuel-pickup');
-  }else{
-    P.magnetT=6;addFloat(P.x,P.alt+48,'مغناطيس العملات!','#ffe27a',P.z);beep(820,.12,'triangle');beep(1040,.15,'triangle');
+    addFloat(P.x,P.alt+48,'الشبح: إمداد وقود +38٪','#baf6ff',P.z);playSfx('fuel-pickup');
+  }else if(key==='guardian'){
+    P.guardianOverdriveT=4;
+    shieldT=Math.max(shieldT,3.5);shieldCooldown=Math.max(shieldCooldown,1.5);shieldMesh.visible=true;
+    addFloat(P.x,P.alt+48,'الحارس: مدفع ثقيل ×2.5!','#ffe27a',P.z);playSfx('shield');shake=Math.max(shake,.28);
   }
   updateAbilityUI();
 }
@@ -1275,7 +1328,7 @@ function doShoot(){
   const mx=P.x+f.x*70,my=P.alt+f.y*70,mz=P.z;let dx=f.x,dy=f.y,dz=f.z;
   if(target){dx=target.x-mx;dy=target.alt-my;dz=target.z-mz;const L=Math.hypot(dx,dy,dz)||1;dx/=L;dy/=L;dz/=L;}
   const offsets=mode==='spread'?[-0.18,0,0.18]:(run.tri?[-0.06,0,0.06]:[0]);
-  for(const off of offsets){const mesh=new THREE.Mesh(shotGeo,shotMat);mesh.position.set(mx*S,Y(my),mz*S);scene.add(mesh);let vx=dx,vy=dy,vz=dz+off;const L=Math.hypot(vx,vy,vz)||1;vx/=L;vy/=L;vz/=L;const speed=1900;shots.push({x:mx,alt:my,z:mz,vx:vx*speed+P.s*Math.cos(P.a)*0.5,vy:vy*speed+P.s*Math.sin(P.a)*0.5,vz:vz*speed+P.vz*0.5,damage:10*run.damage,life:target?clamp((target.x-mx)/speed+0.8,2,7):1.9,mesh,target:target||null,aimMode:mode});}
+  for(const off of offsets){const mesh=new THREE.Mesh(shotGeo,shotMat);mesh.position.set(mx*S,Y(my),mz*S);scene.add(mesh);let vx=dx,vy=dy,vz=dz+off;const L=Math.hypot(vx,vy,vz)||1;vx/=L;vy/=L;vz/=L;const speed=1900;shots.push({x:mx,alt:my,z:mz,vx:vx*speed+P.s*Math.cos(P.a)*0.5,vy:vy*speed+P.s*Math.sin(P.a)*0.5,vz:vz*speed+P.vz*0.5,damage:10*run.damage*(P.guardianOverdriveT>0?2.5:1),life:target?clamp((target.x-mx)/speed+0.8,2,7):1.9,mesh,target:target||null,aimMode:mode});}
   if(run.fireSfxTimer<=0){playSfx('weapon-fire',0.56);run.fireSfxTimer=0.07;}
 }
 function missileTarget(){
@@ -1413,6 +1466,7 @@ function updateFlight(dt){
   }
   P.abilityCooldown=Math.max(0,P.abilityCooldown-dt);
   P.magnetT=Math.max(0,P.magnetT-dt);
+  P.guardianOverdriveT=Math.max(0,(P.guardianOverdriveT||0)-dt);
   const holding=down.size>0;
   const lvP=save.lv.plane;
   const wasFueled=P.fuel>0;
