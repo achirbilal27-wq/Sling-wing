@@ -33,6 +33,9 @@ for (const match of html.matchAll(/\b(?:src|href)=["']([^"']+)["']/g)) {
 const cssOpen = (css.match(/{/g) || []).length;
 const cssClose = (css.match(/}/g) || []).length;
 check(cssOpen === cssClose, 'CSS brace mismatch: ' + cssOpen + ' opening vs ' + cssClose + ' closing braces.');
+check(css.includes('left:calc(50% + 42px)') && css.includes('left:calc(50% + 38px)'), 'Pause button must sit beside the right edge of the centered fuel gauge on desktop and narrow screens.');
+check(css.includes('#pauseBtn:active{transform:scale(.94)}'), 'Pause button active styling must not restore the overlapping centered transform.');
+check(css.includes('#fuelGauge{') && css.includes('left:50%') && css.includes('transform:translateX(-50%)'), 'Fuel gauge must remain centered so the pause control can be positioned beside it.');
 for (const match of css.matchAll(/url\(["']?([^"')]+)["']?\)/g)) {
   const url = match[1];
   if (/^(?:https?:|data:|#)/i.test(url)) continue;
