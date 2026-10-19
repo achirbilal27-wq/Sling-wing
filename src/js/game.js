@@ -418,6 +418,11 @@ function applyPlaneColors(){
   const l=Math.min(colorIndex+Math.floor(save.lv.plane/3),PAL.length-1);
   if(l!==appliedLv){appliedLv=l;bodyMat.color.setHex(PAL[l][0]);accMat.color.setHex(PAL[l][1]);}
   const customModel=(model==='phantom'||model==='guardian')&&!!aircraftModelTemplates[model];
+  if(customModel&&aircraftModelHolder.userData.modelKey!==model){
+    aircraftModelHolder.clear();
+    aircraftModelHolder.add(aircraftModelTemplates[model].clone(true));
+    aircraftModelHolder.userData.modelKey=model;
+  }
   aircraftModelHolder.visible=customModel;
   planeCoreChildren.forEach(child=>{if(child!==prop&&child!==flame)child.visible=!customModel;});
   Object.keys(variantKits).forEach(k=>{variantKits[k].visible=!customModel&&k===model;});
