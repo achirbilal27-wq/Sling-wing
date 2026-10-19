@@ -417,6 +417,7 @@ function applyPlaneColors(){
 }
 
 const bossImageLoader=new THREE.TextureLoader(),bossImageTextures=Object.create(null),bossSpriteMaterials=Object.create(null);
+let ironEagleModelTemplate=null,ironEagleModelLoadStarted=false;
 /* ---------- objects ---------- */
 const objGroup=new THREE.Group();scene.add(objGroup);
 const coinGeo=new THREE.CylinderGeometry(1.5,1.5,0.35,18);coinGeo.rotateZ(Math.PI/2);
@@ -573,13 +574,22 @@ function makeBossPlane(biomeIndex){
   fallback.scale.setScalar(biomeIndex===4?2.85:2.15);
   fallback.visible=true;
   g.add(fallback);
+  g.userData.boss=true;
+  if(biomeIndex===0){
+    // A real GLB takes priority for Iron Eagle; preserve the procedural fallback.
+    g.userData.ironEagleBoss=true;
+    g.userData.proceduralFallback=fallback;
+    g.userData.imageBoss=false;
+    if(ironEagleModelTemplate)attachIronEagleModel(g);
+    else loadIronEagleBossModel();
+    return g;
+  }
   const path='assets/images/bosses/'+names[biomeIndex]+'.png';
   const material=bossSpriteMaterials[path]||(bossSpriteMaterials[path]=new THREE.SpriteMaterial({transparent:true,alphaTest:0.015,depthWrite:false,depthTest:true}));
   const image=new THREE.Sprite(material);
   image.center.set(0.5,0.5);
   image.visible=false;
   g.add(image);
-  g.userData.boss=true;
   g.userData.imageBoss=true;
   const applyBossTexture=texture=>{
     texture.encoding=THREE.sRGBEncoding;
@@ -606,6 +616,62 @@ function makeBossPlane(biomeIndex){
     fallback.visible=true;
   });
   return g;
+}
+function prepareIronEagleBoss(root){
+  const normalized=new THREE.Group();
+  normalized.add(root);
+  normalized.updateMatrixWorld(true);
+  let box=new THREE.Box3().setFromObject(normalized);
+  if(box.isEmpty())return null;
+  const originalSize=box.getSize(new THREE.Vector3());
+  // Keep the wingspan on the game's Z axis and the nose on X.
+  if(originalSize.x>originalSize.z)normalized.rotation.y=Math.PI/2;
+  normalized.updateMatrixWorld(true);
+  box=new THREE.Box3().setFromObject(normalized);
+  const size=box.getSize(new THREE.Vector3());
+  const span=Math.max(size.x,size.z);
+  if(!Number.isFinite(span)||span<0.001)return null;
+  normalized.scale.setScalar(38/span);
+  normalized.updateMatrixWorld(true);
+  box=new THREE.Box3().setFromObject(normalized);
+  normalized.position.sub(box.getCenter(new THREE.Vector3()));
+  normalized.updateMatrixWorld(true);
+  normalized.traverse(node=>{
+    if(!node.isMesh)return;
+    node.castShadow=true;node.receiveShadow=true;
+    if(node.material){
+      const materials=Array.isArray(node.material)?node.material:[node.material];
+      materials.forEach(material=>{material.side=THREE.DoubleSide;material.needsUpdate=true;});
+    }
+  });
+  return normalized;
+}
+function attachIronEagleModel(group){
+  if(!ironEagleModelTemplate||!group||!group.userData.ironEagleBoss||group.userData.ironEagleModelAttached)return;
+  const model=ironEagleModelTemplate.clone(true);
+  model.rotation.y=Math.PI;
+  group.add(model);
+  group.userData.ironEagleModel=model;
+  group.userData.ironEagleModelAttached=true;
+  if(group.userData.proceduralFallback)group.userData.proceduralFallback.visible=false;
+  group.userData.imageBoss=false;
+}
+function loadIronEagleBossModel(){
+  if(ironEagleModelLoadStarted)return;
+  if(typeof THREE.GLTFLoader!=='function'){
+    console.warn('GLTFLoader unavailable; keeping the procedural Iron Eagle boss.');
+    return;
+  }
+  ironEagleModelLoadStarted=true;
+  new THREE.GLTFLoader().load('assets/models/bosses/iron_eagle.glb',gltf=>{
+    const model=prepareIronEagleBoss(gltf.scene);
+    if(!model){console.warn('Iron Eagle GLB has no usable geometry; keeping the procedural boss.');return;}
+    ironEagleModelTemplate=model;
+    if(typeof objs!=='undefined'&&objs&&Array.isArray(objs.enemies)){
+      objs.enemies.forEach(enemy=>{if(enemy.boss&&enemy.bossStage===1&&!enemy.hit)attachIronEagleModel(enemy.mesh);});
+    }
+    console.info('Iron Eagle GLB loaded successfully.');
+  },undefined,error=>console.warn('Iron Eagle GLB failed to load; keeping the procedural boss.',error));
 }
 let enemyModelTemplate=null;
 let enemyModelLoadStarted=false;
@@ -847,7 +913,7 @@ function spawn(until){
     objs.enemies=objs.enemies.filter(other=>other.boss&&!other.hit);
     objs.enemyShots.forEach(b=>scene.remove(b.mesh));objs.enemyShots.length=0;
     ['coins','rings','birds','fuels','drafts','storms','stations'].forEach(key=>{objs[key].forEach(o=>{if(o.mesh)objGroup.remove(o.mesh);});objs[key]=[];});
-    const e={x,alt:250+Math.random()*260,z:zc((Math.random()-.5)*260),phase:Math.random()*6.28,fireT:2.3,hit:false,boss:true,hp:bossHp,maxHp:bossHp,contactHit:false,attackState:'ranged',attackTimer:3.2+Math.random()*1.5,diveWarning:0,diveTimer:0,weaponCycle:0,diveTargetAlt:300,diveTargetZ:0,combatPhase:1,biomeIndex,bossName:BOSS_PROFILES[biomeIndex].name,bossStage:stage+1};
+    const e={x,alt:250+Math.random()*260,z:zc((Math.random()-.5)*260),phase:Math.random()*6.28,fireT:2.3,hit:false,boss:true,hp:bossHp,maxHp:bossHp,contactHit:false,attackState:'ranged',attackTimer:3.2+Math.random()*1.5,diveWarning:0,diveTimer:0,weaponCycle:0,diveTargetAlt:300,diveTargetZ:0,combatPhase:1,biomeIndex,bossName:BOSS_PROFILES[biomeIndex].name,bossStage:stage+1,hitRadiusX:biomeIndex===0?92:82,hitRadiusY:biomeIndex===0?64:72,hitRadiusZ:biomeIndex===0?112:80,bank:0};
     e.finalBoss=biomeIndex===4;e.mesh=makeBossPlane(biomeIndex);e.mesh.position.set(x*S,Y(e.alt),e.z*S);objGroup.add(e.mesh);objs.enemies.push(e);
     const portrait=$('bossPortrait');
     if(portrait){portrait.hidden=true;portrait.onerror=()=>{portrait.hidden=true;};portrait.onload=()=>{portrait.hidden=false;};portrait.src='assets/images/bosses/'+['iron-eagle','storm-bomber','Current-serpent','cloud-warden','grey-ruler'][biomeIndex]+'.png';}
@@ -1471,21 +1537,24 @@ function updateFlight(dt){
         toast(phaseName);shake=Math.max(shake,nextPhase===3?0.28:0.14);
       }
       if(e.attackState==='ranged'){
-        const duelX=P.x+760+Math.sin(e.phase*0.42)*125;
-        e.x+=(duelX-e.x)*Math.min(1,dt*1.15);
-        e.alt=clamp(e.alt+(clamp(P.alt+Math.sin(e.phase*0.7)*105,130,640)-e.alt)*Math.min(1,dt*0.72),110,660);
-        e.z=zc(e.z+(clamp(P.z+Math.sin(e.phase*0.85)*135,-300,300)-e.z)*Math.min(1,dt*1.35));
+        const duelX=P.x+760+Math.sin(e.phase*0.42)*(e.bossStage===1?155:125);
+        const lateralTarget=clamp(P.z+Math.sin(e.phase*(e.bossStage===1?1.12:0.85))*(e.bossStage===1?175:135),-300,300);
+        e.x+=(duelX-e.x)*Math.min(1,dt*(e.bossStage===1?1.28:1.15));
+        e.alt=clamp(e.alt+(clamp(P.alt+Math.sin(e.phase*(e.bossStage===1?0.92:0.7))*(e.bossStage===1?125:105),130,640)-e.alt)*Math.min(1,dt*(e.bossStage===1?0.86:0.72)),110,660);
+        e.z=zc(e.z+(lateralTarget-e.z)*Math.min(1,dt*(e.bossStage===1?1.55:1.35)));
+        if(e.bossStage===1)e.bank=clamp((lateralTarget-e.z)*0.0022,-0.34,0.34);
         e.attackTimer-=dt;
         if(e.attackTimer<=0&&e.x>P.x+430){e.attackState='warning';e.diveWarning=1.55;e.diveTargetAlt=P.alt;e.diveTargetZ=P.z;addFloat(e.x,e.alt+95,'تحذير أحمر: انقضاض وشيك!','#ff648e',e.z);playSfx('boss-warning',0.68);e.attackTimer=0;}
       }else if(e.attackState==='warning'){
-        const duelX=P.x+740+Math.sin(e.phase*.42)*100;
-        e.x+=(duelX-e.x)*Math.min(1,dt*1.1);e.alt+=(P.alt+Math.sin(e.phase)*60-e.alt)*Math.min(1,dt*.5);e.z+=(P.z-e.z)*Math.min(1,dt*.65);
+        const duelX=P.x+740+Math.sin(e.phase*.42)*(e.bossStage===1?125:100);
+        e.x+=(duelX-e.x)*Math.min(1,dt*1.1);e.alt+=(P.alt+Math.sin(e.phase)*60-e.alt)*Math.min(1,dt*.5);e.z+=(P.z-e.z)*Math.min(1,dt*.65);if(e.bossStage===1)e.bank=clamp((P.z-e.z)*0.002,-0.3,0.3);
         e.diveWarning-=dt;
         if(e.diveWarning<=0){e.attackState='dive';e.diveTimer=.78;e.contactHit=false;addFloat(e.x,e.alt+85,'انقضاض! غيّر مسارك الآن','#ff3d78',e.z);beep(150,.28,'sawtooth',.055);shake=Math.max(shake,.16);}
       }else if(e.attackState==='dive'){
-        e.x+=(P.x+48-e.x)*Math.min(1,dt*3.6);
-        e.alt+=(e.diveTargetAlt-e.alt)*Math.min(1,dt*2.6);
-        e.z+=(e.diveTargetZ-e.z)*Math.min(1,dt*2.8);
+        e.x+=(P.x+48-e.x)*Math.min(1,dt*(e.bossStage===1?4.0:3.6));
+        e.alt+=(e.diveTargetAlt-e.alt)*Math.min(1,dt*(e.bossStage===1?3.0:2.6));
+        e.z+=(e.diveTargetZ-e.z)*Math.min(1,dt*(e.bossStage===1?3.1:2.8));
+        if(e.bossStage===1)e.bank=clamp((e.diveTargetZ-e.z)*0.002,-0.38,0.38);
         e.mesh.rotation.z=Math.sin(e.phase*1.8)*.3;e.mesh.rotation.x=-.16;
         e.diveTimer-=dt;
         if(e.diveTimer<=0){e.attackState='retreat';e.fireT=1.2;}
@@ -1494,7 +1563,7 @@ function updateFlight(dt){
         e.x+=(retreatX-e.x)*Math.min(1,dt*2.5);
         e.alt+=(P.alt+Math.sin(e.phase*.7)*100-e.alt)*Math.min(1,dt*.7);
         e.z+=(P.z+Math.sin(e.phase*.85)*110-e.z)*Math.min(1,dt*1.2);
-        if(e.x>P.x+480){e.attackState='ranged';e.attackTimer=5+Math.random()*1.6;e.fireT=1.8;}
+        if(e.x>P.x+480){e.attackState='ranged';e.attackTimer=(e.bossStage===1?4.2:5)+Math.random()*1.6;e.fireT=e.bossStage===1?1.1:1.8;e.bank=0;}
       }
       if(e.attackState!=='dive'){e.mesh.rotation.z=Math.sin(e.phase*.9)*.12;e.mesh.rotation.x=Math.sin(e.phase*.7)*.08;}
     }else{e.x-=180*dt;e.z=zc(e.z+Math.sin(e.phase)*14*dt);}
@@ -1509,7 +1578,32 @@ function updateFlight(dt){
           {cycle:4,color:0x6eeaff,label:'حارس السحاب',speed:1320},
           {cycle:phase===3?6:4,color:0xff365f,label:'الحاكم الرمادي',speed:1450}
         ];
-        const style=styles[stageIndex]||styles[0],pattern=e.weaponCycle++%(style.cycle+(stageIndex===4&&phase===3?2:0)),finalBoss=stageIndex===4;
+        if(stageIndex===0){
+          // Iron Eagle: paired wing cannons, guided missile, burst fire, and flak fan.
+          const pattern=e.weaponCycle++%4;
+          const count=pattern===0?2:pattern===1?1:pattern===2?5:7;
+          const label=pattern===0?'مدفعان جناحيان':pattern===1?'صاروخ النسر الموجّه':pattern===2?'رشقة مدفعية متتابعة':'مروحة شظايا مضادة';
+          const speed=pattern===0?1480:pattern===1?900:pattern===2?1190:990;
+          const color=pattern===3?0xff8b36:0xffc857;
+          e.fireT=(pattern===1?4.4:pattern===0?2.1:pattern===2?2.65:3.15)*(phase===3?0.78:phase===2?0.9:1);
+          for(let k=0;k<count;k++){
+            const offset=k-(count-1)/2;
+            const originZ=e.z+(pattern===0?offset*68:pattern===2?offset*20:pattern===3?offset*26:0);
+            const originAlt=e.alt+(pattern===2?offset*7:pattern===3?offset*10:0);
+            const geometry=pattern===1?bossLanceGeo:pattern===3?bossPulseGeo:enemyShotGeo;
+            const mesh=new THREE.Mesh(geometry,bossWeaponMaterials[0]);
+            mesh.position.set((e.x-8)*S,Y(originAlt),originZ*S);scene.add(mesh);
+            const spread=pattern===3?offset*46:pattern===2?offset*20:0;
+            const tx=(P.x+(pattern===1?Math.min(90,P.s*0.12):0))-(e.x-8);
+            const ty=P.alt-originAlt+spread*0.35;
+            const tz=P.z-originZ+spread;
+            const length=Math.hypot(tx,ty,tz)||1;
+            objs.enemyShots.push({x:e.x-8,alt:originAlt,z:originZ,vx:tx/length*speed,vy:ty/length*speed,vz:tz/length*speed,life:4.2,mesh,bossShot:true,bossWeapon:label,damage:pattern===1?14:pattern===3?7:9,ironEagleSeeker:pattern===1,seekerSpeed:speed});
+          }
+          e.lastWeaponLabel=label;
+          addFloat(e.x,e.alt+48,label,'#'+color.toString(16).padStart(6,'0'),e.z);
+        }else{
+          const style=styles[stageIndex]||styles[0],pattern=e.weaponCycle++%(style.cycle+(stageIndex===4&&phase===3?2:0)),finalBoss=stageIndex===4;
         const aimed=stageIndex===0?pattern===1:stageIndex===1?pattern===2:stageIndex===2?pattern===1||pattern===3:stageIndex===3?pattern===0||pattern===3:pattern===1||pattern===4;
         const radial=stageIndex===2?pattern===0:stageIndex===3?pattern===2:stageIndex===4?(pattern===3||pattern===5):pattern===3;
         const pulse=stageIndex===1||radial||(finalBoss&&pattern===0);
@@ -1526,6 +1620,7 @@ function updateFlight(dt){
           objs.enemyShots.push({x:e.x,alt:e.alt,z:e.z,vx:tx/L*spd,vy:ty/L*spd,vz:tz/L*spd,life:3.8,mesh,bossShot:true,bossWeapon:weaponLabel,damage:[9,11,13,15,18][stageIndex]});
         }
         e.lastWeaponLabel=weaponLabel;addFloat(e.x,e.alt+48,weaponLabel,'#'+style.color.toString(16).padStart(6,'0'),e.z);
+        }
       }else{
         e.fireT=Math.max(0.75,1.65-save.lv.plane*0.06);
         const mesh=new THREE.Mesh(enemyShotGeo,enemyShotMat);mesh.position.set(e.x*S,Y(e.alt),e.z*S);scene.add(mesh);
@@ -1541,7 +1636,9 @@ function updateFlight(dt){
     }
   }
   for(let i=objs.enemyShots.length-1;i>=0;i--){
-    const b=objs.enemyShots[i];b.x+=b.vx*dt;b.alt+=(b.vy||0)*dt;b.z+=(b.vz||0)*dt;b.life-=dt;b.mesh.position.set(b.x*S,Y(b.alt),b.z*S);
+    const b=objs.enemyShots[i];
+    if(b.ironEagleSeeker){const tx=P.x-b.x,ty=P.alt-b.alt,tz=P.z-b.z,L=Math.hypot(tx,ty,tz)||1,k=Math.min(1,dt*0.72),speed=b.seekerSpeed||900;b.vx=lerp(b.vx,tx/L*speed,k);b.vy=lerp(b.vy,ty/L*speed,k);b.vz=lerp(b.vz,tz/L*speed,k);}
+    b.x+=b.vx*dt;b.alt+=(b.vy||0)*dt;b.z+=(b.vz||0)*dt;b.life-=dt;b.mesh.position.set(b.x*S,Y(b.alt),b.z*S);
     if(Math.abs(b.x-P.x)<34&&Math.abs(b.alt-P.alt)<32&&Math.abs(b.z-P.z)<40){
       if(shieldT>0||shieldCooldown<=0)activateShield(b.x,b.alt,b.z);
       else{const stageIndex=Math.max(0,Math.min(4,(objs.enemies.find(e=>e.boss&&!e.hit)?.bossStage||1)-1));damagePlayer(b.bossShot?(b.damage||[9,11,13,15,18][stageIndex]):6,b.x,b.alt,b.z,b.bossShot?'boss':'enemy');P.alt=Math.max(20,P.alt-(b.bossShot?24:12));}
@@ -1565,8 +1662,10 @@ function updateFlight(dt){
     }
     if(!hit){for(const e of objs.enemies){
       if(e.hit)continue;
-      const hr=e.boss?(e.bossStage>=5?118:82):38;
-      if(Math.abs(e.x-shot.x)<hr&&Math.abs(e.alt-shot.alt)<(e.bossStage>=5?94:e.boss?72:40)&&Math.abs(e.z-shot.z)<(e.bossStage>=5?108:e.boss?80:45)){
+      const hr=e.boss?(e.hitRadiusX||(e.bossStage>=5?118:82)):38;
+      const hitY=e.boss?(e.hitRadiusY||(e.bossStage>=5?94:72)):40;
+      const hitZ=e.boss?(e.hitRadiusZ||(e.bossStage>=5?108:80)):45;
+      if(Math.abs(e.x-shot.x)<hr&&Math.abs(e.alt-shot.alt)<hitY&&Math.abs(e.z-shot.z)<hitZ){
         hit=true;
         if(e.boss){
           e.hp-=Math.max(1,(shot.damage||10)/10);playSfx('boss-hit',0.7);shake=Math.max(shake,0.08);
@@ -1591,7 +1690,7 @@ function updateFlight(dt){
     if(m.smoke<=0){addPart(m.x,m.alt,0,0,0.34,0xb9c4d4,4,m.z,0);m.smoke=0.045;}
     const v=new THREE.Vector3(m.vx,m.vy,m.vz);m.mesh.position.set(m.x*S,Y(m.alt),m.z*S);m.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(1,0,0),v.normalize());
     let hit=m.life<=0||m.alt<0,impacted=false;
-    if(!hit){for(const e of objs.enemies){if(e.hit)continue;const dx=e.x-m.x,dy=e.alt-m.alt,dz=e.z-m.z;if(dx*dx+dy*dy+dz*dz<(e.boss?(e.bossStage>=5?148:125):70)**2){hit=true;impacted=true;if(e.boss){e.hp=Math.max(0,e.hp-26);playSfx('boss-hit',0.78);addFloat(e.x,e.alt+70,'صاروخ أصاب الزعيم! طاقة '+Math.ceil(e.hp)+'/'+e.maxHp,'#ffe27a',e.z);if(e.hp<=0)defeatBoss(e,'missile');} else{e.hit=true;e.mesh.visible=false;run.coins+=18*(1+save.lv.coin);addFloat(e.x,e.alt+45,'إسقاط صاروخي +18','#ffe27a',e.z);}for(let n=0;n<24;n++)addPart(e.x,e.alt,(Math.random()-.5)*300,(Math.random()-.5)*240,0.55,0xff9b4a,4,e.z);shake=Math.max(shake,0.3);break;}}}
+    if(!hit){for(const e of objs.enemies){if(e.hit)continue;const dx=e.x-m.x,dy=e.alt-m.alt,dz=e.z-m.z;if(dx*dx+dy*dy+dz*dz<(e.boss?(e.bossStage===1?138:e.bossStage>=5?148:125):70)**2){hit=true;impacted=true;if(e.boss){e.hp=Math.max(0,e.hp-26);playSfx('boss-hit',0.78);addFloat(e.x,e.alt+70,'صاروخ أصاب الزعيم! طاقة '+Math.ceil(e.hp)+'/'+e.maxHp,'#ffe27a',e.z);if(e.hp<=0)defeatBoss(e,'missile');} else{e.hit=true;e.mesh.visible=false;run.coins+=18*(1+save.lv.coin);addFloat(e.x,e.alt+45,'إسقاط صاروخي +18','#ffe27a',e.z);}for(let n=0;n<24;n++)addPart(e.x,e.alt,(Math.random()-.5)*300,(Math.random()-.5)*240,0.55,0xff9b4a,4,e.z);shake=Math.max(shake,0.3);break;}}}
     if(hit){if(impacted){playSfx('missile-impact');playSfx('explosion',0.72);}scene.remove(m.mesh);missiles.splice(i,1);}
   }
 }
@@ -1878,8 +1977,8 @@ function render(dt){
     e.mesh.position.set(e.x*S,Y(e.alt),e.z*S);
     if(e.mesh.userData.energyRings)e.mesh.userData.energyRings.forEach((ring,i)=>{ring.rotation.z=time*(i?1.8:-1.25);});
     e.mesh.visible=!e.hit;
-    e.mesh.rotation.z=e.boss?Math.sin(e.phase*0.9)*0.13:Math.sin(e.phase)*0.06;
-    e.mesh.rotation.x=e.boss?Math.sin(e.phase*0.7)*0.08:0;
+    e.mesh.rotation.z=e.boss?(e.bossStage===1?clamp(e.bank||0,-0.36,0.36):Math.sin(e.phase*0.9)*0.13):Math.sin(e.phase)*0.06;
+    e.mesh.rotation.x=e.boss?(e.bossStage===1&&e.attackState==='dive'?-0.2:Math.sin(e.phase*0.7)*0.08):0;
   }
   for(const b of objs.enemyShots){b.mesh.position.set(b.x*S,Y(b.alt),b.z*S);}
   for(const b of objs.birds){
