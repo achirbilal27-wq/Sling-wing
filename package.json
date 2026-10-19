@@ -4,12 +4,12 @@
   "private": true,
   "description": "Sling Wing - 3D airplane slingshot game (Capacitor Android)",
   "scripts": {
-    "prepare-www": "node scripts/prepare.js",
+    "prepare-www": "node scripts/generate-aircraft-models.js && node scripts/prepare.js",
     "sync": "npm run prepare-www && npx cap sync android",
     "open": "npx cap open android",
     "apk": "npm run sync && cd android && ./gradlew assembleDebug",
     "bundle": "npm run sync && cd android && ./gradlew bundleRelease",
-    "test": "node scripts/check-game.js"
+    "test": "node scripts/generate-aircraft-models.js && node scripts/check-game.js"
   },
   "dependencies": {
     "@capacitor/android": "^6.1.0",
