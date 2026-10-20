@@ -50,6 +50,7 @@ const assetRefs = [...decodedJs.matchAll(/assets\/[^'"\s)]+?\.(?:png|jpe?g|webp|
 const optionalCustomAircraft = new Set([
   'assets/models/aircraft/phantom.glb',
   'assets/models/aircraft/guardian.glb',
+  'assets/models/aircraft/stylized_ww1_plane.glb',
 ]);
 for (const url of [...new Set(assetRefs)]) {
   if (optionalCustomAircraft.has(url)) continue;
@@ -88,6 +89,9 @@ check(js.includes("assets/models/glb/plane_pc.glb") && js.includes('loadEnemyPla
 check(js.includes('if(enemy.boss||!enemy.mesh||!enemy.mesh.parent) return;'), 'Enemy GLB loading must preserve active boss meshes.');
 check(js.includes("phantom:{name:'الشبح النفاث',short:'الشبح',unlock:3000"), 'Phantom must unlock at 3000 m and before Guardian.');
 check(js.includes("guardian:{name:'الحارس المدرع',short:'الحارس',unlock:4000"), 'Guardian must be the final aircraft unlocked at 4000 m.');
+check(js.includes("ww1:{name:'المقاتلة الكلاسيكية WWI',short:'الحربية',unlock:2000"), 'WWI aircraft must be selectable after 2000 m.');
+check(js.includes("assets/models/aircraft/stylized_ww1_plane.glb") && js.includes("['ww1','assets/models/aircraft/stylized_ww1_plane.glb']"), 'WWI custom GLB loading is not configured.');
+check(js.includes("ww1:{name:'رشاشات WWI',icon:'🎯'}") && js.includes('P.ww1OverdriveT=5'), 'WWI aircraft must provide its special rapid-fire ability.');
 check(js.includes("}else if(key==='phantom'){") && js.includes("'الشبح: إمداد وقود +38٪'"), 'Phantom must own the fuel-supply ability.');
 check(js.includes("}else if(key==='guardian'){") && js.includes('P.guardianOverdriveT=4'), 'Guardian must have its temporary heavy-cannon combat ability.');
 const preparedHtmlPath = path.join(root, 'www', 'index.html');
