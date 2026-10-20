@@ -1338,5 +1338,5 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
 @media(max-width:380px){#pauseBtn{top:17px;width:38px;height:38px}}
 @media(max-height:560px){#pauseBtn{top:8px}}
 
-/* Missile stock recharge indicator and station perk rarity. */
-#missile{position:relative;overflow:hidden}#missileCharge{display:block;width:42px;height:3px;border-radius:4px;background:rgba(30,10,10,.5);overflow:hidden;margin-top:2px}#missileCharge b{display:block;width:100%;height:100%;background:#a9ffcf;transition:width .08s linear}#missile.locking{box-shadow:0 0 0 4px rgba(119,226,255,.75),0 4px 0 #7a1d15;filter:brightness(1.12)}.perk.rarity-common{border-color:#8ca3b8}.perk.rarity-rare{border-color:#47a8ff;box-shadow:0 0 0 1px rgba(71,168,255,.25)}.perk.rarity-legendary{border-color:#ffca52;box-shadow:0 0 0 1px rgba(255,202,82,.4)}.perk-synergy{color:#65e4ff!important;font-weight:800}
+/* Upgrade rarity and synergy cues for the tactical station. */
+.perk.rarity-common{border-color:#8ca3b8}.perk.rarity-rare{border-color:#47a8ff;box-shadow:0 0 0 1px rgba(71,168,255,.25)}.perk.rarity-legendary{border-color:#ffca52;box-shadow:0 0 0 1px rgba(255,202,82,.4)}.perk-synergy{color:#65e4ff!important;font-weight:800}
