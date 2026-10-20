@@ -1293,10 +1293,9 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
 #story .sheet,#codex .sheet{overscroll-behavior:contain}
 
 
-/* Keep pause immediately to the right of the centered fuel gauge on every screen size. */
+/* Keep pause in the upper-right safe corner, separated from the centered fuel gauge. */
 #pauseBtn{
-  top:calc(10px + env(safe-area-inset-top,0px) + 15px);
-  left:calc(50% + 42px);right:auto;transform:none;
+  top:12px;right:12px;left:auto;transform:none;
   z-index:9;width:42px;height:42px;
   border-color:rgba(255,255,255,.96);
   background:linear-gradient(145deg,rgba(24,44,72,.92),rgba(7,15,30,.9));
@@ -1305,13 +1304,10 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
 }
 #pauseBtn:active{transform:scale(.94)}
 @media(max-width:380px){
-  #pauseBtn{
-    top:calc(10px + env(safe-area-inset-top,0px) + 13px);
-    left:calc(50% + 38px);right:auto;width:38px;height:38px;
-  }
+  #pauseBtn{top:8px;right:8px;left:auto;width:38px;height:38px}
 }
 @media(max-height:560px){
-  #pauseBtn{top:calc(8px + env(safe-area-inset-top,0px) + 10px)}
+  #pauseBtn{top:8px;right:8px}
 }
 #bossBlastOverlay{position:fixed;inset:0;z-index:18;pointer-events:none;opacity:0;background:radial-gradient(circle at 54% 46%,rgba(255,248,207,.86) 0%,rgba(255,126,65,.34) 24%,rgba(24,10,36,0) 72%);mix-blend-mode:screen}
 #bossBlastOverlay.on{animation:bossBlastFlash .76s ease-out both}
