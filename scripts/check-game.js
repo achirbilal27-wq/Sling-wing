@@ -38,6 +38,8 @@ check(css.includes('#runCoins{top:12px;left:12px;right:auto;inset-inline-start:a
 check(css.includes('#pauseBtn:active{transform:translateX(-50%) scale(.94)}'), 'Pause button active styling must preserve its centered position.');
 check(css.includes('#fuelGauge{') && css.includes('top:12px;right:12px;width:72px;height:72px;'), 'Fuel gauge must remain anchored to the right side of the HUD.');
 check(css.includes('@media(max-width:380px){#pauseBtn{top:17px;width:38px;height:38px}}'), 'Pause button must shrink on narrow screens.');
+check(css.includes('#dist{top:84px;font-size:52px}') && css.includes('#alt{top:138px}'), 'Distance and altitude indicators must sit below the top control row.');
+check(css.includes('#hud:has(#bossHud.on) #dist,'), 'Distance, altitude, and biome indicators must not overlap the active boss HUD.');
 const playerModelPrep=js.slice(js.indexOf('function prepareAircraftModel(root){'),js.indexOf('function loadPlayerAircraftModels()',js.indexOf('function prepareAircraftModel(root){')));
 check(playerModelPrep.includes('if(originalSize.x>originalSize.z)normalized.rotation.y=Math.PI/2;'), 'Falcon GLB must be rotated into the game forward axis when its wingspan lies on X.');
 check(playerModelPrep.includes('normalized.scale.setScalar(14/span);'), 'Falcon GLB must be fitted to the procedural aircraft size.');
