@@ -356,6 +356,8 @@ const AIRCRAFT={
  phantom:{name:'الشبح النفاث',short:'الشبح',unlock:3000,shield:8.4,shot:0.2,boost:1.35,speed:1.08,fuelUse:1.12,upgrade:'قدرة إمداد الوقود +38٪'},
  guardian:{name:'الحارس المدرع',short:'الحارس',unlock:4000,shield:14.5,shot:0.115,boost:1.2,speed:1.15,fuelUse:0.9,upgrade:'مدفع ثقيل ودرع قتالي للزعيم الأخير'},
 };
+// Migrate saves from the temporary WWI selectable-aircraft entry back to the original first aircraft.
+if(!AIRCRAFT[save.model]){save.model='trainer';persist();}
 function aircraft(){return AIRCRAFT[save.model]||AIRCRAFT.trainer;}
 const bodyMat=matS(0x8bd13a,0.5),accMat=matS(0x5a9a1c,0.6);
 const planeG=new THREE.Group();planeG.rotation.order='ZYX';
