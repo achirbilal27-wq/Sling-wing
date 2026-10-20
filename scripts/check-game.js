@@ -93,6 +93,7 @@ check(js.includes("}else if(key==='phantom'){") && js.includes("'الشبح: إ�
 check(js.includes("}else if(key==='guardian'){") && js.includes('P.guardianOverdriveT=4'), 'Guardian must have its temporary heavy-cannon combat ability.');
 check(js.includes("trainer:{name:'الصقر التدريبي',short:'الصقر',unlock:0"), 'Falcon must remain the first aircraft and be available from the start.');
 check(js.includes("['trainer','assets/models/aircraft/stylized_ww1_plane.glb']") && js.includes("model==='trainer'"), 'WWI GLB must replace the original Falcon model rather than appear as a separate aircraft.');
+check(js.includes('prop.visible=!customModel;'), 'The original procedural propeller must be hidden when the custom Falcon GLB is active.');
 check(js.includes("if(!AIRCRAFT[save.model]){save.model='trainer';persist();}"), 'Legacy saves must migrate removed aircraft selections back to Falcon.');
 const preparedHtmlPath = path.join(root, 'www', 'index.html');
 if (fs.existsSync(preparedHtmlPath)) {
