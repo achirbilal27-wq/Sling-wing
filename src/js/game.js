@@ -780,15 +780,27 @@ function loadEnemyPlaneModel(){
 }
 loadEnemyPlaneModel();
 function prepareAircraftModel(root){
+  // Keep the imported GLB hierarchy intact and normalize it through a wrapper.
   const normalized=new THREE.Group();
   normalized.add(root);
   normalized.updateMatrixWorld(true);
+  const originalBounds=new THREE.Box3().setFromObject(normalized);
+  if(originalBounds.isEmpty())return null;
+  const originalSize=originalBounds.getSize(new THREE.Vector3());
+
+  // The supplied Falcon GLB has its wingspan on X and nose along +Z.
+  // Gameplay uses +X as forward and Z for wingspan, so rotate the wrapper
+  // before measuring and fitting the model to the procedural aircraft size.
+  if(originalSize.x>originalSize.z)normalized.rotation.y=Math.PI/2;
+  normalized.updateMatrixWorld(true);
+
   let bounds=new THREE.Box3().setFromObject(normalized);
   if(bounds.isEmpty())return null;
-  let size=bounds.getSize(new THREE.Vector3());
+  const size=bounds.getSize(new THREE.Vector3());
   const span=Math.max(size.x,size.z);
   if(!Number.isFinite(span)||span<0.001)return null;
-  normalized.scale.setScalar(18/span);
+  // Match the existing procedural aircraft's approximate 14-unit wingspan.
+  normalized.scale.setScalar(14/span);
   normalized.updateMatrixWorld(true);
   bounds=new THREE.Box3().setFromObject(normalized);
   normalized.position.sub(bounds.getCenter(new THREE.Vector3()));
