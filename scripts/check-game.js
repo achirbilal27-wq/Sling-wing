@@ -34,7 +34,7 @@ const cssOpen = (css.match(/{/g) || []).length;
 const cssClose = (css.match(/}/g) || []).length;
 check(cssOpen === cssClose, 'CSS brace mismatch: ' + cssOpen + ' opening vs ' + cssClose + ' closing braces.');
 check(css.includes('#pauseBtn{top:18px;left:50%;right:auto;transform:translateX(-50%);z-index:10;width:42px;height:42px}'), 'Pause button must sit centered between the left-side coin counter and right-side fuel gauge.');
-check(css.includes('#runCoins{top:12px;left:12px;right:auto;inset-inline-start:auto;z-index:8}'), 'Run coin counter must stay on the left side of the HUD.');
+check(css.includes('#runCoins{position:absolute;top:12px;inset-inline-start:12px}'), 'Run coin counter must preserve its original left-side positioning.');
 check(css.includes('#pauseBtn:active{transform:translateX(-50%) scale(.94)}'), 'Pause button active styling must preserve its centered position.');
 check(css.includes('#fuelGauge{') && css.includes('top:12px;right:12px;width:72px;height:72px;'), 'Fuel gauge must remain anchored to the right side of the HUD.');
 check(css.includes('@media(max-width:380px){#pauseBtn{top:17px;width:38px;height:38px}}'), 'Pause button must shrink on narrow screens.');
