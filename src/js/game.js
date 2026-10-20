@@ -354,7 +354,8 @@ const AIRCRAFT={
  trainer:{name:'الصقر التدريبي',short:'الصقر',unlock:0,shield:9.5,shot:0.24,boost:1,speed:1,fuelUse:1,upgrade:'خزان وقود موسّع'},
  interceptor:{name:'المعترض السريع',short:'المعترض',unlock:500,shield:9,shot:0.17,boost:1,speed:1.12,fuelUse:1.08,upgrade:'خزان وقود للرحلات الطويلة'},
  phantom:{name:'الشبح النفاث',short:'الشبح',unlock:3000,shield:8.4,shot:0.2,boost:1.35,speed:1.08,fuelUse:1.12,upgrade:'قدرة إمداد الوقود +38٪'},
- guardian:{name:'الحارس المدرع',short:'الحارس',unlock:4000,shield:14.5,shot:0.115,boost:1.2,speed:1.15,fuelUse:0.9,upgrade:'مدفع ثقيل ودرع قتالي للزعيم الأخير'}
+ guardian:{name:'الحارس المدرع',short:'الحارس',unlock:4000,shield:14.5,shot:0.115,boost:1.2,speed:1.15,fuelUse:0.9,upgrade:'مدفع ثقيل ودرع قتالي للزعيم الأخير'},
+ ww1:{name:'المقاتلة الكلاسيكية WWI',short:'الحربية',unlock:2000,shield:10.5,shot:0.21,boost:1.08,speed:1.04,fuelUse:0.96,upgrade:'رشاشات كلاسيكية ومناورة متوازنة'}
 };
 function aircraft(){return AIRCRAFT[save.model]||AIRCRAFT.trainer;}
 const bodyMat=matS(0x8bd13a,0.5),accMat=matS(0x5a9a1c,0.6);
@@ -406,6 +407,12 @@ addKit('phantom',0xb46bff,[
  {geo:new THREE.BoxGeometry(4,0.6,2.4),pos:[-4.2,0.1,-2.1]},
  {geo:new THREE.BoxGeometry(4,0.6,2.4),pos:[-4.2,0.1,2.1]}
 ]);
+addKit('ww1',0x8a6b43,[
+  {geo:new THREE.BoxGeometry(5.8,0.28,15),pos:[-0.1,0.55,0]},
+  {geo:new THREE.BoxGeometry(5.4,0.28,13.5),pos:[-0.25,-0.95,0]},
+  {geo:new THREE.BoxGeometry(2.6,0.24,5.2),pos:[-4.2,0.45,0]},
+  {geo:new THREE.CylinderGeometry(0.22,0.22,2.7,8),pos:[4.2,0.15,0],rot:[Math.PI/2,0,0]}
+]);
 const shieldMesh=new THREE.Mesh(new THREE.SphereGeometry(9,18,12),new THREE.MeshBasicMaterial({color:0x7ff5ff,wireframe:true,transparent:true,opacity:0.68,depthWrite:false}));
 shieldMesh.scale.set(1.15,0.62,0.9);shieldMesh.visible=false;planeG.add(shieldMesh);
 const aircraftModelHolder=new THREE.Group();aircraftModelHolder.visible=false;planeG.add(aircraftModelHolder);
@@ -414,10 +421,10 @@ let aircraftModelLoadStarted=false;
 let shieldT=0,shieldCooldown=0,appliedLv=-1,appliedModel='';
 function applyPlaneColors(){
   const model=save.model in AIRCRAFT?save.model:'trainer';
-  const colorIndex={trainer:0,interceptor:1,phantom:2,guardian:3}[model];
+  const colorIndex={trainer:0,interceptor:1,phantom:2,guardian:3,ww1:4}[model];
   const l=Math.min(colorIndex+Math.floor(save.lv.plane/3),PAL.length-1);
   if(l!==appliedLv){appliedLv=l;bodyMat.color.setHex(PAL[l][0]);accMat.color.setHex(PAL[l][1]);}
-  const customModel=(model==='phantom'||model==='guardian')&&!!aircraftModelTemplates[model];
+  const customModel=(model==='phantom'||model==='guardian'||model==='ww1')&&!!aircraftModelTemplates[model];
   if(customModel&&aircraftModelHolder.userData.modelKey!==model){
     aircraftModelHolder.clear();
     aircraftModelHolder.add(aircraftModelTemplates[model].clone(true));
@@ -803,7 +810,7 @@ function loadPlayerAircraftModels(){
   if(typeof THREE.GLTFLoader!=='function'){console.warn('GLTFLoader unavailable; custom Phantom and Guardian GLB models cannot load; keeping procedural fallback.');return;}
   aircraftModelLoadStarted=true;
   const loader=new THREE.GLTFLoader();
-  [['phantom','assets/models/aircraft/phantom.glb'],['guardian','assets/models/aircraft/guardian.glb']].forEach(([key,url])=>{
+  [['phantom','assets/models/aircraft/phantom.glb'],['guardian','assets/models/aircraft/guardian.glb'],['ww1','assets/models/aircraft/stylized_ww1_plane.glb']].forEach(([key,url])=>{
     loader.load(url,gltf=>{
       const model=prepareAircraftModel(gltf.scene);
       if(!model){console.warn('Invalid '+key+' GLB; keeping procedural fallback.');return;}
@@ -1050,7 +1057,7 @@ function renderHangar(upgradedKey){
     const unlocked=save.best>=a.unlock;
     const b=document.createElement('button');b.type='button';
     b.className='fleet-btn'+(save.model===key?' selected':'')+(!unlocked?' locked':'');
-    b.innerHTML='<span class="fleet-icon">'+({trainer:'✈',interceptor:'➤',guardian:'⬟',phantom:'✦'}[key])+'</span><span class="fleet-name">'+a.short+'</span><small>'+(unlocked?(save.model===key?'محددة':'اختيار'):(a.unlock+' م'))+'</small>';
+    b.innerHTML='<span class="fleet-icon">'+({trainer:'✈',interceptor:'➤',guardian:'⬟',phantom:'✦',ww1:'🛩'}[key])+'</span><span class="fleet-name">'+a.short+'</span><small>'+(unlocked?(save.model===key?'محددة':'اختيار'):(a.unlock+' م'))+'</small>';
     b.addEventListener('click',()=>{if(!unlocked){toast('اقطع '+a.unlock+' م لفتحها');beep(160,.1,'square');return;}save.model=key;persist();appliedModel='';appliedLv=-1;renderHangar();playSfx('ui-confirm');toast(a.name);});
     fleet.appendChild(b);
   });
@@ -1290,7 +1297,8 @@ const ABILITIES={
   trainer:{name:'درع',icon:'🛡'},
   interceptor:{name:'اندفاع',icon:'⚡'},
   phantom:{name:'وقود',icon:'⛽'},
-  guardian:{name:'مدفع ثقيل',icon:'💥'}
+  guardian:{name:'مدفع ثقيل',icon:'💥'},
+  ww1:{name:'رشاشات WWI',icon:'🎯'}
 };
 function updateAbilityUI(){
   const key=save.model||'trainer',a=ABILITIES[key]||ABILITIES.trainer;
@@ -1314,6 +1322,9 @@ function doAbility(){
   }else if(key==='phantom'){
     P.fuel=Math.min(100,P.fuel+38);P.engineOut=P.fuel<=0;P.fuelWarned=false;updateFuelGauge();
     addFloat(P.x,P.alt+48,'الشبح: إمداد وقود +38٪','#baf6ff',P.z);playSfx('fuel-pickup');
+  }else if(key==='ww1'){
+    P.ww1OverdriveT=5;
+    addFloat(P.x,P.alt+48,'المقاتلة الكلاسيكية: رشاشات سريعة!','#ffe0a3',P.z);playSfx('weapon-fire',0.85);shake=Math.max(shake,.12);
   }else if(key==='guardian'){
     P.guardianOverdriveT=4;
     shieldT=Math.max(shieldT,3.5);shieldCooldown=Math.max(shieldCooldown,1.5);shieldMesh.visible=true;
@@ -1461,7 +1472,7 @@ function updateFlight(dt){
   const canFire=fireHeld&&!run.overheat;
   if(canFire&&run.fireCd<=0){
     doShoot();
-    run.fireCd=1/(8*run.rate*(run.firePower||1));
+    run.fireCd=1/(8*run.rate*(run.firePower||1)*(P.ww1OverdriveT>0&&save.model==='ww1'?1.8:1));
     run.heat+=5.5;
     if(run.heat>=100){run.heat=100;run.overheat=true;toast('سخن المدفع!');beep(140,.3,'square',.05);}
   }
@@ -1472,6 +1483,7 @@ function updateFlight(dt){
   P.abilityCooldown=Math.max(0,P.abilityCooldown-dt);
   P.magnetT=Math.max(0,P.magnetT-dt);
   P.guardianOverdriveT=Math.max(0,(P.guardianOverdriveT||0)-dt);
+  P.ww1OverdriveT=Math.max(0,(P.ww1OverdriveT||0)-dt);
   const holding=down.size>0;
   const lvP=save.lv.plane;
   const wasFueled=P.fuel>0;
