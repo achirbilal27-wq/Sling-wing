@@ -1336,5 +1336,17 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
 #runCoins{top:12px;left:12px;right:auto;inset-inline-start:auto;z-index:8}
 #pauseBtn{top:18px;left:50%;right:auto;transform:translateX(-50%);z-index:10;width:42px;height:42px}
 #pauseBtn:active{transform:translateX(-50%) scale(.94)}
+/* Move distance below the top controls so the centered pause button never covers it. */
+#dist{top:84px;font-size:52px}
+#alt{top:138px}
+#biomeBadge{top:164px}
+#hud:has(#bossHud.on) #dist,
+#hud:has(#bossHud.on) #alt,
+#hud:has(#bossHud.on) #biomeBadge{display:none}
 @media(max-width:380px){#pauseBtn{top:17px;width:38px;height:38px}}
-@media(max-height:560px){#pauseBtn{top:8px}}
+@media(max-height:560px){
+  #pauseBtn{top:8px}
+  #dist{top:54px;font-size:44px}
+  #alt{top:102px}
+  #biomeBadge{display:none}
+}
