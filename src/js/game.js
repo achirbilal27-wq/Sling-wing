@@ -895,8 +895,8 @@ function resetRun(){
   shots.forEach(s=>scene.remove(s.mesh));shots.length=0;
   missiles.forEach(m=>scene.remove(m.mesh));missiles.length=0;missileCooldown=0;
   const cannonLevel=Number(save.lv.cannon)||0;
-  run={coins:0,picked:0,maxAlt:0,gateCombo:0,bestCombo:0,gates:0,bosses:0,bossBattle:false,missiles:3,missileMax:Math.min(12,3+(Number(save.lv.missile)||0)),missileCharge:0,missileLocking:false,missileLockTargets:[],stationCount:0,stormHits:0,firePower:1,stationShield:0,aimMode:'smart',perks:[],
-    tri:false,rate:1,cool:1+0.12*cannonLevel,damage:1+0.25*cannonLevel,heat:0,overheat:false,fireCd:0,fireSfxTimer:0};
+  run={coins:0,picked:0,maxAlt:0,gateCombo:0,bestCombo:0,gates:0,bosses:0,bossBattle:false,missiles:3,stationCount:0,stormHits:0,firePower:1,stationShield:0,aimMode:'smart',
+    tri:false,rate:1,cool:1+0.12*cannonLevel,damage:1+0.25*cannonLevel,perks:[],heat:0,overheat:false,fireCd:0,fireSfxTimer:0};
   objs={coins:[],rings:[],birds:[],enemies:[],enemyShots:[],fuels:[],drafts:[],storms:[],stations:[],next:600,nextEnemy:550/M_PER_PX,nextBoss:bossDistanceMeters(0)/M_PER_PX,nextStorm:600/M_PER_PX,nextStation:(bossDistanceMeters(0)-1100)/M_PER_PX,nextStationStage:0,approachBossX:null};
   shieldT=0;shieldCooldown=0;shieldMesh.visible=false;
   clearObjs();
@@ -1299,9 +1299,7 @@ fireBtn.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation(
 ['pointerup','pointercancel','lostpointercapture'].forEach(ev=>fireBtn.addEventListener(ev,e=>{e.stopPropagation();fireHeld=false;}));
 window.addEventListener('blur',()=>{fireHeld=false;});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)fireHeld=false;});
-$('missile').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();if(state!=='flight'||paused||run.dead)return;run.missileLocking=save.model==='phantom';run.missileLockTargets=run.missileLocking?findMissileTargets(Math.min(5,1+(Number(save.lv.missile)||0))):[];run.missilePressAt=performance.now();if(!run.missileLocking)doMissile();else{toast('استمر بالضغط لقفل الأهداف');}});
-$('missile').addEventListener('pointerup',e=>{e.preventDefault();if(run.missileLocking){run.missileLocking=false;fireMissileVolley(run.missileLockTargets||[]);run.missileLockTargets=[];}});
-$('missile').addEventListener('pointercancel',()=>{run.missileLocking=false;run.missileLockTargets=[];});
+$('missile').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();doMissile();});
 $('specialAbility').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();doAbility();});
 const ABILITIES={
   trainer:{name:'درع',icon:'🛡'},
@@ -1419,51 +1417,16 @@ function defeatBoss(e,source){
     }
   });
 }
-function missilePattern(){
-  if(save.model==='interceptor')return 'rapid';
-  if(save.model==='guardian')return 'heavy';
-  if(save.model==='phantom')return 'lock';
-  return 'guided';
-}
-function findMissileTargets(limit){
-  const candidates=(objs.enemies||[]).filter(e=>e&&!e.hit&&e.x>P.x-10&&e.x<P.x+15000);
-  candidates.sort((a,b)=>Math.abs(a.x-P.x)-Math.abs(b.x-P.x));
-  return candidates.slice(0,Math.max(1,limit));
-}
-function launchOneMissile(target,options){
-  options=options||{};
-  const mesh=new THREE.Mesh(missileGeo,missileMat);mesh.position.set((P.x+24)*S,Y(P.alt),P.z*S);scene.add(mesh);
-  missiles.push({x:P.x+24,alt:P.alt,z:P.z,vx:options.speed||Math.max(850,P.s+650),vy:0,vz:0,life:options.life||4.2,smoke:0,target:target||missileTarget(),mesh,heavy:!!options.heavy,mini:!!options.mini,damage:options.damage||1,blast:options.blast||150,pierce:!!options.pierce,hitIds:[]});
-  shake=Math.max(shake,options.heavy?0.22:0.09);
-}
-function fireMissileVolley(locked){
+function doMissile(){
   if(state!=='flight'||paused||run.dead)return;
-  if(missileCooldown>0){toast('الصواريخ قيد إعادة الشحن');return;}
-  if(run.missiles<=0){toast('الذخيرة فارغة — انتظر إعادة الشحن');beep(160,.1,'square');return;}
-  const pattern=missilePattern(),level=Math.max(0,Number(save.lv.missile)||0);
-  const targets=Array.isArray(locked)?locked.filter(e=>e&&!e.hit):[];
-  if(pattern==='lock'&&!targets.length){const found=findMissileTargets(Math.min(5,1+level));targets.push(...found);}
-  if(pattern!=='lock'&&!missileTarget()&&pattern!=='rapid'){toast('لا يوجد هدف أمامك الآن');return;}
-  const cost=pattern==='rapid'?Math.min(2,run.missiles):pattern==='mini'?Math.min(3,run.missiles):1;
-  run.missiles=Math.max(0,run.missiles-cost);
-  const launch=(target,opts)=>launchOneMissile(target,opts);
-  if(pattern==='rapid'){
-    const target=missileTarget();launch(target,{speed:1950,damage:0.85});setTimeout(()=>{if(state==='flight'&&!paused&&!run.dead&&missiles.length<24)launch(missileTarget()||target,{speed:1950,damage:0.85});},110);
-    playSfx('missile-launch');toast('وابل المعترض السريع!');
-  }else if(pattern==='heavy'){
-    launch(missileTarget(),{speed:760,life:6.2,heavy:true,damage:2.1,blast:260,pierce:true});playSfx('missile-launch');beep(95,.18,'sawtooth');toast('صاروخ ثقيل خارق للدروع!');
-  }else if(pattern==='lock'){
-    const chosen=targets.slice(0,Math.max(1,cost+level));
-    if(!chosen.length){run.missiles=Math.min(run.missileMax,run.missiles+1);toast('لا توجد أهداف للقفل');return;}
-    chosen.forEach((target,i)=>launch(target,{speed:1500,damage:0.78,life:4.8}));
-    playSfx('missile-launch');beep(760,.08,'triangle');toast('إطلاق وابل الأهداف المقفلة: '+chosen.length);
-  }else{
-    launch(missileTarget(),{speed:Math.max(850,P.s+650),damage:1});playSfx('missile-launch');toast('صاروخ موجّه!');
-  }
-  missileCooldown=Math.max(0.28,0.9-level*0.045);
+  if(missileCooldown>0){toast('الصاروخ يعاد تجهيزه');return;}
+  if(run.missiles<=0){toast('نفدت الصواريخ؛ ابحث عن محطة تطوير');beep(160,.1,'square');return;}
+  const target=missileTarget();
+  if(!target){toast('لا يوجد هدف أمامك الآن');return;}
+  const mesh=new THREE.Mesh(missileGeo,missileMat);mesh.position.set((P.x+24)*S,Y(P.alt),P.z*S);scene.add(mesh);
+  missiles.push({x:P.x+24,alt:P.alt,z:P.z,vx:Math.max(850,P.s+650),vy:0,vz:0,life:4.2,smoke:0,target,mesh});
+  run.missiles--;missileCooldown=0.7;playSfx('missile-launch');toast('صاروخ موجّه!');
 }
-function doMissile(){fireMissileVolley([]);}
-
 function updateFuelGauge(){
   const p=clamp(P&&Number.isFinite(P.fuel)?P.fuel:100,0,100);
   const arc=$('fuelArc'),num=$('fuelPercent'),g=$('fuelGauge');
@@ -1794,8 +1757,6 @@ function updateFlight(dt){
     if(hit||shot.life<=0){scene.remove(shot.mesh);shots.splice(i,1);}
   }
   missileCooldown=Math.max(0,missileCooldown-dt);
-  if(state==='flight'&&!paused&&!run.dead&&run.missiles<run.missileMax){run.missileCharge=(run.missileCharge||0)+dt;const reload=Math.max(2.4,6.5-(Number(save.lv.missile)||0)*0.42);if(run.missileCharge>=reload){run.missileCharge-=reload;run.missiles=Math.min(run.missileMax,run.missiles+1);}}
-  else if(run.missiles>=run.missileMax)run.missileCharge=0;
   for(let i=missiles.length-1;i>=0;i--){
     const m=missiles[i];m.life-=dt;
     if(!m.target||m.target.hit||m.target.x<P.x-20){m.target=missileTarget();}
@@ -1863,11 +1824,9 @@ function update(dt){
     $('alt').textContent='الارتفاع '+Math.floor(P.alt/10)+' م';
     $('boost').classList.toggle('off',save.fuel<=0||P.boostT>0.2);
     $('bFuel').textContent=save.fuel;
-    $('missileCount').textContent=run.missiles+'/'+run.missileMax;
-    const missileFill=$('missileChargeFill');if(missileFill)missileFill.style.width=(run.missiles>=run.missileMax?100:Math.min(100,100*(run.missileCharge||0)/Math.max(2.4,6.5-(Number(save.lv.missile)||0)*0.42)))+'%';
+    $('missileCount').textContent=run.missiles;
     const aimBtn=$('aimMode');if(aimBtn){const modes={smart:'تتبع ذكي',precision:'تصويب دقيق',spread:'انتشار'};aimBtn.textContent=modes[run.aimMode||'smart'];aimBtn.setAttribute('aria-label','نمط إطلاق النار: '+modes[run.aimMode||'smart']+'، اضغط للتغيير');aimBtn.classList.toggle('active',run.aimMode==='smart');}
     $('missile').classList.toggle('off',run.missiles<=0||missileCooldown>0);
-    $('missile').classList.toggle('locking',!!run.missileLocking);
     const heatFill=$('heatFill'),heatBox=$('heat');
     if(heatFill)heatFill.style.width=Math.round(run.heat)+'%';
     if(heatBox){heatBox.classList.toggle('hot',run.heat>=65);heatBox.classList.toggle('overheat',run.overheat);}
@@ -1904,11 +1863,11 @@ function activateShield(x,alt,z){
 const enemyShotGeo=new THREE.SphereGeometry(1.6,8,6),enemyShotMat=new THREE.MeshBasicMaterial({color:0xff635f}),enemyShotBossMat=new THREE.MeshBasicMaterial({color:0xffb04a,emissive:0x8a2d00});
 const bossWeaponMaterials=[0xffc857,0xff8b36,0xff5ed2,0x6eeaff,0xff365f].map(color=>new THREE.MeshBasicMaterial({color}));
 function openStation(station){
-  paused=true;fireHeld=false;down.clear();ptr.clear();keys.left=keys.right=false;run.missileLocking=false;run.missileLockTargets=[];run.stationCount++;
+  paused=true;fireHeld=false;down.clear();ptr.clear();keys.left=keys.right=false;run.stationCount++;
   const root=$('stationPerks');root.replaceChildren();
   const pool=[
     {id:'repair',icon:'🛠️',title:'إصلاح شامل',desc:'استعادة الوقود والحماية المؤقتة',tags:['guardian','lowhp'],weight:3,apply:()=>{P.fuel=100;P.engineOut=false;P.fuelWarned=false;shieldT=Math.max(shieldT,3.2);updateFuelGauge();}},
-    {id:'missiles',icon:'🚀',title:'صواريخ إضافية',desc:'إضافة 3 صواريخ وإعادة شحن المخزن',tags:['phantom','lowammo'],weight:3,apply:()=>{run.missiles=Math.min(run.missileMax,run.missiles+3);run.missileCharge=0;}},
+    {id:'missiles',icon:'🚀',title:'صواريخ إضافية',desc:'إضافة 3 صواريخ وإعادة شحن المخزن',tags:['phantom','lowammo'],weight:3,apply:()=>{run.missiles=Math.min(9,run.missiles+3);}},
     {id:'rapid',icon:'⚡',title:'مدفع سريع',desc:'زيادة سرعة إطلاق النار 35٪',tags:['interceptor','cannon'],weight:3,apply:()=>{run.firePower=Math.min(2.2,(run.firePower||1)+0.35);run.perks.push('rapid');}},
     {id:'triple',icon:'🔫',title:'مدفع ثلاثي',desc:'إطلاق ثلاث رصاصات في كل دفعة',tags:['interceptor','cannon'],weight:2,valid:()=>!run.tri,apply:()=>{run.tri=true;run.perks.push('triple');}},
     {id:'cool',icon:'❄️',title:'مبرد المدفع',desc:'تبريد أسرع وتقليل السخونة',tags:['interceptor','cannon'],weight:2,apply:()=>{run.cool=Math.min(2.5,run.cool*1.5);run.perks.push('cool');}},
@@ -1916,9 +1875,9 @@ function openStation(station){
     {id:'armor',icon:'🛡️',title:'درع متقدم',desc:'درع مؤقت وإعادة تجهيز الدرع التلقائي',tags:['guardian','lowhp'],weight:3,apply:()=>{shieldT=Math.max(shieldT,5);shieldCooldown=0;run.stationShield=5;run.perks.push('armor');}},
     {id:'magnet',icon:'🧲',title:'مغناطيس العملات',desc:'جذب العملات لمدة 14 ثانية',tags:['phantom'],weight:2,apply:()=>{P.magnetT=Math.max(P.magnetT,14);run.perks.push('magnet');}},
     {id:'coins',icon:'🪙',title:'مكافأة التموين',desc:'الحصول على 90 عملة إضافية',tags:['surprise'],weight:1,apply:()=>{run.coins+=90*(1+save.lv.coin);run.perks.push('coins');}},
-    {id:'cluster',icon:'☄️',title:'صواريخ عنقودية',desc:'ترقية تطورية: صواريخ ذكية ورؤوس متفجرة',tags:['phantom','guardian'],weight:4,valid:()=>run.perks.includes('smart-missile')&&run.perks.includes('explosive')&&!run.perks.includes('cluster'),apply:()=>{run.mdmg=(run.mdmg||1)*1.35;run.perks.push('cluster');}}
+    {id:'cluster',icon:'☄️',title:'صواريخ عنقودية',desc:'ترقية تطورية: صواريخ ذكية ورؤوس متفجرة',tags:['phantom','guardian'],weight:4,valid:()=>run.perks.includes('explosive')&&!run.perks.includes('cluster'),apply:()=>{run.damage=Math.min(3.5,run.damage*1.2);run.perks.push('cluster');}}
   ];
-  const plane=save.model||'trainer',hpRatio=(P.maxHp?P.hp/P.maxHp:1),ammoRatio=run.missileMax?run.missiles/run.missileMax:1;
+  const plane=save.model||'trainer',hpRatio=(P.maxHp?P.hp/P.maxHp:1),ammoRatio=run.missiles/9;
   const boss=Math.max(0,Number(run.bosses)||0),rarity=boss>=4?'أسطوري':boss>=2?'نادر':'عادي';
   const available=pool.filter(p=>!p.valid||p.valid()).map(p=>{let w=p.weight;
     if(p.tags.includes(plane))w*=2.8;
