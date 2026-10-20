@@ -33,10 +33,14 @@ for (const match of html.matchAll(/\b(?:src|href)=["']([^"']+)["']/g)) {
 const cssOpen = (css.match(/{/g) || []).length;
 const cssClose = (css.match(/}/g) || []).length;
 check(cssOpen === cssClose, 'CSS brace mismatch: ' + cssOpen + ' opening vs ' + cssClose + ' closing braces.');
-check(css.includes('top:12px;right:12px;left:auto;transform:none;'), 'Pause button must remain in the upper-right corner, clear of the centered fuel gauge.');
-check(css.includes('#pauseBtn{top:8px;right:8px;left:auto;width:38px;height:38px}'), 'Pause button must use compact upper-right positioning on narrow screens.');
-check(css.includes('#pauseBtn:active{transform:scale(.94)}'), 'Pause button active styling must not restore the overlapping centered transform.');
-check(css.includes('#fuelGauge{') && css.includes('left:50%') && css.includes('transform:translateX(-50%)'), 'Fuel gauge must remain centered so the pause control can be positioned beside it.');
+check(css.includes('#pauseBtn{top:18px;left:50%;right:auto;transform:translateX(-50%);z-index:10;width:42px;height:42px}'), 'Pause button must sit centered between the left-side coin counter and right-side fuel gauge.');
+check(css.includes('#runCoins{top:12px;left:12px;right:auto;inset-inline-start:auto;z-index:8}'), 'Run coin counter must stay on the left side of the HUD.');
+check(css.includes('#pauseBtn:active{transform:translateX(-50%) scale(.94)}'), 'Pause button active styling must preserve its centered position.');
+check(css.includes('#fuelGauge{') && css.includes('top:12px;right:12px;width:72px;height:72px;'), 'Fuel gauge must remain anchored to the right side of the HUD.');
+check(css.includes('@media(max-width:380px){#pauseBtn{top:17px;width:38px;height:38px}}'), 'Pause button must shrink on narrow screens.');
+const playerModelPrep=js.slice(js.indexOf('function prepareAircraftModel(root){'),js.indexOf('function loadPlayerAircraftModels()',js.indexOf('function prepareAircraftModel(root){')));
+check(playerModelPrep.includes('if(originalSize.x>originalSize.z)normalized.rotation.y=Math.PI/2;'), 'Falcon GLB must be rotated into the game forward axis when its wingspan lies on X.');
+check(playerModelPrep.includes('normalized.scale.setScalar(14/span);'), 'Falcon GLB must be fitted to the procedural aircraft size.');
 for (const match of css.matchAll(/url\(["']?([^"')]+)["']?\)/g)) {
   const url = match[1];
   if (/^(?:https?:|data:|#)/i.test(url)) continue;
