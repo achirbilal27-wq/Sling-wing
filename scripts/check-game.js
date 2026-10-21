@@ -36,7 +36,9 @@ check(cssOpen === cssClose, 'CSS brace mismatch: ' + cssOpen + ' opening vs ' + 
 const flightHudStart = css.lastIndexOf('/* Flight HUD:');
 const flightHudCss = flightHudStart >= 0 ? css.slice(flightHudStart) : '';
 check(/#pauseBtn\{[^}]*top:27px !important;[^}]*left:50% !important;[^}]*right:auto !important;[^}]*transform:translateX\(-50%\) !important;/.test(flightHudCss), 'Final flight HUD rules must center the pause button.');
-check(css.includes('#runCoins{position:absolute;top:12px;inset-inline-start:12px}'), 'Run coin counter must preserve its original left-side positioning.');
+check(/#runCoins\{[^}]*top:12px !important;[^}]*right:12px !important;[^}]*left:auto !important;/.test(flightHudCss), 'Final flight HUD rules must keep the coin counter on the right side.');
+check(/#fuelGauge\{[^}]*right:74px !important;[^}]*width:56px !important;[^}]*height:56px !important;/.test(flightHudCss), 'Fuel gauge must fit narrow screens.');
+check(/#fuelGauge\{[^}]*right:72px !important;[^}]*width:54px !important;[^}]*height:54px !important;/.test(flightHudCss), 'Fuel gauge must fit short screens.');
 check(flightHudCss.includes('#pauseBtn:active{transform:translateX(-50%) scale(.94) !important}'), 'Pause button active styling must preserve its centered position.');
 check(/#fuelGauge\{[^}]*top:12px !important;[^}]*right:88px !important;[^}]*width:76px !important;[^}]*height:76px !important;/.test(flightHudCss), 'Final flight HUD rules must position the fuel gauge between the pause button and coin counter.');
 check(flightHudCss.includes('@media(max-width:380px){') && /#pauseBtn\{top:21px !important;width:38px !important;height:38px !important\}/.test(flightHudCss), 'Pause button must shrink on narrow screens.');
