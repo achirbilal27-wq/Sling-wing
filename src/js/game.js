@@ -17,7 +17,7 @@ const H=(n,k)=>{const s=Math.sin(n*12.9898+k*78.233)*43758.5453;return s-Math.fl
 /* ---------- save ---------- */
 const KEY='sling_wing_v1';
 const LEGACY_KEY='sling_wing_epic_v1';
-const DEFAULT_SAVE={coins:200,fuel:1,best:0,model:'trainer',lv:{sling:0,plane:0,coin:0},bosses:0,intro:false,cinematicSeen:false,campaignEndingSeen:false,mute:false,top:[]};
+const DEFAULT_SAVE={coins:200,fuel:1,best:0,model:'trainer',lv:{sling:0,cannon:0,plane:0,coin:0},bosses:0,intro:false,cinematicSeen:false,campaignEndingSeen:false,mute:false,top:[]};
 let save=Object.assign({},DEFAULT_SAVE,{lv:Object.assign({},DEFAULT_SAVE.lv)});
 let legacyProgress=null;
 try{
@@ -43,7 +43,7 @@ try{
     // Keep the old key untouched; write a merged copy under the current key.
     localStorage.setItem(KEY,JSON.stringify(save));
   }
-  save.lv=Object.assign({sling:0,plane:0,coin:0},save.lv||{});
+  save.lv=Object.assign({sling:0,cannon:0,plane:0,coin:0},save.lv||{});
   save.model=typeof save.model==='string'?save.model:'trainer';
   save.coins=Math.max(0,Number(save.coins)||0);
   save.fuel=Math.max(0,Number(save.fuel)||0);
@@ -1057,10 +1057,11 @@ function spawn(until){
 /* ---------- ui ---------- */
 const ICONS={
   sling:'<svg viewBox="0 0 64 64" role="img" aria-label="قوة المقلاع"><defs><linearGradient id="slWood" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d99a55"/><stop offset="1" stop-color="#75401f"/></linearGradient><linearGradient id="slBand" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ff755c"/><stop offset="1" stop-color="#d92f3c"/></linearGradient><radialGradient id="slGlow"><stop stop-color="#fff2a1"/><stop offset="1" stop-color="#ffb52e"/></radialGradient></defs><ellipse cx="32" cy="55" rx="19" ry="4" fill="#8a4b1e" opacity=".18"/><path d="M29 53 27 29 13 8Q11 5 8 8t0 6l15 21 1 18z" fill="url(#slWood)" stroke="#75401f" stroke-width="2.5" stroke-linejoin="round"/><path d="m34 53 3-24L51 9q2-3 5 0t0 6L41 36l-2 17z" fill="url(#slWood)" stroke="#75401f" stroke-width="2.5" stroke-linejoin="round"/><path d="M11 11Q31 37 53 12" fill="none" stroke="#f8b5a0" stroke-width="7" stroke-linecap="round"/><path d="M11 11Q31 37 53 12" fill="none" stroke="url(#slBand)" stroke-width="4" stroke-linecap="round"/><circle cx="32" cy="31" r="8" fill="url(#slGlow)" stroke="#e58a13" stroke-width="2"/><path d="m32 25 2 4 4 2-4 2-2 4-2-4-4-2 4-2z" fill="#fff9cf"/></svg>',
+  cannon:'<svg viewBox="0 0 64 64" role="img" aria-label="المدفع المحسّن"><defs><linearGradient id="cnBody" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e8f8ff"/><stop offset=".5" stop-color="#65a6d5"/><stop offset="1" stop-color="#244c78"/></linearGradient></defs><ellipse cx="32" cy="55" rx="22" ry="4" fill="#182b44" opacity=".18"/><path d="M9 26h31l10 7v9H9z" fill="url(#cnBody)" stroke="#244c78" stroke-width="2.5"/><path d="M37 26V18h13l6 8v7H43z" fill="#9edcff" stroke="#244c78" stroke-width="2.5"/><path d="M17 42v8h7v-8m15 0v8h7v-8" fill="#244c78"/><path d="m51 12 2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#ffe88a" stroke="#c98a19" stroke-width="1.2"/></svg>',
   plane:'<svg viewBox="0 0 64 64" role="img" aria-label="تطوير الطائرة"><defs><linearGradient id="plBody" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff7d6"/><stop offset=".45" stop-color="#ff784f"/><stop offset="1" stop-color="#c92d37"/></linearGradient><linearGradient id="plWing" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ffb35c"/><stop offset="1" stop-color="#e54a3c"/></linearGradient><linearGradient id="plGlass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e8ffff"/><stop offset="1" stop-color="#4cb8ed"/></linearGradient></defs><ellipse cx="32" cy="53" rx="21" ry="4" fill="#8a4b1e" opacity=".16"/><path d="m28 28-19-9-3 3 14 16-6 13 5 2 13-10 13 10 5-2-6-13 14-16-3-3-19 9-2-19-4-3-4 3z" fill="url(#plWing)" stroke="#b52d31" stroke-width="2" stroke-linejoin="round"/><path d="M31 8q-4 1-5 10l-5 30q0 5 4 5h14q4 0 4-5l-5-30q-1-9-5-10z" fill="url(#plBody)" stroke="#b52d31" stroke-width="2"/><path d="M27 23q5-5 10 0l2 8H25z" fill="url(#plGlass)" stroke="#fff2d2" stroke-width="1.5"/><path d="m21 40-8 9 10-4m20-5 8 9-10-4" fill="#fff0bc" opacity=".9"/><path d="M29 37h6" stroke="#fff7dc" stroke-width="2.5" stroke-linecap="round"/></svg>',
   coin:'<svg viewBox="0 0 64 64" role="img" aria-label="مضاعف العملات"><defs><linearGradient id="coEdge" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#b66b05"/><stop offset=".45" stop-color="#ffe477"/><stop offset="1" stop-color="#c27b08"/></linearGradient><radialGradient id="coFace" cx=".32" cy=".22" r=".9"><stop stop-color="#fff7b0"/><stop offset=".42" stop-color="#ffd84c"/><stop offset=".78" stop-color="#f4a900"/><stop offset="1" stop-color="#d77a00"/></radialGradient></defs><ellipse cx="33" cy="54" rx="20" ry="4" fill="#8a4b1e" opacity=".18"/><g transform="rotate(-10 32 35)"><ellipse cx="31" cy="43" rx="20" ry="10" fill="#c17a08" stroke="#8b4c09" stroke-width="2"/><path d="M11 34v9c0 6 9 11 20 11s20-5 20-11v-9" fill="url(#coEdge)" stroke="#a76108" stroke-width="2"/><ellipse cx="31" cy="34" rx="20" ry="10" fill="url(#coFace)" stroke="#a76108" stroke-width="2.5"/><ellipse cx="31" cy="34" rx="15" ry="6.8" fill="none" stroke="#fff1a0" stroke-width="1.8"/><path d="M35 25 27 37h6l-4 7 11-13h-7l3-6z" fill="#fff8c7" stroke="#d58b0a" stroke-width="1.2" stroke-linejoin="round"/><path d="M17 29q4-4 9-4" fill="none" stroke="#fffbd6" stroke-width="2.5" stroke-linecap="round"/></g><path d="m48 8 2.5 6 6.5 2.5-6.5 2.5-2.5 6-2.5-6-6.5-2.5 6.5-2.5z" fill="#fff4a1" stroke="#f0b51b" stroke-width="1.3"/></svg>'
 };
-const NAMES={sling:'قوة المقلاع',plane:'الطائرة',coin:'مضاعف العملات'};
+const NAMES={cannon:'المدفع المحسّن',plane:'الطائرة',coin:'مضاعف العملات'};
 function renderDailyMissions(){
   const list=$('missionsList');
   if(!list)return;
@@ -1102,12 +1103,12 @@ function renderHangar(upgradedKey){
     stats.innerHTML='<div class="aircraft-stats-head"><span class="aircraft-stats-icon">✈</span><div><strong>'+selected.name+'</strong><small>'+selected.upgrade+' · مستوى الطائرة '+save.lv.plane+'/'+MAXLV+'</small></div><span class="stats-chip">مواصفات فعلية</span></div><div class="aircraft-stat-grid">'+rows.map(r=>'<div class="aircraft-stat '+r.tone+'"><div><span>'+r.label+'</span><strong>'+r.value+'</strong></div><i><b style="width:'+r.bar+'%"></b></i></div>').join('')+'</div>';
   }
   const box=$('cards');box.innerHTML='';
-  ['sling','plane','coin'].forEach(k=>{
+  ['cannon','plane','coin'].forEach(k=>{
     const l=save.lv[k],max=l>=MAXLV,c=cost(l);
     const d=document.createElement('div');d.className='card'+(k===upgradedKey?' just-upgraded':'');
     let pips='';for(let i=0;i<MAXLV;i++)pips+='<b'+(i<l?' class="f"':'')+'></b>';
     const cardName=k==='plane'?aircraft().short+' · '+aircraft().upgrade:NAMES[k];
-    const descriptions={sling:'إقلاع أقوى واندفاع أولي أفضل',plane:'خزان وقود أكبر مدىً: كل مستوى يضيف 14٪ إلى مدة الطيران الأساسية ويؤخر الهبوط الاضطراري',coin:'مكافآت عملات أكبر من البوابات والخصوم'};
+    const descriptions={cannon:'تأثير مباشر في القتال: كل مستوى يزيد ضرر الطلقات 25٪ ويحسّن سرعة إطلاق النار 12٪',plane:'خزان وقود أكبر مدىً: كل مستوى يضيف 14٪ إلى مدة الطيران الأساسية ويؤخر الهبوط الاضطراري',coin:'مكافآت عملات أكبر من البوابات والخصوم'};
     d.innerHTML='<div class="ic">'+ICONS[k]+'<span class="lv">'+(l+1)+'</span></div><div class="nm">'+cardName+(k==='coin'?' ×'+(l+1):'')+'</div><div class="upgrade-desc">'+descriptions[k]+'</div><div class="pips">'+pips+'</div>';
     const b=document.createElement('button');
     b.className='btn up'+((!max&&save.coins<c)?' no':'');
