@@ -353,7 +353,7 @@ const PAL=[[0x8bd13a,0x5a9a1c],[0x4aa8ff,0x2476c9],[0xffc83d,0xd18a00],[0xb46bff
 const AIRCRAFT={
  trainer:{name:'الصقر التدريبي',short:'الصقر',unlock:0,shield:9.5,shot:0.24,boost:1,speed:1,fuelUse:1,upgrade:'خزان وقود موسّع'},
  interceptor:{name:'المعترض السريع',short:'المعترض',unlock:500,shield:9,shot:0.17,boost:1,speed:1.12,fuelUse:1.08,upgrade:'خزان وقود للرحلات الطويلة'},
- phantom:{name:'الشبح النفاث',short:'الشبح',unlock:3000,shield:8.4,shot:0.2,boost:1.35,speed:1.08,fuelUse:1.12,upgrade:'قدرة إمداد الوقود +38٪'},
+ phantom:{name:'الشبح النفاث',short:'الشبح',unlock:5000,shield:10.2,shot:0.17,boost:1.45,speed:1.16,fuelUse:0.55,upgrade:'مدى بعيد لمواجهة الزعيم الأخير'},
  guardian:{name:'الحارس المدرع',short:'الحارس',unlock:4000,shield:14.5,shot:0.115,boost:1.2,speed:1.15,fuelUse:0.9,upgrade:'مدفع ثقيل ودرع قتالي للزعيم الأخير'},
 };
 // Migrate saves from the temporary WWI selectable-aircraft entry back to the original first aircraft.
@@ -1348,9 +1348,9 @@ function doAbility(){
     P.fuel=Math.min(100,P.fuel+38);P.engineOut=P.fuel<=0;P.fuelWarned=false;updateFuelGauge();
     addFloat(P.x,P.alt+48,'الشبح: إمداد وقود +38٪','#baf6ff',P.z);playSfx('fuel-pickup');
   }else if(key==='guardian'){
-    P.guardianOverdriveT=4;
-    shieldT=Math.max(shieldT,3.5);shieldCooldown=Math.max(shieldCooldown,1.5);shieldMesh.visible=true;
-    addFloat(P.x,P.alt+48,'الحارس: مدفع ثقيل ×2.5!','#ffe27a',P.z);playSfx('shield');shake=Math.max(shake,.28);
+    P.guardianOverdriveT=6;
+    shieldT=Math.max(shieldT,4.5);shieldCooldown=Math.max(shieldCooldown,1.5);shieldMesh.visible=true;
+    addFloat(P.x,P.alt+48,'الحارس: مدفع الزعماء ×8!','#ffe27a',P.z);playSfx('shield');playSfx('explosion',0.55);shake=Math.max(shake,.42);
   }
   updateAbilityUI();
 }
@@ -1366,7 +1366,7 @@ function doShoot(){
   const mx=P.x+f.x*70,my=P.alt+f.y*70,mz=P.z;let dx=f.x,dy=f.y,dz=f.z;
   if(target){dx=target.x-mx;dy=target.alt-my;dz=target.z-mz;const L=Math.hypot(dx,dy,dz)||1;dx/=L;dy/=L;dz/=L;}
   const offsets=mode==='spread'?[-0.18,0,0.18]:(run.tri?[-0.06,0,0.06]:[0]);
-  for(const off of offsets){const mesh=new THREE.Mesh(shotGeo,shotMat);mesh.position.set(mx*S,Y(my),mz*S);scene.add(mesh);let vx=dx,vy=dy,vz=dz+off;const L=Math.hypot(vx,vy,vz)||1;vx/=L;vy/=L;vz/=L;const speed=1900;shots.push({x:mx,alt:my,z:mz,vx:vx*speed+P.s*Math.cos(P.a)*0.5,vy:vy*speed+P.s*Math.sin(P.a)*0.5,vz:vz*speed+P.vz*0.5,damage:10*run.damage*(P.guardianOverdriveT>0?2.5:1),life:target?clamp((target.x-mx)/speed+0.8,2,7):1.9,mesh,target:target||null,aimMode:mode});}
+  for(const off of offsets){const mesh=new THREE.Mesh(shotGeo,shotMat);mesh.position.set(mx*S,Y(my),mz*S);scene.add(mesh);let vx=dx,vy=dy,vz=dz+off;const L=Math.hypot(vx,vy,vz)||1;vx/=L;vy/=L;vz/=L;const speed=1900;shots.push({x:mx,alt:my,z:mz,vx:vx*speed+P.s*Math.cos(P.a)*0.5,vy:vy*speed+P.s*Math.sin(P.a)*0.5,vz:vz*speed+P.vz*0.5,damage:10*run.damage*(P.guardianOverdriveT>0?8:1),heavyShot:P.guardianOverdriveT>0,life:target?clamp((target.x-mx)/speed+0.8,2,7):1.9,mesh,target:target||null,aimMode:mode});}
   if(run.fireSfxTimer<=0){playSfx('weapon-fire',0.56);run.fireSfxTimer=0.07;}
 }
 function missileTarget(){
@@ -1793,7 +1793,12 @@ function updateFlight(dt){
       if(Math.abs(e.x-shot.x)<hr&&Math.abs(e.alt-shot.alt)<hitY&&Math.abs(e.z-shot.z)<hitZ){
         hit=true;
         if(e.boss){
-          e.hp-=Math.max(1,(shot.damage||10)/10);playSfx('boss-hit',0.7);shake=Math.max(shake,0.08);
+          const bossDamage=Math.max(1,(shot.damage||10)/10)*(shot.heavyShot?2.5:1);
+          e.hp=Math.max(0,e.hp-bossDamage);playSfx('boss-hit',shot.heavyShot?1:0.7);shake=Math.max(shake,shot.heavyShot?0.24:0.08);
+          if(shot.heavyShot){
+            addFloat(e.x,e.alt+92,'ضربة المدفع الثقيل −'+Math.ceil(bossDamage)+'!','#ffe27a',e.z);
+            for(let n=0;n<12;n++)addPart(e.x,e.alt,(Math.random()-.5)*260,(Math.random()-.5)*220,0.38,0xffc857,4,e.z,(Math.random()-.5)*180);
+          }
           if(e.hp<=0)defeatBoss(e,'cannon');
           else{addFloat(e.x,e.alt+70,'طاقة الزعيم '+Math.ceil(e.hp)+'/'+e.maxHp,'#ffb2a6',e.z);}
         }else{
