@@ -353,8 +353,8 @@ const PAL=[[0x8bd13a,0x5a9a1c],[0x4aa8ff,0x2476c9],[0xffc83d,0xd18a00],[0xb46bff
 const AIRCRAFT={
  trainer:{name:'الصقر التدريبي',short:'الصقر',unlock:0,shield:9.5,shot:0.24,boost:1,speed:1,fuelUse:1,upgrade:'خزان وقود موسّع'},
  interceptor:{name:'المعترض السريع',short:'المعترض',unlock:500,shield:9,shot:0.17,boost:1,speed:1.12,fuelUse:1.08,upgrade:'خزان وقود للرحلات الطويلة'},
- phantom:{name:'الشبح النفاث',short:'الشبح',unlock:5000,shield:10.2,shot:0.17,boost:1.45,speed:1.16,fuelUse:0.55,upgrade:'مدى بعيد لمواجهة الزعيم الأخير'},
- guardian:{name:'الحارس المدرع',short:'الحارس',unlock:4000,shield:14.5,shot:0.115,boost:1.2,speed:1.15,fuelUse:0.9,upgrade:'مدفع ثقيل ودرع قتالي للزعيم الأخير'},
+ phantom:{name:'الشبح النفاث',short:'الشبح',unlock:8149,shield:10.2,shot:0.17,boost:1.45,speed:1.16,fuelUse:0.55,upgrade:'مدى بعيد لمواجهة الزعيم الأخير'},
+ guardian:{name:'الحارس المدرع',short:'الحارس',unlock:9462,shield:14.5,shot:0.115,boost:1.2,speed:1.15,fuelUse:0.9,upgrade:'مدفع ثقيل ودرع قتالي للزعيم الأخير'},
 };
 // Migrate saves from the temporary WWI selectable-aircraft entry back to the original first aircraft.
 if(!AIRCRAFT[save.model]){save.model='trainer';persist();}
