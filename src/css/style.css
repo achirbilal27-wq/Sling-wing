@@ -1340,7 +1340,7 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
 #fuelGauge{
   top:12px !important;
   left:auto !important;
-  right:112px !important;
+  right:108px !important;
   transform:none !important;
   width:76px !important;
   height:76px !important;
@@ -1364,14 +1364,14 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
 #pauseBtn:active{transform:translateX(-50%) scale(.94) !important}
 @media(max-width:380px){
   #runCoins{top:10px !important;right:8px !important;transform:scale(.68) !important}
-  #fuelGauge{top:10px !important;right:86px !important;width:56px !important;height:56px !important}
+  #fuelGauge{top:10px !important;right:82px !important;width:56px !important;height:56px !important}
   .fuel-readout strong{font-size:15px !important}
   .fuel-readout small{font-size:7px !important}
   #pauseBtn{top:21px !important;width:38px !important;height:38px !important}
 }
 @media(max-height:560px){
   #runCoins{top:8px !important}
-  #fuelGauge{top:8px !important;right:84px !important;width:54px !important;height:54px !important}
+  #fuelGauge{top:8px !important;right:80px !important;width:54px !important;height:54px !important}
   .fuel-readout strong{font-size:15px !important}
   .fuel-readout small{font-size:7px !important}
   #pauseBtn{top:16px !important;width:38px !important;height:38px !important}
