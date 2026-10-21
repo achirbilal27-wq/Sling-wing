@@ -38,6 +38,8 @@ check(css.includes('#runCoins{position:absolute;top:12px;inset-inline-start:12px
 check(css.includes('#pauseBtn:active{transform:translateX(-50%) scale(.94)}'), 'Pause button active styling must preserve its centered position.');
 check(css.includes('#fuelGauge{') && css.includes('top:12px;right:12px;width:72px;height:72px;'), 'Fuel gauge must remain anchored to the right side of the HUD.');
 check(css.includes('@media(max-width:380px){#pauseBtn{top:17px;width:38px;height:38px}}'), 'Pause button must shrink on narrow screens.');
+check(!/\/\* Keep pause in the upper-right safe corner[\s\S]*?#pauseBtn\{[\s\S]*?right:12px/.test(css), 'Legacy upper-right pause positioning must not conflict with the centered HUD button.');
+check((css.match(/#pauseBtn\{top:18px;left:50%;right:auto;transform:translateX\(-50%\);z-index:10;width:42px;height:42px\}/g)||[]).length===1, 'Pause button must have exactly one canonical centered positioning rule.');
 const playerModelPrep=js.slice(js.indexOf('function prepareAircraftModel(root){'),js.indexOf('function loadPlayerAircraftModels()',js.indexOf('function prepareAircraftModel(root){')));
 check(playerModelPrep.includes('if(originalSize.x>originalSize.z)normalized.rotation.y=Math.PI/2;'), 'Falcon GLB must be rotated into the game forward axis when its wingspan lies on X.');
 check(playerModelPrep.includes('normalized.scale.setScalar(14/span);'), 'Falcon GLB must be fitted to the procedural aircraft size.');
@@ -50,14 +52,25 @@ for (const match of css.matchAll(/url\(["']?([^"')]+)["']?\)/g)) {
 const decodedJs = js.replace(/\\u([0-9a-f]{4})/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
 const assetRefs = [...decodedJs.matchAll(/assets\/[^'"\s)]+?\.(?:png|jpe?g|webp|ogg|mp3|wav|mp4|json|glb|gltf)(?=['"\s)]|$)/gi)]
   .map((match) => match[0]);
-// Phantom and Guardian are user-supplied optional GLB models. Their absence is
-// expected until the developer adds their own files; game.js keeps a procedural fallback.
+// Phantom and Guardian are optional custom GLBs. If supplied, validate them;
+// absent files are allowed because those aircraft have procedural fallbacks.
 const optionalCustomAircraft = new Set([
   'assets/models/aircraft/phantom.glb',
   'assets/models/aircraft/guardian.glb',
 ]);
 for (const url of [...new Set(assetRefs)]) {
-  if (optionalCustomAircraft.has(url)) continue;
+  if (optionalCustomAircraft.has(url)) {
+    if (exists(url)) {
+      const optionalBytes = fs.readFileSync(path.join(src, url));
+      check(optionalBytes.length >= 20, 'Optional custom aircraft GLB is unexpectedly small or truncated: src/' + url);
+      if (optionalBytes.length >= 12) {
+        check(optionalBytes.toString('ascii', 0, 4) === 'glTF', 'Optional custom aircraft is not a valid binary glTF file: src/' + url);
+        check(optionalBytes.readUInt32LE(4) === 2, 'Optional custom aircraft GLB must use glTF binary version 2: src/' + url);
+        check(optionalBytes.readUInt32LE(8) === optionalBytes.length, 'Optional custom aircraft GLB header length mismatch: src/' + url);
+      }
+    }
+    continue;
+  }
   check(exists(url), 'Missing local JavaScript asset: src/' + url);
 }
 const glbModels = [
