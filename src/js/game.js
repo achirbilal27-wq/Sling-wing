@@ -1079,7 +1079,7 @@ function renderHangar(upgradedKey){
   $('hFuel').textContent=save.fuel;
   $('best').textContent=save.best>0?('أفضل مسافة: '+save.best+' م'):'';
   const fleet=$('fleet');fleet.innerHTML='';
-  Object.entries(AIRCRAFT).forEach(([key,a])=>{
+  Object.entries(AIRCRAFT).sort(([,a],[,b])=>a.unlock-b.unlock).forEach(([key,a])=>{
     const unlocked=save.best>=a.unlock;
     const b=document.createElement('button');b.type='button';
     b.className='fleet-btn'+(save.model===key?' selected':'')+(!unlocked?' locked':'');
