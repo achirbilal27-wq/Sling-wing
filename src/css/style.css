@@ -1325,3 +1325,36 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
 
 /* Upgrade rarity and synergy cues for the tactical station. */
 .perk.rarity-common{border-color:#8ca3b8}.perk.rarity-rare{border-color:#47a8ff;box-shadow:0 0 0 1px rgba(71,168,255,.25)}.perk.rarity-legendary{border-color:#ffca52;box-shadow:0 0 0 1px rgba(255,202,82,.4)}.perk-synergy{color:#65e4ff!important;font-weight:800}
+
+
+/* Final flight HUD alignment: coins on the left, pause in the middle, fuel on the right. */
+#runCoins{
+  top:12px !important;
+  left:12px !important;
+  right:auto !important;
+  inset-inline-start:auto !important;
+  inset-inline-end:auto !important;
+}
+#fuelGauge{
+  top:12px !important;
+  left:auto !important;
+  right:12px !important;
+  transform:none !important;
+}
+#pauseBtn{
+  top:27px !important;
+  left:50% !important;
+  right:auto !important;
+  transform:translateX(-50%) !important;
+}
+#pauseBtn:active{transform:translateX(-50%) scale(.94) !important}
+@media(max-width:380px){
+  #runCoins{top:10px !important;left:8px !important}
+  #fuelGauge{top:10px !important;right:8px !important;width:64px !important;height:64px !important}
+  #pauseBtn{top:21px !important;width:38px !important;height:38px !important}
+}
+@media(max-height:560px){
+  #runCoins{top:8px !important}
+  #fuelGauge{top:8px !important;right:8px !important;width:58px !important;height:58px !important}
+  #pauseBtn{top:16px !important;width:38px !important;height:38px !important}
+}
