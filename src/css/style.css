@@ -1327,11 +1327,23 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
 .perk.rarity-common{border-color:#8ca3b8}.perk.rarity-rare{border-color:#47a8ff;box-shadow:0 0 0 1px rgba(71,168,255,.25)}.perk.rarity-legendary{border-color:#ffca52;box-shadow:0 0 0 1px rgba(255,202,82,.4)}.perk-synergy{color:#65e4ff!important;font-weight:800}
 
 
-/* Fuel gauge clarity: larger dial, stronger contrast, and readable labels. */
+/* Flight HUD: pause centered; fuel dial between pause and coins. */
+#runCoins{
+  top:12px !important;
+  right:12px !important;
+  left:auto !important;
+  inset-inline-start:auto !important;
+  inset-inline-end:auto !important;
+  transform:scale(.78) !important;
+  transform-origin:top right !important;
+}
 #fuelGauge{
+  top:12px !important;
+  left:auto !important;
+  right:112px !important;
+  transform:none !important;
   width:76px !important;
   height:76px !important;
-  right:112px !important;
   border:2px solid rgba(157,239,255,.9) !important;
   background:linear-gradient(145deg,rgba(6,24,43,.96),rgba(12,67,86,.94)) !important;
   box-shadow:0 0 0 3px rgba(91,220,255,.15),0 5px 18px rgba(0,0,0,.42),inset 0 2px 0 rgba(255,255,255,.2) !important;
@@ -1343,13 +1355,24 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
 .fuel-readout small{font-size:9px !important;font-weight:800 !important;white-space:nowrap;color:#e5fbff !important;text-shadow:0 1px 4px #000 !important}
 #fuelGauge.low{border-color:#ffd36e !important;box-shadow:0 0 0 3px rgba(255,211,110,.18),0 0 18px rgba(255,166,57,.35) !important}
 #fuelGauge.empty{border-color:#ff6677 !important;box-shadow:0 0 0 3px rgba(255,102,119,.2),0 0 20px rgba(255,60,80,.45) !important}
+#pauseBtn{
+  top:27px !important;
+  left:50% !important;
+  right:auto !important;
+  transform:translateX(-50%) !important;
+}
+#pauseBtn:active{transform:translateX(-50%) scale(.94) !important}
 @media(max-width:380px){
-  #fuelGauge{right:86px !important;width:56px !important;height:56px !important}
+  #runCoins{top:10px !important;right:8px !important;transform:scale(.68) !important}
+  #fuelGauge{top:10px !important;right:86px !important;width:56px !important;height:56px !important}
   .fuel-readout strong{font-size:15px !important}
   .fuel-readout small{font-size:7px !important}
+  #pauseBtn{top:21px !important;width:38px !important;height:38px !important}
 }
 @media(max-height:560px){
-  #fuelGauge{right:84px !important;width:54px !important;height:54px !important}
+  #runCoins{top:8px !important}
+  #fuelGauge{top:8px !important;right:84px !important;width:54px !important;height:54px !important}
   .fuel-readout strong{font-size:15px !important}
   .fuel-readout small{font-size:7px !important}
+  #pauseBtn{top:16px !important;width:38px !important;height:38px !important}
 }
