@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "root": "src/assets/models",
+  "runtimeNote": "GLB files are assets only until a game runtime loader and behavior are implemented for their category.",
+  "categories": {
+    "environment": {
+      "title": "البيئات والمناطق الجديدة",
+      "folder": "src/assets/models/environment/",
+      "formats": [
+        ".glb"
+      ],
+      "runtimeIntegration": "pending",
+      "purpose": "ضع هنا ملفات GLB الخاصة بالبيئات: جزر، جبال، مدن، قواعد، كهوف أو عناصر تضيف هوية بصرية لكل منطقة. استخدم أسماء واضحة مثل desert_outpost.glb و ice_island.glb. يفضّل أن تكون البيئة مقسمة إلى أجزاء قابلة لإعادة الاستخدام، مع خامات مضمنة داخل GLB."
+    },
+    "assault-defender": {
+      "title": "المدافع والقواعد الاعتراضية",
+      "folder": "src/assets/models/assault-defender/",
+      "formats": [
+        ".glb"
+      ],
+      "runtimeIntegration": "pending",
+      "purpose": "ضع هنا مجسمات المدافع الأرضية، أبراج الدفاع، بطاريات الصواريخ والقواعد الاعتراضية. أسماء مقترحة: coastal_turret.glb و interceptor_base.glb. أضف لاحقًا لكل مجسم إعدادات المدى، معدل الإطلاق، نقاط الصحة ونوع المقذوف في ملف بيانات منفصل."
+    },
+    "bonus": {
+      "title": "طائرات مكافآت العملات",
+      "folder": "src/assets/models/bonus/",
+      "formats": [
+        ".glb"
+      ],
+      "runtimeIntegration": "pending",
+      "purpose": "ضع هنا طائرات المكافآت التي تظهر كأهداف/عناصر خاصة وتمنح اللاعب عملات عند جمع المكافأة. أسماء مقترحة: coin_carrier.glb و golden_wing.glb. ملفات GLB وحدها لا تمنح العملات تلقائيًا؛ يلزم ربط كل طائرة بمنطق ظهور والتقاط ومكافأة داخل اللعبة."
+    },
+    "planes-dead": {
+      "title": "الطائرات الانتحارية",
+      "folder": "src/assets/models/planes-dead/",
+      "formats": [
+        ".glb"
+      ],
+      "runtimeIntegration": "pending",
+      "purpose": "ضع هنا نماذج الطائرات المعادية التي تندفع نحو طائرة اللاعب لزيادة الإيقاع والأكشن. أسماء مقترحة: kamikaze_scout.glb و dive_attacker.glb. ينبغي ضبط الحركة والتصادم والانفجار والضرر برمجيًا بعد إضافة النموذج."
+    },
+    "rocket-attack": {
+      "title": "الصواريخ الجوية المهاجمة",
+      "folder": "src/assets/models/rocket-attack/",
+      "formats": [
+        ".glb"
+      ],
+      "runtimeIntegration": "pending",
+      "purpose": "ضع هنا نماذج الصواريخ التي تطارد طائرة اللاعب أو تعترض مسارها. أسماء مقترحة: air_interceptor_missile.glb و heat_seeker.glb. النموذج بصري فقط؛ التوجيه والسرعة والتصادم والانفجار وموازنة الصعوبة تحتاج تكاملًا برمجيًا."
+    },
+    "wildlife": {
+      "title": "الماء والبحر والطبيعة أسفل الطائرة",
+      "folder": "src/assets/models/wildlife/",
+      "formats": [
+        ".glb"
+      ],
+      "runtimeIntegration": "pending",
+      "purpose": "ضع هنا نماذج أو قطعًا بيئية للماء والبحر والسواحل والجزر، بما يناسب المنطقة والطقس. أسماء مقترحة: calm_ocean_tile.glb و stormy_water_tile.glb و tropical_coast.glb. للماء الممتد غالبًا يكون سطح منخفض المضلعات أو خامة متحركة أفضل أداءً من مجسم بحر ضخم."
+    }
+  },
+  "modelConventions": {
+    "format": "glTF Binary (.glb)",
+    "texturePolicy": "Prefer embedded textures",
+    "fileNaming": "lowercase-kebab-case or lowercase_snake_case; no spaces",
+    "licensing": "Record author, source URL, and license for each third-party model"
+  }
+}
