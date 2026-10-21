@@ -3,6 +3,9 @@
   --gold:#ffc83d; --green:#5cc83a; --green-d:#3c9a22; --red:#e5483a;
   --font-ui:'Cairo',system-ui,-apple-system,'Segoe UI',Tahoma,sans-serif;
   --font-big:'Lalezar','Cairo',system-ui,sans-serif;
+
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 html,body{margin:0;height:100%;overflow:hidden;background:#5cc8ff;font-family:var(--font-ui);color:var(--ink);touch-action:none}
