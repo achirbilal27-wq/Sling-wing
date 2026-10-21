@@ -33,7 +33,7 @@ for (const match of html.matchAll(/\b(?:src|href)=["']([^"']+)["']/g)) {
 const cssOpen = (css.match(/{/g) || []).length;
 const cssClose = (css.match(/}/g) || []).length;
 check(cssOpen === cssClose, 'CSS brace mismatch: ' + cssOpen + ' opening vs ' + cssClose + ' closing braces.');
-check(css.includes('#pauseBtn{top:18px;left:50%;right:auto;transform:translateX(-50%);z-index:10;width:42px;height:42px}'), 'Pause button must sit centered between the left-side coin counter and right-side fuel gauge.');
+check(/#pauseBtn\\{[^}]*top:18px;left:50%;right:auto;transform:translateX\\(-50%\\);z-index:10;width:42px;height:42px/.test(css), 'Pause button must sit centered between the left-side coin counter and right-side fuel gauge.');
 check(css.includes('#runCoins{position:absolute;top:12px;inset-inline-start:12px}'), 'Run coin counter must preserve its original left-side positioning.');
 check(css.includes('#pauseBtn:active{transform:translateX(-50%) scale(.94)}'), 'Pause button active styling must preserve its centered position.');
 check(css.includes('#fuelGauge{') && css.includes('top:12px;right:12px;width:72px;height:72px;'), 'Fuel gauge must remain anchored to the right side of the HUD.');
