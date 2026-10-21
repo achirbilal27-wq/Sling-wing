@@ -1459,10 +1459,40 @@ function steerInput(){
   v=clamp(v,-1,1);
   return Math.abs(v)<0.1?0:v;
 }
+function playBoostSfx(){
+  if(save.mute||typeof window==='undefined')return;
+  try{
+    AC=AC||(window.AudioContext||window.webkitAudioContext)&&new (window.AudioContext||window.webkitAudioContext)();
+    if(!AC)return;
+    if(AC.state==='suspended')AC.resume().catch(()=>{});
+    const t=AC.currentTime,master=AC.createGain();
+    master.gain.setValueAtTime(0.0001,t);
+    master.gain.exponentialRampToValueAtTime(0.13,t+0.035);
+    master.gain.exponentialRampToValueAtTime(0.0001,t+0.62);
+    master.connect(AC.destination);
+    const low=AC.createOscillator(),lowGain=AC.createGain();
+    low.type='sawtooth';
+    low.frequency.setValueAtTime(95,t);
+    low.frequency.exponentialRampToValueAtTime(360,t+0.13);
+    low.frequency.exponentialRampToValueAtTime(72,t+0.58);
+    lowGain.gain.setValueAtTime(0.72,t);
+    low.connect(lowGain);lowGain.connect(master);low.start(t);low.stop(t+0.64);
+    const high=AC.createOscillator(),highGain=AC.createGain();
+    high.type='triangle';
+    high.frequency.setValueAtTime(280,t);
+    high.frequency.exponentialRampToValueAtTime(720,t+0.11);
+    high.frequency.exponentialRampToValueAtTime(190,t+0.48);
+    highGain.gain.setValueAtTime(0.22,t);
+    high.connect(highGain);highGain.connect(master);high.start(t);high.stop(t+0.5);
+  }catch(e){}
+}
 function doBoost(){
   if(state!=='flight'||paused||run.dead||P.boostT>0.2)return;
   if(save.fuel<=0){toast('لا يوجد وقود');beep(160,.12,'square');return;}
-  save.fuel--;P.boostT=(1.6+save.lv.plane*0.08)*aircraft().boost;beep(180,.4,'sawtooth',0.04);shake=Math.max(shake,0.15);
+  save.fuel--;
+  P.boostT=(1.6+save.lv.plane*0.08)*aircraft().boost;
+  playBoostSfx();
+  shake=Math.max(shake,0.15);
 }
 function launch(){
   const lv=save.lv.sling;
