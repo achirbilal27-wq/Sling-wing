@@ -818,7 +818,7 @@ function loadPlayerAircraftModels(){
   if(typeof THREE.GLTFLoader!=='function'){console.warn('GLTFLoader unavailable; custom Falcon, Phantom and Guardian GLB models cannot load; keeping procedural fallbacks.');return;}
   aircraftModelLoadStarted=true;
   const loader=new THREE.GLTFLoader();
-  [['trainer','assets/models/aircraft/stylized_ww1_plane.glb'],['phantom','assets/models/aircraft/phantom.glb'],['guardian','assets/models/aircraft/guardian.glb']].forEach(([key,url])=>{
+  [['trainer','assets/models/aircraft/stylized_ww1_plane.glb']].forEach(([key,url])=>{
     loader.load(url,gltf=>{
       const model=prepareAircraftModel(gltf.scene);
       if(!model){console.warn('Invalid '+key+' GLB; keeping procedural fallback.');return;}
