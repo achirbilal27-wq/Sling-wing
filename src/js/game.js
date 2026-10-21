@@ -913,7 +913,7 @@ function resetRun(){
   missiles.forEach(m=>scene.remove(m.mesh));missiles.length=0;missileCooldown=0;
   const cannonLevel=Number(save.lv.cannon)||0;
   run={coins:0,picked:0,maxAlt:0,gateCombo:0,bestCombo:0,gates:0,bosses:0,bossBattle:false,missiles:3,stationCount:0,stormHits:0,firePower:1,stationShield:0,aimMode:'smart',
-    tri:false,rate:1,cool:1+0.12*cannonLevel,damage:1+0.25*cannonLevel,perks:[],heat:0,overheat:false,fireCd:0,fireSfxTimer:0};
+    tri:false,rate:1,cool:1+0.12*cannonLevel,damage:1+0.25*cannonLevel,perks:[],reserveTank:false,reserveTankUsed:false,heat:0,overheat:false,fireCd:0,fireSfxTimer:0};
   objs={coins:[],rings:[],birds:[],enemies:[],enemyShots:[],fuels:[],drafts:[],storms:[],stations:[],next:600,nextEnemy:550/M_PER_PX,nextBoss:bossDistanceMeters(0)/M_PER_PX,nextStorm:600/M_PER_PX,nextStation:(bossDistanceMeters(0)-1100)/M_PER_PX,nextStationStage:0,approachBossX:null};
   shieldT=0;shieldCooldown=0;shieldMesh.visible=false;
   clearObjs();
@@ -1508,6 +1508,7 @@ function updateFlight(dt){
   const lvP=save.lv.plane;
   const wasFueled=P.fuel>0;
   if(wasFueled){const tankEfficiency=1+save.lv.plane*0.14;const bossFuelFactor=objs.enemies.some(e=>e.boss&&!e.hit)?0.38:1;P.fuel=Math.max(0,P.fuel-dt*(100/48)*(aircraft().fuelUse||1)/tankEfficiency*(P.boostT>0?1.55:1)*bossFuelFactor);}
+  if(P.fuel<=15&&run.reserveTank&&!run.reserveTankUsed){P.fuel=45;run.reserveTank=false;run.reserveTankUsed=true;P.engineOut=false;P.fuelWarned=false;toast('تم تفعيل خزان الوقود الاحتياطي!');addFloat(P.x,P.alt+58,'وقود احتياطي +45٪','#8cf5ff',P.z);beep(620,.12,'triangle');updateFuelGauge();}
   if(P.fuel<=0&&!P.engineOut){P.engineOut=true;P.fuelWarned=true;toast('نفد الوقود! الطائرة تدخل الهبوط الاضطراري');addFloat(P.x,P.alt+58,'نفد الوقود — هبوط اضطراري','#ff8d7e',P.z);beep(170,.28,'sawtooth',0.05);shake=Math.max(shake,0.18);}
   if(P.fuel>0&&P.fuel<20&&!P.fuelWarned){P.fuelWarned=true;toast('تنبيه: الوقود أقل من 20٪');beep(340,.1,'square');}
   const maxPitch=clamp((P.s-130)/320,0,0.62);
@@ -1893,6 +1894,7 @@ function openStation(station){
     {id:'magnet',icon:'🧲',title:'مغناطيس العملات',desc:'جذب العملات لمدة 14 ثانية',tags:['phantom'],weight:2,apply:()=>{P.magnetT=Math.max(P.magnetT,14);run.perks.push('magnet');}},
     {id:'coins',icon:'🪙',title:'مكافأة التموين',desc:'الحصول على 90 عملة إضافية',tags:['surprise'],weight:1,apply:()=>{run.coins+=90*(1+save.lv.coin);run.perks.push('coins');}},
     {id:'cluster',icon:'☄️',title:'صواريخ عنقودية',desc:'ترقية تطورية: صواريخ ذكية ورؤوس متفجرة',tags:['phantom','guardian'],weight:4,valid:()=>run.perks.includes('explosive')&&!run.perks.includes('cluster'),apply:()=>{run.damage=Math.min(3.5,run.damage*1.2);run.perks.push('cluster');}}
+    ,{id:'reserveTank',icon:'⛽',title:'خزان وقود احتياطي',desc:'يشحن الوقود تلقائيًا إلى 45٪ مرة واحدة عند انخفاضه إلى 15٪',tags:['guardian','lowfuel'],weight:3,valid:()=>!run.reserveTank&&!run.reserveTankUsed,apply:()=>{run.reserveTank=true;run.perks.push('reserveTank');if(P.fuel<=15){P.fuel=45;run.reserveTank=false;run.reserveTankUsed=true;P.engineOut=false;P.fuelWarned=false;updateFuelGauge();}}}
   ];
   const plane=save.model||'trainer',hpRatio=(P.maxHp?P.hp/P.maxHp:1),ammoRatio=run.missiles/9;
   const boss=Math.max(0,Number(run.bosses)||0),rarity=boss>=4?'أسطوري':boss>=2?'نادر':'عادي';
