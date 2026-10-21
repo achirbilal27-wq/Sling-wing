@@ -634,17 +634,33 @@ function makeBossPlane(biomeIndex){
   return g;
 }
 function prepareIronEagleBoss(root){
+  // Normalize the imported hierarchy before applying game-specific orientation.
   const normalized=new THREE.Group();
   normalized.add(root);
   normalized.updateMatrixWorld(true);
   let box=new THREE.Box3().setFromObject(normalized);
   if(box.isEmpty())return null;
-  const originalSize=box.getSize(new THREE.Vector3());
-  // Keep the wingspan on the game's Z axis and the nose on X.
-  if(originalSize.x>originalSize.z)normalized.rotation.y=Math.PI/2;
+  let size=box.getSize(new THREE.Vector3());
+
+  // Some exported GLBs arrive Z-up/sideways. If Y is clearly the dominant
+  // span, lay the aircraft onto the game's horizontal flight plane first.
+  if(size.y>Math.max(size.x,size.z)*1.2){
+    normalized.rotation.x=Math.PI/2;
+    normalized.updateMatrixWorld(true);
+    box=new THREE.Box3().setFromObject(normalized);
+    size=box.getSize(new THREE.Vector3());
+  }
+
+  // The game's aircraft span across Z and point along X. Align the wider
+  // horizontal axis first, then turn the nose toward the approaching player.
+  if(size.x>size.z)normalized.rotation.y=Math.PI/2;
+  normalized.rotation.y+=Math.PI;
   normalized.updateMatrixWorld(true);
+
+  // Fit and center only after the FINAL rotation. Centering before the yaw
+  // caused the offset itself to rotate, making the boss appear displaced.
   box=new THREE.Box3().setFromObject(normalized);
-  const size=box.getSize(new THREE.Vector3());
+  size=box.getSize(new THREE.Vector3());
   const span=Math.max(size.x,size.z);
   if(!Number.isFinite(span)||span<0.001)return null;
   normalized.scale.setScalar(38/span);
@@ -652,6 +668,7 @@ function prepareIronEagleBoss(root){
   box=new THREE.Box3().setFromObject(normalized);
   normalized.position.sub(box.getCenter(new THREE.Vector3()));
   normalized.updateMatrixWorld(true);
+
   normalized.traverse(node=>{
     if(!node.isMesh)return;
     node.castShadow=true;node.receiveShadow=true;
@@ -664,8 +681,8 @@ function prepareIronEagleBoss(root){
 }
 function attachIronEagleModel(group){
   if(!ironEagleModelTemplate||!group||!group.userData.ironEagleBoss||group.userData.ironEagleModelAttached)return;
+  // Orientation and centering are already finalized in prepareIronEagleBoss.
   const model=ironEagleModelTemplate.clone(true);
-  model.rotation.y=Math.PI;
   group.add(model);
   group.userData.ironEagleModel=model;
   group.userData.ironEagleModelAttached=true;
