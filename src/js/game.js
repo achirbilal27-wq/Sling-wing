@@ -1538,7 +1538,7 @@ function updateFlight(dt){
   const holding=down.size>0;
   const lvP=save.lv.plane;
   const wasFueled=P.fuel>0;
-  if(wasFueled&&!run.bossBattle){const tankEfficiency=1+save.lv.plane*0.14+save.lv.fuelTank*0.1;P.fuel=Math.max(0,P.fuel-dt*(100/48)*(aircraft().fuelUse||1)/tankEfficiency*(P.boostT>0?1.55:1));}
+  if(wasFueled&&!run.bossBattle){const tankEfficiency=1+save.lv.plane*0.14;P.fuel=Math.max(0,P.fuel-dt*(100/48)*(aircraft().fuelUse||1)/tankEfficiency*(P.boostT>0?1.55:1));}
   if(P.fuel<=15&&run.reserveTank&&!run.reserveTankUsed){P.fuel=45;run.reserveTank=false;run.reserveTankUsed=true;P.engineOut=false;P.fuelWarned=false;toast('تم تفعيل خزان الوقود الاحتياطي!');addFloat(P.x,P.alt+58,'وقود احتياطي +45٪','#8cf5ff',P.z);beep(620,.12,'triangle');updateFuelGauge();}
   if(P.fuel<=0&&!P.engineOut){P.engineOut=true;P.fuelWarned=true;toast('نفد الوقود! الطائرة تدخل الهبوط الاضطراري');addFloat(P.x,P.alt+58,'نفد الوقود — هبوط اضطراري','#ff8d7e',P.z);beep(170,.28,'sawtooth',0.05);shake=Math.max(shake,0.18);}
   if(P.fuel>0&&P.fuel<20&&!P.fuelWarned){P.fuelWarned=true;toast('تنبيه: الوقود أقل من 20٪');beep(340,.1,'square');}
