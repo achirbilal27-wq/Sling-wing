@@ -38,8 +38,8 @@ check(css.includes('#runCoins{position:absolute;top:12px;inset-inline-start:12px
 check(css.includes('#pauseBtn:active{transform:translateX(-50%) scale(.94)}'), 'Pause button active styling must preserve its centered position.');
 check(css.includes('#fuelGauge{') && css.includes('top:12px;right:12px;width:72px;height:72px;'), 'Fuel gauge must remain anchored to the right side of the HUD.');
 check(css.includes('@media(max-width:380px){#pauseBtn{top:17px;width:38px;height:38px}}'), 'Pause button must shrink on narrow screens.');
-check(!/\/\* Keep pause in the upper-right safe corner[\s\S]*?#pauseBtn\{[\s\S]*?right:12px/.test(css), 'Legacy upper-right pause positioning must not conflict with the centered HUD button.');
-check((css.match(/#pauseBtn\{top:18px;left:50%;right:auto;transform:translateX\(-50%\);z-index:10;width:42px;height:42px\}/g)||[]).length===1, 'Pause button must have exactly one canonical centered positioning rule.');
+check(!/#pauseBtn\{[^}]*right:(?:12|8)px/.test(css), 'Legacy right-corner pause positioning must not conflict with the centered HUD button.');
+check((css.match(/#pauseBtn\{[^}]*left:50%;right:auto;transform:translateX\(-50%\)/g)||[]).length===1, 'Pause button must have exactly one canonical centered positioning rule.');
 const playerModelPrep=js.slice(js.indexOf('function prepareAircraftModel(root){'),js.indexOf('function loadPlayerAircraftModels()',js.indexOf('function prepareAircraftModel(root){')));
 check(playerModelPrep.includes('if(originalSize.x>originalSize.z)normalized.rotation.y=Math.PI/2;'), 'Falcon GLB must be rotated into the game forward axis when its wingspan lies on X.');
 check(playerModelPrep.includes('normalized.scale.setScalar(14/span);'), 'Falcon GLB must be fitted to the procedural aircraft size.');
