@@ -1915,6 +1915,7 @@ function openStation(station){
   const root=$('stationPerks');root.replaceChildren();
   const pool=[
     {id:'repair',icon:'🛠️',title:'إصلاح شامل',desc:'استعادة الوقود والحماية المؤقتة',tags:['guardian','lowhp'],weight:3,apply:()=>{P.fuel=100;P.engineOut=false;P.fuelWarned=false;shieldT=Math.max(shieldT,3.2);updateFuelGauge();}},
+    {id:'refuel',icon:'⛽',title:'تزويد الوقود',desc:'إضافة 35٪ إلى الوقود الحالي دون تجاوز 100٪',tags:['guardian','lowfuel'],weight:4,valid:()=>P.fuel<100,apply:()=>{const before=P.fuel;P.fuel=Math.min(100,P.fuel+35);if(P.fuel>0){P.engineOut=false;P.fuelWarned=false;}updateFuelGauge();toast('تم تزويد الوقود: +'+Math.round(P.fuel-before)+'٪');}},
     {id:'missiles',icon:'🚀',title:'صواريخ إضافية',desc:'إضافة 3 صواريخ وإعادة شحن المخزن',tags:['phantom','lowammo'],weight:3,apply:()=>{run.missiles=Math.min(9,run.missiles+3);}},
     {id:'rapid',icon:'⚡',title:'مدفع سريع',desc:'زيادة سرعة إطلاق النار 35٪',tags:['interceptor','cannon'],weight:3,apply:()=>{run.firePower=Math.min(2.2,(run.firePower||1)+0.35);run.perks.push('rapid');}},
     {id:'triple',icon:'🔫',title:'مدفع ثلاثي',desc:'إطلاق ثلاث رصاصات في كل دفعة',tags:['interceptor','cannon'],weight:2,valid:()=>!run.tri,apply:()=>{run.tri=true;run.perks.push('triple');}},
