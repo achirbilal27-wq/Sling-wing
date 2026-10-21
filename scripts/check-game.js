@@ -111,7 +111,8 @@ check(js.includes("assets/models/glb/plane_pc.glb") && js.includes('loadEnemyPla
 check(js.includes('if(enemy.boss||!enemy.mesh||!enemy.mesh.parent) return;'), 'Enemy GLB loading must preserve active boss meshes.');
 check(js.includes("phantom:{name:'الشبح النفاث',short:'الشبح',unlock:5000"), 'Phantom must be the last aircraft unlocked, at 5000.');
 check(js.includes("guardian:{name:'الحارس المدرع',short:'الحارس',unlock:4000"), 'Guardian must remain unlocked at 4000.');
-check(js.indexOf("phantom:{name:'الشبح النفاث'") > js.indexOf("guardian:{name:'الحارس المدرع'"), 'Phantom must appear after Guardian in the aircraft ranking.');
+check(js.includes("Object.entries(AIRCRAFT).sort(([,a],[,b])=>a.unlock-b.unlock).forEach(([key,a])=>{"), 'Hangar aircraft must be sorted by unlock distance.');
+check(/phantom:\\{name:'الشبح النفاث',short:'الشبح',unlock:5000/.test(js) && /guardian:\\{name:'الحارس المدرع',short:'الحارس',unlock:4000/.test(js), 'Phantom must unlock after Guardian.');
 check(js.includes("}else if(key==='phantom'){") && js.includes("'الشبح: إمداد وقود +38٪'"), 'Phantom must own the fuel-supply ability.');
 check(js.includes("}else if(key==='guardian'){") && js.includes('P.guardianOverdriveT=6'), 'Guardian must have its six-second temporary heavy-cannon combat ability.');
 check(js.includes('P.guardianOverdriveT>0?8:1') && js.includes('shot.heavyShot?2.5:1'), 'Guardian heavy cannon must deal strongly increased damage to bosses.');
