@@ -975,7 +975,7 @@ function loadDefenseModels(){
  });
 }
 loadDefenseModels();
-function currentDefenseBiome(stage){const n=((stage%5)+5)%5;return n===1?'snow':n===2?'desert':n===4?'boss_arena':'general';}
+function currentDefenseBiome(stage){const n=((stage%5)+5)%5;return n===1?'desert':n===3?'snow':n===4?'boss_arena':'general';}
 function spawnDefenseTurret(x){
  const stage=biomeStageAtMeters(x*M_PER_PX),biome=currentDefenseBiome(stage);
  const general=DEFENSE_MODELS.filter(d=>d.biome==='general');
