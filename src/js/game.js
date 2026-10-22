@@ -120,7 +120,6 @@ const SFX_URLS={
   launch:'assets/audio/sfx/\u200claunch.ogg',
   'engine-loop':'assets/audio/sfx/\u200cengine-loop.ogg',
   'weapon-fire':'assets/audio/sfx/\u200c\u200cweapon-fire.ogg',
-  'missile-launch':'assets/audio/sfx/\u200cmissile-launch.ogg',
   'missile-impact':'assets/audio/sfx/\u200cmissile-impact.ogg',
   'boss-warning':'assets/audio/sfx/\u200cboss-warning.ogg',
   'boss-hit':'assets/audio/sfx/\u200cboss-hit.ogg',
