@@ -418,7 +418,7 @@ function applyPlaneColors(){
   const colorIndex={trainer:0,interceptor:1,phantom:2,guardian:3}[model];
   const l=Math.min(colorIndex+Math.floor(save.lv.plane/3),PAL.length-1);
   if(l!==appliedLv){appliedLv=l;bodyMat.color.setHex(PAL[l][0]);accMat.color.setHex(PAL[l][1]);}
-  const customModel=(model==='trainer'||model==='phantom'||model==='guardian')&&!!aircraftModelTemplates[model];
+  const customModel=model==='trainer'&&!!aircraftModelTemplates.trainer;
   // Avoid showing the old procedural Falcon for a frame before its GLB arrives.
   // If the asset fails, the error handler restores the safe procedural aircraft.
   const modelPending=model==='trainer'&&aircraftModelLoadStarted&&!aircraftModelTemplates.trainer&&!aircraftModelLoadFailed;
