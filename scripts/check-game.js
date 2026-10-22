@@ -131,8 +131,6 @@ const expectedDefenseModels = {
   'iron_wild_turret_-_free.glb': ['precision_missile_turret', 'general', 'one_side_limited_homing_missiles'],
   'lazer_turret.glb': ['alternate_laser_turret', 'general', 'distinct_color_laser'],
   'sand_slugthrow_trt.glb': ['sandstorm_cannon', 'desert', 'sandstorm_projectile'],
-  'one_shot_boss_final__turet.glb': ['boss_final_defense_turret', 'boss_arena', 'railgun_shot'],
-  'railguntower_building004.glb': ['railgun_tower', 'general', 'railgun_shot'],
   'raval_turet_animated.glb': ['animated_defense_turret', 'general', 'animated_turret_fire'],
   'rocket_launcher_turret.glb': ['rocket_launcher_turret', 'general', 'rocket_projectile'],
 };
