@@ -19,7 +19,7 @@
         ".glb"
       ],
       "runtimeIntegration": "runtime-integrated",
-      "purpose": "نماذج الدفاع مرتبطة بظهور داخل المراحل، إطلاق مقذوفات، تصادم وضرر، ويمكن تدميرها. برج الجليد يظهر في مرحلة الثلج ومدفع الرمال في مرحلة الصحراء؛ النماذج غير المحملة تستخدم مجسمات بديلة.",
+      "purpose": "نماذج الدفاع المتوفرة مرتبطة بظهور داخل المراحل، إطلاق مقذوفات، تصادم وضرر، ويمكن تدميرها. عند غياب نموذج مخصص للصحراء أو ساحة الزعيم، تستخدم اللعبة نموذج دفاع متاحًا أو مجسمًا إجرائيًا بديلًا.",
       "models": {
         "big_ice_turret.glb": {
           "role": "ice_anti_air_turret",
@@ -67,22 +67,6 @@
             "desert"
           ],
           "attack": "sandstorm_projectile",
-          "damage": true
-        },
-        "one_shot_boss_final__turet.glb": {
-          "role": "boss_final_defense_turret",
-          "biomes": [
-            "boss_arena"
-          ],
-          "attack": "railgun_shot",
-          "damage": true
-        },
-        "railguntower_building004.glb": {
-          "role": "railgun_tower",
-          "biomes": [
-            "general"
-          ],
-          "attack": "railgun_shot",
           "damage": true
         },
         "raval_turet_animated.glb": {
