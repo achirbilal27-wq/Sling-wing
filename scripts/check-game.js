@@ -177,5 +177,10 @@ for (const [filename, [role, biome, attack]] of Object.entries(expectedDefenseMo
     }
   }
 }
-check(defenseCatalog.categories['assault-defender'].runtimeIntegration === 'role-defined-runtime-pending',
-  'Defense catalog must not claim runtime gameplay integration before it exists.');
+check(defenseCatalog.categories['assault-defender'].runtimeIntegration === 'runtime-integrated',
+  'Defense catalog must match the active defense runtime.');
+check(js.includes('function loadDefenseModels()') && js.includes('loadDefenseModels();'), 'Defense GLB loader must be active.');
+check(js.includes('function spawnDefenseTurret(x)') && js.includes('nextDefense:900/M_PER_PX'), 'Defense turrets must be scheduled during flight.');
+check(js.includes("assets/models/assault-defender/'+def.file") && js.includes('makeDefenseFallback(def)'), 'Defense models must load locally and preserve a fallback.');
+check(js.includes("e.defenseAttack==='chase'") && js.includes('turretShot:true') && js.includes('else if(e.turret)'), 'Defense turrets must have active movement, attacks, and damage handling.');
+check(js.includes('currentDefenseBiome(stage)') && js.includes("d.role==='ice'") && js.includes("d.role==='sand'"), 'Ice and sand defenses must be biome-gated.');

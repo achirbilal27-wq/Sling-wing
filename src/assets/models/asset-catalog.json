@@ -18,8 +18,8 @@
       "formats": [
         ".glb"
       ],
-      "runtimeIntegration": "role-defined-runtime-pending",
-      "purpose": "ضع هنا مجسمات المدافع الأرضية، أبراج الدفاع، بطاريات الصواريخ والقواعد الاعتراضية. أسماء مقترحة: coastal_turret.glb و interceptor_base.glb. أضف لاحقًا لكل مجسم إعدادات المدى، معدل الإطلاق، نقاط الصحة ونوع المقذوف في ملف بيانات منفصل.",
+      "runtimeIntegration": "runtime-integrated",
+      "purpose": "نماذج الدفاع مرتبطة بظهور داخل المراحل، إطلاق مقذوفات، تصادم وضرر، ويمكن تدميرها. برج الجليد يظهر في مرحلة الثلج ومدفع الرمال في مرحلة الصحراء؛ النماذج غير المحملة تستخدم مجسمات بديلة.",
       "models": {
         "big_ice_turret.glb": {
           "role": "ice_anti_air_turret",

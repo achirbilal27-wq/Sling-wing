@@ -903,6 +903,69 @@ const bossLanceMat=new THREE.MeshBasicMaterial({color:0xff3e9b});
 const bossPulseGeo=new THREE.SphereGeometry(5,10,8);
 const bossPulseMat=new THREE.MeshBasicMaterial({color:0xffa64d});
 const G=560;
+const DEFENSE_MODELS=[
+ {file:'big_ice_turret.glb',role:'ice',biome:'snow',color:0x8beaff,attack:'ice'},
+ {file:'fire-turet.glb',role:'fire',biome:'general',color:0xff512d,attack:'chase'},
+ {file:'interceptor_base.glb',role:'interceptor',biome:'general',color:0x48eaff,attack:'laser'},
+ {file:'iron_wild_turret_-_free.glb',role:'missile',biome:'general',color:0xffbf58,attack:'missile'},
+ {file:'lazer_turret.glb',role:'laser2',biome:'general',color:0xe879ff,attack:'laser2'},
+ {file:'sand_slugthrow_trt.glb',role:'sand',biome:'desert',color:0xd8b16b,attack:'sand'},
+ {file:'one_shot_boss_final__turet.glb',role:'final',biome:'boss_arena',color:0xff365f,attack:'rail'},
+ {file:'railguntower_building004.glb',role:'railgun',biome:'general',color:0xff7c56,attack:'rail'},
+ {file:'raval_turet_animated.glb',role:'animated',biome:'general',color:0x72ffae,attack:'burst'},
+ {file:'rocket_launcher_turret.glb',role:'rocket',biome:'general',color:0xff984a,attack:'rocket'}
+];
+const defenseTemplates=Object.create(null),defenseLoadStarted=Object.create(null);
+function makeDefenseFallback(def){
+ const g=new THREE.Group(),base=new THREE.Mesh(new THREE.CylinderGeometry(12,17,9,10),matS(0x273344,0.35,{metalness:0.55}));
+ const tower=new THREE.Mesh(new THREE.BoxGeometry(12,16,12),matS(def.color,0.3,{metalness:0.35,emissive:def.color,emissiveIntensity:0.12}));
+ const barrel=new THREE.Mesh(new THREE.CylinderGeometry(2.2,2.8,19,8),matS(0x303847,0.25,{metalness:0.7}));
+ base.position.y=4.5;tower.position.y=15;barrel.rotation.z=Math.PI/2;barrel.position.set(8,18,0);g.add(base,tower,barrel);g.userData.defenseFallback=true;return g;
+}
+function prepareDefenseModel(root){
+ const g=new THREE.Group();g.add(root);g.updateMatrixWorld(true);
+ let box=new THREE.Box3().setFromObject(g);if(box.isEmpty())return null;
+ const size=box.getSize(new THREE.Vector3()),max=Math.max(size.x,size.y,size.z);
+ if(!Number.isFinite(max)||max<0.001)return null;
+ g.scale.setScalar(44/max);g.updateMatrixWorld(true);box.setFromObject(g);
+ const center=box.getCenter(new THREE.Vector3());g.position.sub(center);g.position.y-=box.min.y-center.y;
+ g.traverse(n=>{if(n.isMesh){n.castShadow=true;n.receiveShadow=true;if(n.material)(Array.isArray(n.material)?n.material:[n.material]).forEach(m=>{m.side=THREE.DoubleSide;m.needsUpdate=true;});}});
+ return g;
+}
+function makeDefenseTurret(def){
+ const g=new THREE.Group(),template=defenseTemplates[def.file];
+ if(template){g.add(template.clone(true));g.userData.usingDefenseGLB=true;}else g.add(makeDefenseFallback(def));
+ g.userData.defenseRole=def.role;return g;
+}
+function loadDefenseModels(){
+ if(typeof THREE.GLTFLoader!=='function'){console.warn('GLTFLoader unavailable; defense turrets use procedural fallbacks.');return;}
+ DEFENSE_MODELS.forEach(def=>{
+  if(defenseLoadStarted[def.file])return;defenseLoadStarted[def.file]=true;
+  new THREE.GLTFLoader().load('assets/models/assault-defender/'+def.file,gltf=>{
+   const template=prepareDefenseModel(gltf.scene);
+   if(!template){console.warn('Invalid defense model; fallback retained:',def.file);return;}
+   defenseTemplates[def.file]=template;
+   if(typeof objs!=='undefined'&&objs&&Array.isArray(objs.enemies))objs.enemies.forEach(e=>{
+    if(!e.turret||e.hit||e.defenseFile!==def.file||!e.mesh||!e.mesh.parent)return;
+    const old=e.mesh,replacement=makeDefenseTurret(def);replacement.position.copy(old.position);replacement.rotation.copy(old.rotation);replacement.visible=old.visible;
+    old.parent.add(replacement);old.parent.remove(old);e.mesh=replacement;
+   });
+   console.info('Defense GLB loaded:',def.file);
+  },undefined,error=>console.warn('Defense GLB unavailable; procedural fallback retained:',def.file,error));
+ });
+}
+loadDefenseModels();
+function currentDefenseBiome(stage){const n=((stage%5)+5)%5;return n===1?'snow':n===2?'desert':n===4?'boss_arena':'general';}
+function spawnDefenseTurret(x){
+ const stage=biomeStageAtMeters(x*M_PER_PX),biome=currentDefenseBiome(stage);
+ const general=DEFENSE_MODELS.filter(d=>d.biome==='general');
+ const def=biome==='snow'?DEFENSE_MODELS.find(d=>d.role==='ice'):biome==='desert'?DEFENSE_MODELS.find(d=>d.role==='sand'):biome==='boss_arena'?DEFENSE_MODELS.find(d=>d.role==='final'):general[Math.floor(x/(900/M_PER_PX))%general.length];
+ if(!def)return;
+ const alt=biome==='boss_arena'?160:Math.max(40,70+Math.random()*120),z=zc((Math.random()<0.5?-1:1)*(150+Math.random()*130));
+ const e={x,alt,z,phase:Math.random()*6.28,fireT:1.1+Math.random()*1.5,hit:false,turret:true,defenseFile:def.file,defenseRole:def.role,defenseAttack:def.attack,defenseColor:def.color,defenseBiome:biome,defenseHp:def.attack==='chase'?38:55,defenseMaxHp:def.attack==='chase'?38:55,attackSide:Math.random()<0.5?-1:1};
+ e.mesh=makeDefenseTurret(def);e.mesh.position.set(x*S,Y(alt),z*S);objGroup.add(e.mesh);objs.enemies.push(e);
+ addFloat(x,alt+55,biome==='snow'?'مدفع جليدي!':biome==='desert'?'مدفع عاصفة رملية!':def.role==='fire'?'مطارد ناري!':'برج دفاع معادٍ!','#'+def.color.toString(16).padStart(6,'0'),z);
+}
 
 function clearObjs(){while(objGroup.children.length)objGroup.remove(objGroup.children[0]);}
 function resetRun(){
@@ -914,7 +977,7 @@ function resetRun(){
   const cannonLevel=Number(save.lv.cannon)||0;
   run={coins:0,picked:0,maxAlt:0,gateCombo:0,bestCombo:0,gates:0,bosses:0,bossBattle:false,missiles:3,stationCount:0,stormHits:0,firePower:1,stationShield:0,aimMode:'smart',
     tri:false,rate:1,cool:1+0.12*cannonLevel,damage:1+0.25*cannonLevel,perks:[],reserveTank:false,reserveTankUsed:false,heat:0,overheat:false,fireCd:0,fireSfxTimer:0};
-  objs={coins:[],rings:[],birds:[],enemies:[],enemyShots:[],fuels:[],drafts:[],storms:[],stations:[],next:600,nextEnemy:550/M_PER_PX,nextBoss:bossDistanceMeters(0)/M_PER_PX,nextStorm:600/M_PER_PX,nextStation:(bossDistanceMeters(0)-1100)/M_PER_PX,nextStationStage:0,approachBossX:null};
+  objs={coins:[],rings:[],birds:[],enemies:[],enemyShots:[],fuels:[],drafts:[],storms:[],stations:[],next:600,nextEnemy:550/M_PER_PX,nextDefense:900/M_PER_PX,nextBoss:bossDistanceMeters(0)/M_PER_PX,nextStorm:600/M_PER_PX,nextStation:(bossDistanceMeters(0)-1100)/M_PER_PX,nextStationStage:0,approachBossX:null};
   shieldT=0;shieldCooldown=0;shieldMesh.visible=false;
   clearObjs();
   parts.forEach(p=>{p.mesh.visible=false;});parts.length=0;
@@ -992,6 +1055,10 @@ function spawn(until){
     addFloat(x,alt+85,'محطة تطوير قادمة — جهّز الطائرة للزعيم','#8cf5ff',z);
     objs.nextStationStage=(objs.nextStationStage||0)+1;
     objs.nextStation=(bossDistanceMeters(objs.nextStationStage)-1100)/M_PER_PX;
+  }
+  while(objs.nextDefense<until){
+    spawnDefenseTurret(objs.nextDefense);
+    objs.nextDefense+=850/M_PER_PX;
   }
   while(objs.nextBoss<until){
     const x=objs.nextBoss,stage=Math.max(0,run.bosses),biomeIndex=stage%BOSS_PROFILES.length;
@@ -1651,7 +1718,37 @@ function updateFlight(dt){
   }
   for(const e of objs.enemies){
     if(e.hit)continue;
-    e.phase+=dt*(e.boss?1.55:2.1);
+    e.phase+=dt*(e.boss?1.55:e.turret?1.0:2.1);
+    if(e.turret){
+      if(e.defenseAttack==='chase'){
+        e.x-=Math.min(260,115+Math.max(0,P.s)*0.08)*dt;
+        e.z=zc(e.z+(P.z-e.z)*Math.min(1,dt*0.24));
+        e.alt=clamp(e.alt+(P.alt-e.alt)*Math.min(1,dt*0.18),35,310);
+        e.mesh.rotation.y=Math.sin(e.phase*2)*0.18;
+      }else{
+        const dx=P.x-e.x,dz=P.z-e.z;e.mesh.rotation.y=Math.atan2(dz,dx);e.mesh.rotation.z=Math.sin(e.phase*0.7)*0.025;
+      }
+      e.fireT-=dt;
+      if(e.defenseAttack!=='chase'&&e.fireT<=0&&e.x>P.x+120&&e.x<P.x+4200){
+        const dx=P.x-e.x,dy=P.alt-e.alt,dz=P.z-e.z,L=Math.hypot(dx,dy,dz)||1,color=e.defenseColor||0xff7048;
+        const geo=new THREE.SphereGeometry(e.defenseAttack==='laser'||e.defenseAttack==='laser2'?3.8:5.4,8,6);
+        const mesh=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.96}));
+        mesh.position.set(e.x*S,Y(e.alt+12),e.z*S);scene.add(mesh);
+        const speed=e.defenseAttack==='missile'||e.defenseAttack==='rocket'?620:e.defenseAttack==='sand'?560:e.defenseAttack==='rail'?1320:e.defenseAttack==='ice'?760:e.defenseAttack==='laser'||e.defenseAttack==='laser2'?1500:850;
+        const homing=e.defenseAttack==='missile'||e.defenseAttack==='rocket';
+        objs.enemyShots.push({x:e.x,alt:e.alt+12,z:e.z,vx:dx/L*speed,vy:dy/L*speed,vz:dz/L*speed,life:3.7,mesh,bossShot:false,turretShot:true,defenseRole:e.defenseRole,defenseAttack:e.defenseAttack,damage:e.defenseAttack==='rail'?16:e.defenseAttack==='sand'?12:e.defenseAttack==='ice'?10:8,homing,seekerSpeed:speed,attackSide:e.attackSide});
+        e.fireT=e.defenseAttack==='burst'?1.15:e.defenseAttack==='rail'?2.7:e.defenseAttack==='laser'||e.defenseAttack==='laser2'?1.45:2.05;
+        if(e.defenseAttack==='sand')addFloat(e.x,e.alt+40,'عاصفة رملية قادمة!','#d8b16b',e.z);
+        else if(e.defenseAttack==='ice')addFloat(e.x,e.alt+40,'مقذوف جليدي!','#8beaff',e.z);
+      }
+      const tx=e.x-P.x,ty=e.alt-P.alt,tz=e.z-P.z;
+      if(tx*tx+ty*ty+tz*tz<42*42){
+        if(shieldT>0||shieldCooldown<=0)activateShield(e.x,e.alt,e.z);
+        else{damagePlayer(e.defenseAttack==='chase'?14:9,e.x,e.alt,e.z,'turret');P.alt=Math.max(20,P.alt-18);}
+        if(e.defenseAttack==='chase'){e.hit=true;e.mesh.visible=false;}
+      }
+      continue;
+    }
     if(e.boss){
       const ratio=e.hp/e.maxHp;
       const nextPhase=ratio<=0.28?3:ratio<=0.62?2:1;
@@ -1762,11 +1859,11 @@ function updateFlight(dt){
   }
   for(let i=objs.enemyShots.length-1;i>=0;i--){
     const b=objs.enemyShots[i];
-    if(b.ironEagleSeeker){const tx=P.x-b.x,ty=P.alt-b.alt,tz=P.z-b.z,L=Math.hypot(tx,ty,tz)||1,k=Math.min(1,dt*0.72),speed=b.seekerSpeed||900;b.vx=lerp(b.vx,tx/L*speed,k);b.vy=lerp(b.vy,ty/L*speed,k);b.vz=lerp(b.vz,tz/L*speed,k);}
+    if(b.ironEagleSeeker||b.homing){const tx=P.x-b.x,ty=P.alt-b.alt,tz=P.z-b.z,L=Math.hypot(tx,ty,tz)||1,k=Math.min(1,dt*(b.ironEagleSeeker?0.72:0.48)),speed=b.seekerSpeed||900;b.vx=lerp(b.vx,tx/L*speed,k);b.vy=lerp(b.vy,ty/L*speed,k);b.vz=lerp(b.vz,(tz/L*speed)+(b.homing?b.attackSide*75:0),k);}
     b.x+=b.vx*dt;b.alt+=(b.vy||0)*dt;b.z+=(b.vz||0)*dt;b.life-=dt;b.mesh.position.set(b.x*S,Y(b.alt),b.z*S);
     if(Math.abs(b.x-P.x)<34&&Math.abs(b.alt-P.alt)<32&&Math.abs(b.z-P.z)<40){
       if(shieldT>0||shieldCooldown<=0)activateShield(b.x,b.alt,b.z);
-      else{const stageIndex=Math.max(0,Math.min(4,(objs.enemies.find(e=>e.boss&&!e.hit)?.bossStage||1)-1));damagePlayer(b.bossShot?(b.damage||[9,11,13,15,18][stageIndex]):6,b.x,b.alt,b.z,b.bossShot?'boss':'enemy');P.alt=Math.max(20,P.alt-(b.bossShot?24:12));}
+      else{const stageIndex=Math.max(0,Math.min(4,(objs.enemies.find(e=>e.boss&&!e.hit)?.bossStage||1)-1));damagePlayer(b.bossShot?(b.damage||[9,11,13,15,18][stageIndex]):(b.turretShot?(b.damage||9):6),b.x,b.alt,b.z,b.bossShot?'boss':b.turretShot?'turret':'enemy');P.alt=Math.max(20,P.alt-(b.bossShot?24:12));}
       b.life=0;
     }
     if(b.life<=0){scene.remove(b.mesh);objs.enemyShots.splice(i,1);}
@@ -1787,9 +1884,9 @@ function updateFlight(dt){
     }
     if(!hit){for(const e of objs.enemies){
       if(e.hit)continue;
-      const hr=e.boss?(e.hitRadiusX||(e.bossStage>=5?118:82)):38;
-      const hitY=e.boss?(e.hitRadiusY||(e.bossStage>=5?94:72)):40;
-      const hitZ=e.boss?(e.hitRadiusZ||(e.bossStage>=5?108:80)):45;
+      const hr=e.boss?(e.hitRadiusX||(e.bossStage>=5?118:82)):e.turret?34:38;
+      const hitY=e.boss?(e.hitRadiusY||(e.bossStage>=5?94:72)):e.turret?46:40;
+      const hitZ=e.boss?(e.hitRadiusZ||(e.bossStage>=5?108:80)):e.turret?38:45;
       if(Math.abs(e.x-shot.x)<hr&&Math.abs(e.alt-shot.alt)<hitY&&Math.abs(e.z-shot.z)<hitZ){
         hit=true;
         if(e.boss){
@@ -1801,6 +1898,11 @@ function updateFlight(dt){
           }
           if(e.hp<=0)defeatBoss(e,'cannon');
           else{addFloat(e.x,e.alt+70,'طاقة الزعيم '+Math.ceil(e.hp)+'/'+e.maxHp,'#ffb2a6',e.z);}
+        }else if(e.turret){
+          e.defenseHp-=Math.max(1,(shot.damage||10)/10)*(shot.heavyShot?2.5:1);
+          addFloat(e.x,e.alt+38,'إصابة البرج!','#'+(e.defenseColor||0xffc857).toString(16).padStart(6,'0'),e.z);
+          if(e.defenseHp<=0){e.hit=true;e.mesh.visible=false;run.coins+=24*(1+save.lv.coin);addFloat(e.x,e.alt+55,'برج مدمر +24','#ffe27a',e.z);playSfx('explosion',0.7);shake=Math.max(shake,0.18);for(let n=0;n<14;n++)addPart(e.x,e.alt,(Math.random()-.5)*180,(Math.random()-.5)*180,0.4,e.defenseColor||0xff9b4a,3,e.z);}
+          else{playSfx('laser',0.65);shake=Math.max(shake,0.05);}
         }else{
           e.hit=true;e.mesh.visible=false;run.coins+=18*(1+save.lv.coin);
           addFloat(e.x,e.alt+45,'طائرة معادية +18','#ffe27a',e.z);playSfx('laser',0.7);playSfx('explosion',0.58);shake=Math.max(shake,0.12);
