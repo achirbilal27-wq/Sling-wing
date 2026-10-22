@@ -56,25 +56,7 @@ for (const match of css.matchAll(/url\(["']?([^"')]+)["']?\)/g)) {
 const decodedJs = js.replace(/\\u([0-9a-f]{4})/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
 const assetRefs = [...decodedJs.matchAll(/assets\/[^'"\s)]+?\.(?:png|jpe?g|webp|ogg|mp3|wav|mp4|json|glb|gltf)(?=['"\s)]|$)/gi)]
   .map((match) => match[0]);
-// Phantom and Guardian are optional custom GLBs. If supplied, validate them;
-// absent files are allowed because those aircraft have procedural fallbacks.
-const optionalCustomAircraft = new Set([
-  'assets/models/aircraft/phantom.glb',
-  'assets/models/aircraft/guardian.glb',
-]);
 for (const url of [...new Set(assetRefs)]) {
-  if (optionalCustomAircraft.has(url)) {
-    if (exists(url)) {
-      const optionalBytes = fs.readFileSync(path.join(src, url));
-      check(optionalBytes.length >= 20, 'Optional custom aircraft GLB is unexpectedly small or truncated: src/' + url);
-      if (optionalBytes.length >= 12) {
-        check(optionalBytes.toString('ascii', 0, 4) === 'glTF', 'Optional custom aircraft is not a valid binary glTF file: src/' + url);
-        check(optionalBytes.readUInt32LE(4) === 2, 'Optional custom aircraft GLB must use glTF binary version 2: src/' + url);
-        check(optionalBytes.readUInt32LE(8) === optionalBytes.length, 'Optional custom aircraft GLB header length mismatch: src/' + url);
-      }
-    }
-    continue;
-  }
   check(exists(url), 'Missing local JavaScript asset: src/' + url);
 }
 const glbModels = [
@@ -121,6 +103,7 @@ check(js.includes("trainer:{name:'الصقر التدريبي',short:'الصقر
 check(js.includes("['trainer','assets/models/aircraft/stylized_ww1_plane.glb']") && js.includes("model==='trainer'"), 'WWI GLB must replace the original Falcon model rather than appear as a separate aircraft.');
 check(js.includes('const modelPending=model===\'trainer\'&&aircraftModelLoadStarted&&!aircraftModelTemplates.trainer&&!aircraftModelLoadFailed;'), 'Procedural Falcon must stay hidden while the replacement GLB is loading to prevent a visible model swap.');
 check(js.includes('aircraftModelLoadFailed=true;') && js.includes('applyPlaneColors();'), 'Failed Falcon GLB loading must restore the procedural fallback safely.');
+check(js.includes("const customModel=model==='trainer'&&!!aircraftModelTemplates.trainer;"), 'Only the trainer aircraft may use the currently loaded player GLB; Phantom and Guardian use their active procedural kits.');
 check(js.includes('prop.visible=!customModel&&!modelPending;'), 'The original procedural propeller must stay hidden while the custom Falcon GLB is loading or active.');
 check(js.includes('loadIronEagleBossModel();') && js.includes('Preload the first boss before the player reaches its arena'), 'Iron Eagle boss GLB must preload before its encounter to reduce visible model swapping.');
 check(js.includes("if(!AIRCRAFT[save.model]){save.model='trainer';persist();}"), 'Legacy saves must migrate removed aircraft selections back to Falcon.');
@@ -148,7 +131,7 @@ const expectedDefenseModels = {
   'iron_wild_turret_-_free.glb': ['precision_missile_turret', 'general', 'one_side_limited_homing_missiles'],
   'lazer_turret.glb': ['alternate_laser_turret', 'general', 'distinct_color_laser'],
   'sand_slugthrow_trt.glb': ['sandstorm_cannon', 'desert', 'sandstorm_projectile'],
-  'one_shot_boss_final__turet.glb': ['boss_final_defense_turret', 'boss_arena', 'pending_user_assignment'],
+  'one_shot_boss_final__turet.glb': ['boss_final_defense_turret', 'boss_arena', 'railgun_shot'],
   'railguntower_building004.glb': ['railgun_tower', 'general', 'railgun_shot'],
   'raval_turet_animated.glb': ['animated_defense_turret', 'general', 'animated_turret_fire'],
   'rocket_launcher_turret.glb': ['rocket_launcher_turret', 'general', 'rocket_projectile'],
