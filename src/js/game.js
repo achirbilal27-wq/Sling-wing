@@ -914,9 +914,7 @@ const missileGeo=new THREE.ConeGeometry(3.2,18,8);missileGeo.rotateZ(-Math.PI/2)
 const missileMat=matS(0xff6248,0.35,{emissive:0x54150c,metalness:0.25});
 let missileCooldown=0;
 const bossLanceGeo=new THREE.BoxGeometry(22,4.5,4.5);
-const bossLanceMat=new THREE.MeshBasicMaterial({color:0xff3e9b});
 const bossPulseGeo=new THREE.SphereGeometry(5,10,8);
-const bossPulseMat=new THREE.MeshBasicMaterial({color:0xffa64d});
 const G=560;
 const DEFENSE_MODELS=[
  {file:'big_ice_turret.glb',role:'ice',biome:'snow',color:0x8beaff,attack:'ice'},
