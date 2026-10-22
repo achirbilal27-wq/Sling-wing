@@ -848,7 +848,14 @@ function loadPlayerAircraftModels(){
   [['trainer','assets/models/aircraft/stylized_ww1_plane.glb']].forEach(([key,url])=>{
     loader.load(url,gltf=>{
       const model=prepareAircraftModel(gltf.scene);
-      if(!model){console.warn('Invalid '+key+' GLB; keeping procedural fallback.');return;}
+      if(!model){
+        // A successful network response can still contain an unusable GLB.
+        // Clear the pending state so applyPlaneColors restores the procedural aircraft.
+        aircraftModelLoadFailed=true;
+        console.warn('Invalid '+key+' GLB; restoring procedural fallback.');
+        applyPlaneColors();
+        return;
+      }
       aircraftModelTemplates[key]=model;
       if(save.model===key){
         aircraftModelHolder.clear();
