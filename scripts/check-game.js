@@ -178,7 +178,7 @@ check(js.includes('function loadDefenseModels()') && js.includes('loadDefenseMod
 check(js.includes('function spawnDefenseTurret(x)') && js.includes('nextDefense:900/M_PER_PX'), 'Defense turrets must be scheduled during flight.');
 check(js.includes("assets/models/assault-defender/'+def.file") && js.includes('makeDefenseFallback(def)'), 'Defense models must load locally and preserve a fallback.');
 check(js.includes("e.defenseAttack==='chase'") && js.includes('turretShot:true') && js.includes('else if(e.turret)'), 'Defense turrets must have active movement, attacks, and damage handling.');
-check(js.includes("function currentDefenseBiome(stage){const n=((stage%5)+5)%5;return n===1?'snow':n===2?'desert':n===4?'boss_arena':'general';}") && js.includes("biome==='snow'?DEFENSE_MODELS.find(d=>d.role==='ice')") && js.includes("biome==='desert'?DEFENSE_MODELS.find(d=>d.role==='sand')"), 'Ice and sand defenses must be selected only for their configured biomes.');
+check(js.includes("function currentDefenseBiome(stage){const n=((stage%5)+5)%5;return n===1?'desert':n===3?'snow':n===4?'boss_arena':'general';}") && js.includes("trees.forEach(t=>{t.visible=index!==1;});") && js.includes("cacti.forEach(c=>{c.visible=index===1;});") && js.includes("biome==='snow'?DEFENSE_MODELS.find(d=>d.role==='ice')") && js.includes("biome==='desert'?DEFENSE_MODELS.find(d=>d.role==='sand')"), 'Defense biome mapping must match the visible desert, snow, and boss-arena stages.');
 
 if (failures.length) {
   console.error('Game integrity checks FAILED:');
