@@ -1912,7 +1912,6 @@ function updateFlight(dt){
             for(let n=0;n<12;n++)addPart(e.x,e.alt,(Math.random()-.5)*260,(Math.random()-.5)*220,0.38,0xffc857,4,e.z,(Math.random()-.5)*180);
           }
           if(e.hp<=0)defeatBoss(e,'cannon');
-          else{addFloat(e.x,e.alt+70,'طاقة الزعيم '+Math.ceil(e.hp)+'/'+e.maxHp,'#ffb2a6',e.z);}
         }else if(e.turret){
           e.defenseHp-=Math.max(1,(shot.damage||10)/10)*(shot.heavyShot?2.5:1);
           addFloat(e.x,e.alt+38,'إصابة البرج!','#'+(e.defenseColor||0xffc857).toString(16).padStart(6,'0'),e.z);
@@ -1937,7 +1936,7 @@ function updateFlight(dt){
     if(m.smoke<=0){addPart(m.x,m.alt,0,0,0.34,0xb9c4d4,4,m.z,0);m.smoke=0.045;}
     const v=new THREE.Vector3(m.vx,m.vy,m.vz);m.mesh.position.set(m.x*S,Y(m.alt),m.z*S);m.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(1,0,0),v.normalize());
     let hit=m.life<=0||m.alt<0,impacted=false;
-    if(!hit){for(const e of objs.enemies){if(e.hit)continue;const dx=e.x-m.x,dy=e.alt-m.alt,dz=e.z-m.z;if(dx*dx+dy*dy+dz*dz<(e.boss?(e.bossStage===1?138:e.bossStage>=5?148:125):70)**2){hit=true;impacted=true;if(e.boss){e.hp=Math.max(0,e.hp-26);playSfx('boss-hit',0.78);addFloat(e.x,e.alt+70,'صاروخ أصاب الزعيم! طاقة '+Math.ceil(e.hp)+'/'+e.maxHp,'#ffe27a',e.z);if(e.hp<=0)defeatBoss(e,'missile');} else{e.hit=true;e.mesh.visible=false;run.coins+=18*(1+save.lv.coin);addFloat(e.x,e.alt+45,'إسقاط صاروخي +18','#ffe27a',e.z);}for(let n=0;n<24;n++)addPart(e.x,e.alt,(Math.random()-.5)*300,(Math.random()-.5)*240,0.55,0xff9b4a,4,e.z);shake=Math.max(shake,0.3);break;}}}
+    if(!hit){for(const e of objs.enemies){if(e.hit)continue;const dx=e.x-m.x,dy=e.alt-m.alt,dz=e.z-m.z;if(dx*dx+dy*dy+dz*dz<(e.boss?(e.bossStage===1?138:e.bossStage>=5?148:125):70)**2){hit=true;impacted=true;if(e.boss){e.hp=Math.max(0,e.hp-26);playSfx('boss-hit',0.78);if(e.hp<=0)defeatBoss(e,'missile');} else{e.hit=true;e.mesh.visible=false;run.coins+=18*(1+save.lv.coin);addFloat(e.x,e.alt+45,'إسقاط صاروخي +18','#ffe27a',e.z);}for(let n=0;n<24;n++)addPart(e.x,e.alt,(Math.random()-.5)*300,(Math.random()-.5)*240,0.55,0xff9b4a,4,e.z);shake=Math.max(shake,0.3);break;}}}
     if(hit){if(impacted){playSfx('missile-impact');playSfx('explosion',0.72);}scene.remove(m.mesh);missiles.splice(i,1);}
   }
 }
