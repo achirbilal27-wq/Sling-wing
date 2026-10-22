@@ -119,7 +119,10 @@ check(js.includes('P.guardianOverdriveT>0?8:1') && js.includes('shot.heavyShot?2
 check(js.includes('ضربة المدفع الثقيل') && js.includes('0xffc857'), 'Guardian heavy-cannon hits must show visible impact feedback.');
 check(js.includes("trainer:{name:'الصقر التدريبي',short:'الصقر',unlock:0"), 'Falcon must remain the first aircraft and be available from the start.');
 check(js.includes("['trainer','assets/models/aircraft/stylized_ww1_plane.glb']") && js.includes("model==='trainer'"), 'WWI GLB must replace the original Falcon model rather than appear as a separate aircraft.');
-check(js.includes('prop.visible=!customModel;'), 'The original procedural propeller must be hidden when the custom Falcon GLB is active.');
+check(js.includes('const modelPending=model===\'trainer\'&&aircraftModelLoadStarted&&!aircraftModelTemplates.trainer&&!aircraftModelLoadFailed;'), 'Procedural Falcon must stay hidden while the replacement GLB is loading to prevent a visible model swap.');
+check(js.includes('aircraftModelLoadFailed=true;') && js.includes('applyPlaneColors();'), 'Failed Falcon GLB loading must restore the procedural fallback safely.');
+check(js.includes('prop.visible=!customModel&&!modelPending;'), 'The original procedural propeller must stay hidden while the custom Falcon GLB is loading or active.');
+check(js.includes('loadIronEagleBossModel();') && js.includes('Preload the first boss before the player reaches its arena'), 'Iron Eagle boss GLB must preload before its encounter to reduce visible model swapping.');
 check(js.includes("if(!AIRCRAFT[save.model]){save.model='trainer';persist();}"), 'Legacy saves must migrate removed aircraft selections back to Falcon.');
 const preparedHtmlPath = path.join(root, 'www', 'index.html');
 if (fs.existsSync(preparedHtmlPath)) {

@@ -411,7 +411,7 @@ const shieldMesh=new THREE.Mesh(new THREE.SphereGeometry(9,18,12),new THREE.Mesh
 shieldMesh.scale.set(1.15,0.62,0.9);shieldMesh.visible=false;planeG.add(shieldMesh);
 const aircraftModelHolder=new THREE.Group();aircraftModelHolder.visible=false;planeG.add(aircraftModelHolder);
 const aircraftModelTemplates=Object.create(null);
-let aircraftModelLoadStarted=false;
+let aircraftModelLoadStarted=false,aircraftModelLoadFailed=false;
 let shieldT=0,shieldCooldown=0,appliedLv=-1,appliedModel='';
 function applyPlaneColors(){
   const model=save.model in AIRCRAFT?save.model:'trainer';
@@ -419,15 +419,18 @@ function applyPlaneColors(){
   const l=Math.min(colorIndex+Math.floor(save.lv.plane/3),PAL.length-1);
   if(l!==appliedLv){appliedLv=l;bodyMat.color.setHex(PAL[l][0]);accMat.color.setHex(PAL[l][1]);}
   const customModel=(model==='trainer'||model==='phantom'||model==='guardian')&&!!aircraftModelTemplates[model];
+  // Avoid showing the old procedural Falcon for a frame before its GLB arrives.
+  // If the asset fails, the error handler restores the safe procedural aircraft.
+  const modelPending=model==='trainer'&&aircraftModelLoadStarted&&!aircraftModelTemplates.trainer&&!aircraftModelLoadFailed;
   if(customModel&&aircraftModelHolder.userData.modelKey!==model){
     aircraftModelHolder.clear();
     aircraftModelHolder.add(aircraftModelTemplates[model].clone(true));
     aircraftModelHolder.userData.modelKey=model;
   }
   aircraftModelHolder.visible=customModel;
-  planeCoreChildren.forEach(child=>{if(child!==flame)child.visible=!customModel;});
-  prop.visible=!customModel;
-  Object.keys(variantKits).forEach(k=>{variantKits[k].visible=!customModel&&k===model;});
+  planeCoreChildren.forEach(child=>{if(child!==flame)child.visible=!customModel&&!modelPending;});
+  prop.visible=!customModel&&!modelPending;
+  Object.keys(variantKits).forEach(k=>{variantKits[k].visible=!customModel&&!modelPending&&k===model;});
   if(model!==appliedModel)appliedModel=model;
 }
 
@@ -705,6 +708,8 @@ function loadIronEagleBossModel(){
     console.info('Iron Eagle GLB loaded successfully.');
   },undefined,error=>console.warn('Iron Eagle GLB failed to load; keeping the procedural boss.',error));
 }
+// Preload the first boss before the player reaches its arena to avoid a visible model swap mid-fight.
+loadIronEagleBossModel();
 let enemyModelTemplate=null;
 let enemyModelLoadStarted=false;
 function prepareEnemyModel(root){
@@ -831,8 +836,14 @@ function prepareAircraftModel(root){
 }
 function loadPlayerAircraftModels(){
   if(aircraftModelLoadStarted)return;
-  if(typeof THREE.GLTFLoader!=='function'){console.warn('GLTFLoader unavailable; keeping the procedural aircraft models.');return;}
+  if(typeof THREE.GLTFLoader!=='function'){
+    aircraftModelLoadFailed=true;
+    console.warn('GLTFLoader unavailable; keeping the procedural aircraft models.');
+    applyPlaneColors();
+    return;
+  }
   aircraftModelLoadStarted=true;
+  applyPlaneColors();
   const loader=new THREE.GLTFLoader();
   [['trainer','assets/models/aircraft/stylized_ww1_plane.glb']].forEach(([key,url])=>{
     loader.load(url,gltf=>{
@@ -842,11 +853,16 @@ function loadPlayerAircraftModels(){
       if(save.model===key){
         aircraftModelHolder.clear();
         aircraftModelHolder.add(model.clone(true));
+        aircraftModelHolder.userData.modelKey=key;
         appliedModel='';
-        applyPlaneColors();
       }
+      applyPlaneColors();
       console.info(key+' aircraft GLB loaded successfully.');
-    },undefined,error=>console.warn(key+' GLB unavailable; using the procedural fallback.',error));
+    },undefined,error=>{
+      aircraftModelLoadFailed=true;
+      applyPlaneColors();
+      console.warn(key+' GLB unavailable; using the procedural fallback.',error);
+    });
   });
 }
 loadPlayerAircraftModels();
