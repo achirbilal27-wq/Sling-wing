@@ -138,14 +138,6 @@ if (fs.existsSync(preparedHtmlPath)) {
 }
 check(fs.existsSync(path.join(root, 'package.json')), 'package.json is missing.');
 
-if (failures.length) {
-  console.error('Game integrity checks FAILED:');
-  for (const failure of failures) console.error(' - ' + failure);
-  process.exit(1);
-}
-console.log('Game integrity checks passed: JS syntax, DOM IDs, local assets, CSS structure, boss portraits, and local Three.js preparation.');
-
-
 const defenseCatalogPath = path.join(src, 'assets', 'models', 'asset-catalog.json');
 const defenseCatalog = JSON.parse(fs.readFileSync(defenseCatalogPath, 'utf8'));
 const defenseModels = defenseCatalog.categories['assault-defender'].models;
@@ -187,3 +179,10 @@ check(js.includes('function spawnDefenseTurret(x)') && js.includes('nextDefense:
 check(js.includes("assets/models/assault-defender/'+def.file") && js.includes('makeDefenseFallback(def)'), 'Defense models must load locally and preserve a fallback.');
 check(js.includes("e.defenseAttack==='chase'") && js.includes('turretShot:true') && js.includes('else if(e.turret)'), 'Defense turrets must have active movement, attacks, and damage handling.');
 check(js.includes('currentDefenseBiome(stage)') && js.includes("def.role==='ice'") && js.includes("def.role==='sand'"), 'Ice and sand defenses must be biome-gated.');
+
+if (failures.length) {
+  console.error('Game integrity checks FAILED:');
+  for (const failure of failures) console.error(' - ' + failure);
+  process.exit(1);
+}
+console.log('Game integrity checks passed: JavaScript syntax, DOM IDs, local assets, CSS structure, aircraft/boss models, defense integration, and local Android preparation.');
