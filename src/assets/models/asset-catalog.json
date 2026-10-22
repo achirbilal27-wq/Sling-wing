@@ -74,7 +74,7 @@
           "biomes": [
             "boss_arena"
           ],
-          "attack": "pending_user_assignment",
+          "attack": "railgun_shot",
           "damage": true
         },
         "railguntower_building004.glb": {
