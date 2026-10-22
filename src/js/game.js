@@ -930,8 +930,6 @@ const DEFENSE_MODELS=[
  {file:'iron_wild_turret_-_free.glb',role:'missile',biome:'general',color:0xffbf58,attack:'missile'},
  {file:'lazer_turret.glb',role:'laser2',biome:'general',color:0xe879ff,attack:'laser2'},
  {file:'sand_slugthrow_trt.glb',role:'sand',biome:'desert',color:0xd8b16b,attack:'sand'},
- {file:'one_shot_boss_final__turet.glb',role:'final',biome:'boss_arena',color:0xff365f,attack:'rail'},
- {file:'railguntower_building004.glb',role:'railgun',biome:'general',color:0xff7c56,attack:'rail'},
  {file:'raval_turet_animated.glb',role:'animated',biome:'general',color:0x72ffae,attack:'burst'},
  {file:'rocket_launcher_turret.glb',role:'rocket',biome:'general',color:0xff984a,attack:'rocket'}
 ];
@@ -979,7 +977,7 @@ function currentDefenseBiome(stage){const n=((stage%5)+5)%5;return n===1?'desert
 function spawnDefenseTurret(x){
  const stage=biomeStageAtMeters(x*M_PER_PX),biome=currentDefenseBiome(stage);
  const general=DEFENSE_MODELS.filter(d=>d.biome==='general');
- const def=biome==='snow'?DEFENSE_MODELS.find(d=>d.role==='ice'):biome==='desert'?DEFENSE_MODELS.find(d=>d.role==='sand'):biome==='boss_arena'?DEFENSE_MODELS.find(d=>d.role==='final'):general[Math.floor(x/(900/M_PER_PX))%general.length];
+ const def=biome==='snow'?(DEFENSE_MODELS.find(d=>d.role==='ice')||general[0]):biome==='desert'?(DEFENSE_MODELS.find(d=>d.role==='sand')||general[0]):biome==='boss_arena'?(DEFENSE_MODELS.find(d=>d.role==='final')||DEFENSE_MODELS.find(d=>d.role==='laser2')||general[0]):general[Math.floor(x/(900/M_PER_PX))%general.length];
  if(!def)return;
  const alt=def.attack==='chase'?85:0,z=zc((Math.random()<0.5?-1:1)*(150+Math.random()*130));
  const e={x,alt,z,phase:Math.random()*6.28,fireT:1.1+Math.random()*1.5,hit:false,turret:true,defenseFile:def.file,defenseRole:def.role,defenseAttack:def.attack,defenseColor:def.color,defenseBiome:biome,defenseHp:def.attack==='chase'?38:55,defenseMaxHp:def.attack==='chase'?38:55,attackSide:Math.random()<0.5?-1:1};
