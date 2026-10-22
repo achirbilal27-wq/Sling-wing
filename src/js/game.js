@@ -927,7 +927,7 @@ function prepareDefenseModel(root){
  let box=new THREE.Box3().setFromObject(g);if(box.isEmpty())return null;
  const size=box.getSize(new THREE.Vector3()),max=Math.max(size.x,size.y,size.z);
  if(!Number.isFinite(max)||max<0.001)return null;
- g.scale.setScalar(44/max);g.updateMatrixWorld(true);box.setFromObject(g);
+ g.scale.setScalar(12/max);g.updateMatrixWorld(true);box.setFromObject(g);
  const center=box.getCenter(new THREE.Vector3());g.position.sub(center);g.position.y-=box.min.y-center.y;
  g.traverse(n=>{if(n.isMesh){n.castShadow=true;n.receiveShadow=true;if(n.material)(Array.isArray(n.material)?n.material:[n.material]).forEach(m=>{m.side=THREE.DoubleSide;m.needsUpdate=true;});}});
  return g;
@@ -961,9 +961,9 @@ function spawnDefenseTurret(x){
  const general=DEFENSE_MODELS.filter(d=>d.biome==='general');
  const def=biome==='snow'?DEFENSE_MODELS.find(d=>d.role==='ice'):biome==='desert'?DEFENSE_MODELS.find(d=>d.role==='sand'):biome==='boss_arena'?DEFENSE_MODELS.find(d=>d.role==='final'):general[Math.floor(x/(900/M_PER_PX))%general.length];
  if(!def)return;
- const alt=biome==='boss_arena'?160:Math.max(40,70+Math.random()*120),z=zc((Math.random()<0.5?-1:1)*(150+Math.random()*130));
+ const alt=def.attack==='chase'?85:0,z=zc((Math.random()<0.5?-1:1)*(150+Math.random()*130));
  const e={x,alt,z,phase:Math.random()*6.28,fireT:1.1+Math.random()*1.5,hit:false,turret:true,defenseFile:def.file,defenseRole:def.role,defenseAttack:def.attack,defenseColor:def.color,defenseBiome:biome,defenseHp:def.attack==='chase'?38:55,defenseMaxHp:def.attack==='chase'?38:55,attackSide:Math.random()<0.5?-1:1};
- e.mesh=makeDefenseTurret(def);e.mesh.position.set(x*S,Y(alt),z*S);objGroup.add(e.mesh);objs.enemies.push(e);
+ e.mesh=makeDefenseTurret(def);e.mesh.position.set(x*S,def.attack==='chase'?Y(alt):0,z*S);objGroup.add(e.mesh);objs.enemies.push(e);
  addFloat(x,alt+55,biome==='snow'?'مدفع جليدي!':biome==='desert'?'مدفع عاصفة رملية!':def.role==='fire'?'مطارد ناري!':'برج دفاع معادٍ!','#'+def.color.toString(16).padStart(6,'0'),z);
 }
 
@@ -2229,11 +2229,11 @@ function render(dt){
   for(const f of objs.fuels)if(f.on){f.mesh.rotation.y=time*1.5;f.mesh.position.y=Y(f.alt)+Math.sin(time*3)*0.4;}
   for(const r of objs.rings)if(r.on)r.mesh.rotation.x=time*0.8;
   for(const e of objs.enemies){
-    e.mesh.position.set(e.x*S,Y(e.alt),e.z*S);
+    e.mesh.position.set(e.x*S,e.turret&&e.defenseAttack!=='chase'?0:Y(e.alt),e.z*S);
     if(e.mesh.userData.energyRings)e.mesh.userData.energyRings.forEach((ring,i)=>{ring.rotation.z=time*(i?1.8:-1.25);});
     e.mesh.visible=!e.hit;
-    e.mesh.rotation.z=e.boss?(e.bossStage===1?clamp(e.bank||0,-0.36,0.36):Math.sin(e.phase*0.9)*0.13):Math.sin(e.phase)*0.06;
-    e.mesh.rotation.x=e.boss?(e.bossStage===1&&e.attackState==='dive'?-0.2:Math.sin(e.phase*0.7)*0.08):0;
+    e.mesh.rotation.z=e.turret?0:e.boss?(e.bossStage===1?clamp(e.bank||0,-0.36,0.36):Math.sin(e.phase*0.9)*0.13):Math.sin(e.phase)*0.06;
+    e.mesh.rotation.x=e.turret?0:e.boss?(e.bossStage===1&&e.attackState==='dive'?-0.2:Math.sin(e.phase*0.7)*0.08):0;
   }
   for(const b of objs.enemyShots){b.mesh.position.set(b.x*S,Y(b.alt),b.z*S);}
   for(const b of objs.birds){
