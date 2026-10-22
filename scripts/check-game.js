@@ -183,4 +183,4 @@ check(js.includes('function loadDefenseModels()') && js.includes('loadDefenseMod
 check(js.includes('function spawnDefenseTurret(x)') && js.includes('nextDefense:900/M_PER_PX'), 'Defense turrets must be scheduled during flight.');
 check(js.includes("assets/models/assault-defender/'+def.file") && js.includes('makeDefenseFallback(def)'), 'Defense models must load locally and preserve a fallback.');
 check(js.includes("e.defenseAttack==='chase'") && js.includes('turretShot:true') && js.includes('else if(e.turret)'), 'Defense turrets must have active movement, attacks, and damage handling.');
-check(js.includes('currentDefenseBiome(stage)') && js.includes("d.role==='ice'") && js.includes("d.role==='sand'"), 'Ice and sand defenses must be biome-gated.');
+check(js.includes('currentDefenseBiome(stage)') && js.includes("def.role==='ice'") && js.includes("def.role==='sand'"), 'Ice and sand defenses must be biome-gated.');
