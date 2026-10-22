@@ -141,3 +141,41 @@ if (failures.length) {
   process.exit(1);
 }
 console.log('Game integrity checks passed: JS syntax, DOM IDs, local assets, CSS structure, boss portraits, and local Three.js preparation.');
+
+
+const defenseCatalogPath = path.join(src, 'assets', 'models', 'asset-catalog.json');
+const defenseCatalog = JSON.parse(fs.readFileSync(defenseCatalogPath, 'utf8'));
+const defenseModels = defenseCatalog.categories['assault-defender'].models;
+const expectedDefenseModels = {
+  'big_ice_turret.glb': ['ice_anti_air_turret', 'snow', 'ice_projectiles'],
+  'fire-turet.glb': ['red_flame_chaser', 'general', 'flame_chase'],
+  'interceptor_base.glb': ['guided_laser_interceptor', 'general', 'tracking_laser'],
+  'iron_wild_turret_-_free.glb': ['precision_missile_turret', 'general', 'one_side_limited_homing_missiles'],
+  'lazer_turret.glb': ['alternate_laser_turret', 'general', 'distinct_color_laser'],
+  'sand_slugthrow_trt.glb': ['sandstorm_cannon', 'desert', 'sandstorm_projectile'],
+  'one_shot_boss_final__turet.glb': ['boss_final_defense_turret', 'boss_arena', 'pending_user_assignment'],
+  'railguntower_building004.glb': ['railgun_tower', 'general', 'railgun_shot'],
+  'raval_turet_animated.glb': ['animated_defense_turret', 'general', 'animated_turret_fire'],
+  'rocket_launcher_turret.glb': ['rocket_launcher_turret', 'general', 'rocket_projectile'],
+};
+for (const [filename, [role, biome, attack]] of Object.entries(expectedDefenseModels)) {
+  const model = defenseModels[filename];
+  check(!!model, 'Defense asset catalog is missing role mapping: ' + filename);
+  if (model) {
+    check(model.role === role, 'Incorrect defense model role: ' + filename);
+    check(model.biomes.includes(biome), 'Incorrect biome restriction for defense model: ' + filename);
+    check(model.attack === attack, 'Incorrect attack mapping for defense model: ' + filename);
+    const modelPath = path.join(src, 'assets', 'models', 'assault-defender', filename);
+    check(fs.existsSync(modelPath), 'Catalogued defense GLB is missing: ' + modelPath);
+    if (fs.existsSync(modelPath)) {
+      const bytes = fs.readFileSync(modelPath);
+      check(bytes.length >= 20 && bytes.toString('ascii', 0, 4) === 'glTF', 'Defense GLB has invalid/truncated header: ' + filename);
+      if (bytes.length >= 12) {
+        check(bytes.readUInt32LE(4) === 2, 'Defense GLB must use binary glTF v2: ' + filename);
+        check(bytes.readUInt32LE(8) === bytes.length, 'Defense GLB header length mismatch: ' + filename);
+      }
+    }
+  }
+}
+check(defenseCatalog.categories['assault-defender'].runtimeIntegration === 'role-defined-runtime-pending',
+  'Defense catalog must not claim runtime gameplay integration before it exists.');
