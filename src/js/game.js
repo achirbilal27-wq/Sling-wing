@@ -222,8 +222,8 @@ function groundTex(base,patch){
 const groundMaps=[
   groundTex('#5fbf4a','#6ccf55'),
   groundTex('#d7b36f','#e8cb8d'),
-  groundTex('#eaf3fb','#ffffff'),
   groundTex('#3faea9','#78d4c6'),
+  groundTex('#eaf3fb','#ffffff'),
   groundTex('#655956','#88756b')
 ];
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(6000,2560),new THREE.MeshLambertMaterial({map:groundMaps[0]}));
