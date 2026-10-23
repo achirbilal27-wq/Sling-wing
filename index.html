@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>جناح المقلاع ثلاثي الأبعاد</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;800&family=Lalezar&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+</head>
+<body>
+<div id="app">
+  <canvas id="c"></canvas>
+  <div id="fx"></div>
+  <div id="bossBlastOverlay" aria-hidden="true"></div>
+
+  <div class="layer on" id="hangar">
+    <div id="top">
+      <span class="pill"><i class="coin-i"></i><span id="hCoins">0</span></span>
+      <span class="pill"><i class="fuel-i"></i><span id="hFuel">0</span><button class="plus" id="buyFuel" aria-label="شراء وقود">+</button></span>
+      <button id="missionsToggle" class="missions-toggle" type="button">🎯 مهام اليوم</button>
+    </div>
+    <div id="missionsOverlay" class="missions-overlay" aria-hidden="true">
+      <section class="missions-panel" role="dialog" aria-modal="true" aria-labelledby="missionsTitle">
+        <header class="missions-head">
+          <div><h2 id="missionsTitle">مهام اليوم</h2><p>أنجز أهدافًا قصيرة واربح عملات إضافية</p></div>
+          <button id="missionsClose" class="missions-close" type="button" aria-label="إغلاق المهام">×</button>
+        </header>
+        <div id="missionsList"></div>
+        <p class="missions-foot">تتجدد المهام يوميًا، وتُحفظ مكافآتك على هذا الجهاز.</p>
+      </section>
+    </div>
+    <button id="storyBtn" type="button">📖 كتاب القصة</button>
+    <button id="muteBtn" type="button">الصوت: يعمل</button>
+    <div id="title">جناح المقلاع</div>
+    <div id="hint">اضغط مطولًا لشدّ المقلاع، واترك عند المنطقة الذهبية</div>
+    <div id="best"></div>
+    <div id="fleet" aria-label="اختيار الطائرة"></div>
+    <section id="aircraftStats" aria-label="مواصفات الطائرة المختارة"></section>
+    <div id="cards"></div>
+  </div>
+
+  <div class="layer" id="charge">
+    <div id="meterTxt">اترك عند الذهبي!</div>
+    <div id="meter"><div class="sweet"></div><div class="fill" id="mFill"></div></div>
+  </div>
+
+  <div class="layer" id="hud">
+    <div id="playerHealth" role="meter" aria-label="صحة الطائرة" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><span class="player-health-icon">✦</span><div class="player-health-copy"><b>سلامة الطائرة</b><div class="player-health-track"><i id="playerHealthFill"></i></div></div><strong id="playerHealthText">100%</strong></div>
+    <div id="dist">0<small>م</small></div>
+    <div id="alt"></div>
+    <div id="fuelGauge" aria-label="وقود المحرك المتبقي"><svg viewBox="0 0 72 72" aria-hidden="true"><circle class="fuel-track" cx="36" cy="36" r="29"></circle><circle id="fuelArc" class="fuel-arc" cx="36" cy="36" r="29"></circle></svg><div class="fuel-readout"><strong id="fuelPercent">100%</strong><small>وقود المحرك</small></div></div>
+    <div id="routeInfo"><div class="route-head"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 21l7-4 7 4-7-18Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 3v14" stroke="currentColor" stroke-width="1.8" stroke-dasharray="2 2"/></svg><span>المسافة إلى الوجهة</span></div><div class="route-distance"><strong id="routeRemaining">500</strong><small>م</small></div><div class="route-track"><span id="routeProgressFill"></span></div><div class="route-foot"><span>نقطة الوصول</span><span id="routeProgressText">0%</span></div></div>
+    <div id="biomeBadge">السهول الخضراء</div>
+    <div id="comboHud"><span id="comboLabel">سلسلة البوابات</span><strong id="comboValue">×0</strong><i aria-hidden="true">✦</i></div>
+    <div id="bossWarning" role="status" aria-live="assertive"><span class="warning-mark">!</span><strong id="bossWarningText">تحذير: انقضاض وشيك</strong><span class="warning-lines" aria-hidden="true">///</span></div>
+    <div id="bossHud" aria-live="polite">
+      <div class="boss-hud-kicker">مواجهة جوية مستقلة</div>
+      <div class="boss-identity"><img id="bossPortrait" src="assets/images/bosses/cloud-warden.png" alt="" hidden><strong id="bossTitle">زعيم السماء</strong></div>
+      <div class="boss-track"><span id="bossHp"></span></div>
+      <div class="boss-hud-meta"><small id="bossHealthText">120 / 120</small><small id="bossPhaseText">المرحلة 1 من 3</small></div>
+      <div id="bossWeaponText">اشتباك جوي</div>
+    </div>
+    <div id="targetLock" class="target-lock" hidden aria-live="polite" aria-label="مؤشر تتبع الهدف">
+      <span class="lock-corner tl"></span><span class="lock-corner tr"></span>
+      <span class="lock-corner bl"></span><span class="lock-corner br"></span>
+      <span class="lock-dot"></span><small id="targetLockLabel">هدف معادٍ</small>
+    </div>
+    <span class="pill" id="runCoins"><i class="coin-i"></i><span id="rCoins">0</span></span>
+    <button id="boost" aria-label="تعزيز"><span>تعزيز</span><em id="bFuel">1</em></button>
+    <button id="missile" aria-label="إطلاق صاروخ موجّه" type="button"><span>صاروخ</span><em id="missileCount">3</em></button>
+    <button id="aimMode" type="button" aria-label="نمط إطلاق النار: تتبع ذكي، اضغط للتغيير">تتبع ذكي</button>
+    <div id="heat" role="meter" aria-label="سخونة المدفع" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="heatFill"></div><span>سخونة المدفع</span></div>
+    <button id="fire" aria-label="إطلاق النار"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M7 26h17l7-7v-5l9 10-9 10v-5l-7-3H7Z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M7 18h8M7 34h8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><span>إطلاق</span></button>
+     <button id="specialAbility" aria-label="القدرة الخاصة"><strong id="abilityIcon">🛡</strong><span id="abilityName">درع</span><small id="abilityCooldown">جاهزة</small></button>
+    <button id="pauseBtn" aria-label="إيقاف مؤقت" type="button">Ⅱ</button>
+    <div id="tapHint">اضغط مطولًا للصعود واترك للانقضاض. اسحب إصبعك يمينًا أو يسارًا للتوجيه</div>
+  </div>
+
+  <div id="cinematicIntro" class="cinematic-intro" hidden aria-label="المشهد السينمائي الافتتاحي">
+    <video id="cinematicVideo" class="cinematic-video" playsinline preload="auto" controls>
+      <source src="assets/cinematics/intro.mp4" type="video/mp4">
+    </video>
+    <div class="cinematic-vignette" aria-hidden="true"></div>
+    <div class="cinematic-caption">
+      <span class="cinematic-kicker">جناح المقلاع · الحكاية الأصلية</span>
+      <strong>قبل أن تتحرر السماء… يجب أن ينكشف سرّها.</strong>
+    </div>
+    <button id="cinematicSkip" class="cinematic-skip" type="button">تجاوز المشهد</button>
+  </div>
+
+  <div class="ov" id="story" aria-modal="true" role="dialog">
+    <section class="sheet dark">
+      <button class="overlay-back" id="storyBack" type="button" aria-label="العودة إلى القائمة">← رجوع</button>
+      <div class="kick" id="stKick"></div>
+      <h2 id="stTitle"></h2>
+      <div id="stText"></div>
+      <button class="go alt" id="stBtn" type="button">تابع</button>
+    </section>
+  </div>
+  <div class="ov" id="pause" aria-modal="true" role="dialog">
+    <section class="sheet">
+      <h2>متوقف مؤقتًا</h2>
+      <button class="go" id="pResume" type="button">تابع الرحلة</button>
+      <button class="go alt" id="pSound" type="button">الصوت: يعمل</button>
+      <button class="go red" id="pEnd" type="button">إنهاء الرحلة</button>
+    </section>
+  </div>
+  <div class="ov" id="codex" aria-modal="true" role="dialog">
+    <section class="sheet dark">
+      <button class="overlay-back" id="cxBack" type="button" aria-label="العودة إلى القائمة">← رجوع</button>
+      <h2>كتاب القصة</h2>
+      <div id="cxList"></div>
+      <button class="go alt" id="cxClose" type="button">إغلاق</button>
+    </section>
+  </div>
+  <div class="ov" id="station" aria-modal="true" role="dialog">
+    <section class="sheet station-sheet">
+      <div class="kick">مركز تجهيز تكتيكي</div>
+      <h2 id="stationTitle">محطة الريح</h2>
+      <p id="stationDesc">اختر ترقية واحدة، ثم واصل القتال.</p>
+      <div class="station-tip"><span aria-hidden="true">✦</span><span>ترقية واحدة لكل محطة</span><span class="station-live">جاهز للقتال</span></div>
+      <div id="stationPerks"></div>
+    </section>
+  </div>
+
+  <div class="layer" id="result">
+    <div class="panel">
+      <h2>هبطت الطائرة</h2>
+      <div class="big"><span id="rDist">0</span><small>م</small></div>
+      <div class="rec" id="rRec" style="display:none">رقم قياسي جديد</div>
+      <div class="rows">
+        <div><span>مكافآت أثناء الرحلة</span><span id="rPick">0</span></div>
+        <div><span>مكافأة المسافة</span><span id="rBonus">0</span></div>
+        <div><span>مكافآت مهام اليوم</span><span id="rDaily">0</span></div>
+        <div><span>المجموع</span><span id="rTotal">0</span></div>
+      </div>
+      <div class="result-stats">
+        <div><small>بوابات ناجحة</small><strong id="rGates">0</strong></div>
+        <div><small>أفضل سلسلة</small><strong id="rCombo">×0</strong></div>
+        <div><small>زعماء هُزموا</small><strong id="rBosses">0</strong></div>
+        <div><small>أعلى ارتفاع</small><strong><span id="rAltitude">0</span> م</strong></div>
+      </div>
+      <button class="go" id="again">حلّق مرة أخرى</button>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+</div>
+
+<script src="js/game.js"></script>
+</body>
+</html>
