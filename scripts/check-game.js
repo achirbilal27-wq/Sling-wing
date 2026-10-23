@@ -57,8 +57,16 @@ const decodedJs = js.replace(/\\u([0-9a-f]{4})/gi, (_, hex) => String.fromCharCo
 const assetRefs = [...decodedJs.matchAll(/assets\/[^'"\s)]+?\.(?:png|jpe?g|webp|ogg|mp3|wav|mp4|json|glb|gltf)(?=['"\s)]|$)/gi)]
   .map((match) => match[0]);
 for (const url of [...new Set(assetRefs)]) {
-  check(exists(url), 'Missing local JavaScript asset: src/' + url);
+  // Browser URLs may encode filesystem characters such as '#' as '%23'.
+  // Decode only for the local filesystem check; keep the runtime URL encoded.
+  let localPath = url;
+  try { localPath = decodeURIComponent(url); } catch {}
+  check(exists(localPath), 'Missing local JavaScript asset: src/' + localPath);
 }
+check(
+  js.includes('eagle_tower%231boss.glb') && exists('assets/models/environment/eagle_tower#1boss.glb'),
+  'Encoded eagle tower URL must map to the local filename containing "#".'
+);
 const glbModels = [
   { path: 'assets/models/aircraft/stylized_ww1_plane.glb', label: 'Falcon player aircraft' },
   { path: 'assets/models/glb/plane_pc.glb', label: 'Enemy aircraft' },
