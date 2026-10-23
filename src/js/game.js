@@ -1046,7 +1046,7 @@ function resetRun(){
   const cannonLevel=Number(save.lv.cannon)||0;
   run={coins:0,picked:0,maxAlt:0,gateCombo:0,bestCombo:0,gates:0,bosses:0,bossBattle:false,missiles:3,stationCount:0,stormHits:0,firePower:1,stationShield:0,aimMode:'smart',
     tri:false,rate:1,cool:1+0.12*cannonLevel,damage:1+0.25*cannonLevel,perks:[],reserveTank:false,reserveTankUsed:false,heat:0,overheat:false,fireCd:0,fireSfxTimer:0};
-  objs={coins:[],rings:[],birds:[],enemies:[],enemyShots:[],fuels:[],drafts:[],storms:[],stations:[],next:600,nextEnemy:550/M_PER_PX,nextDefense:900/M_PER_PX,nextBoss:bossDistanceMeters(0)/M_PER_PX,nextStorm:600/M_PER_PX,nextStation:(bossDistanceMeters(0)-1100)/M_PER_PX,nextStationStage:0,approachBossX:null};
+  objs={coins:[],rings:[],birds:[],enemies:[],enemyShots:[],fuels:[],drafts:[],storms:[],stations:[],landmarks:[],next:600,nextEnemy:550/M_PER_PX,nextDefense:900/M_PER_PX,nextBoss:bossDistanceMeters(0)/M_PER_PX,nextStorm:600/M_PER_PX,nextStation:(bossDistanceMeters(0)-1100)/M_PER_PX,nextStationStage:0,nextLandmark:450/M_PER_PX,approachBossX:null};
   shieldT=0;shieldCooldown=0;shieldMesh.visible=false;
   clearObjs();
   parts.forEach(p=>{p.mesh.visible=false;});parts.length=0;
@@ -1069,6 +1069,73 @@ function addFloat(x,alt,txt,col,z){
 }
 
 /* ---------- world spawn ---------- */
+const WORLD_MODEL_DEFS={
+  desertOutpost:{file:'assets/models/environment/desert_outpost.glb',size:62},
+  iceIsland:{file:'assets/models/environment/ice_island.glb',size:150},
+  finalCastle:{file:'assets/models/environment/The_castle_of_boss.glb',size:130},
+  lighthouse:{file:'assets/models/environment/castle_bar_resaux.glb',size:30},
+  eagleTower:{file:'assets/models/environment/eagle_tower#1boss.glb',size:38},
+  fighterDefense:{file:'assets/models/environment/environment_of_fighter.glb',size:34},
+  serpentWater:{file:'assets/models/environment/ocean_water_animated.glb',size:190},
+  searchlight:{file:'assets/models/environment/searchlight_place.glb',size:28}
+};
+const worldLandmarkTemplates=Object.create(null),worldLandmarkClips=Object.create(null),worldLandmarkLoadStarted=Object.create(null);
+function prepareWorldModel(root,targetSize){
+  const model=new THREE.Group();model.add(root);model.updateMatrixWorld(true);
+  let box=new THREE.Box3().setFromObject(model);if(box.isEmpty())return null;
+  let size=box.getSize(new THREE.Vector3()),largest=Math.max(size.x,size.y,size.z);
+  if(!Number.isFinite(largest)||largest<0.001)return null;
+  model.scale.setScalar(targetSize/largest);model.updateMatrixWorld(true);
+  box.setFromObject(model);const center=box.getCenter(new THREE.Vector3());
+  model.position.x-=center.x;model.position.z-=center.z;model.position.y-=box.min.y;
+  model.traverse(n=>{if(n.isMesh){n.castShadow=true;n.receiveShadow=true;if(n.material){const mats=Array.isArray(n.material)?n.material:[n.material];mats.forEach(m=>{m.side=THREE.DoubleSide;m.needsUpdate=true;});}}});
+  return model;
+}
+function makeWorldFallback(kind){
+  const g=new THREE.Group();
+  const stone=matS(0x777b83,0.8,{roughness:0.92}),sand=matS(0xb69a65,0.75,{roughness:1}),ice=matS(0x9edff2,0.45,{roughness:0.38,metalness:0.08}),dark=matS(0x303746,0.6,{roughness:0.72}),glow=new THREE.MeshBasicMaterial({color:0x91eaff});
+  const addBox=(w,h,d,material,x,y,z)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);m.position.set(x,y,z);g.add(m);return m;};
+  if(kind==='desertOutpost'){addBox(28,12,22,sand,0,6,0);addBox(9,18,9,stone,-12,9,-4);addBox(9,18,9,stone,12,9,4);}
+  else if(kind==='iceIsland'){const m=new THREE.Mesh(new THREE.DodecahedronGeometry(36,1),ice);m.scale.set(1.7,.45,1.2);m.position.y=7;g.add(m);for(let i=0;i<5;i++){const r=new THREE.Mesh(new THREE.ConeGeometry(8+i%3*3,24+i%3*8,5),ice);r.position.set((i-2)*19,15,(i%2?12:-12));g.add(r);}}
+  else if(kind==='finalCastle'){addBox(64,18,48,dark,0,9,0);for(let i=-2;i<=2;i++){const t=new THREE.Mesh(new THREE.CylinderGeometry(7,9,44,7),stone);t.position.set(i*19,22,i%2*13);g.add(t);}const roof=new THREE.Mesh(new THREE.ConeGeometry(12,22,6),sand);roof.position.set(0,42,0);g.add(roof);}
+  else if(kind==='lighthouse'){const tower=new THREE.Mesh(new THREE.CylinderGeometry(3.5,6,30,10),stone);tower.position.y=15;g.add(tower);const lamp=new THREE.Mesh(new THREE.CylinderGeometry(5,5,4,10),glow);lamp.position.y=31;g.add(lamp);}
+  else if(kind==='eagleTower'){const tower=new THREE.Mesh(new THREE.CylinderGeometry(5,8,34,8),dark);tower.position.y=17;g.add(tower);const top=new THREE.Mesh(new THREE.ConeGeometry(10,13,6),sand);top.position.y=40;g.add(top);}
+  else if(kind==='fighterDefense'){addBox(25,14,26,dark,0,7,0);addBox(8,20,8,stone,-8,10,0);addBox(8,20,8,stone,8,10,0);}
+  else if(kind==='serpentWater'){const water=new THREE.Mesh(new THREE.PlaneGeometry(190,150,12,12),new THREE.MeshStandardMaterial({color:0x167d9e,roughness:.24,metalness:.15,transparent:true,opacity:.78,side:THREE.DoubleSide}));water.rotation.x=-Math.PI/2;water.position.y=1;g.add(water);}
+  else if(kind==='searchlight'){const base=new THREE.Mesh(new THREE.CylinderGeometry(4,7,8,8),dark);base.position.y=4;g.add(base);const beam=new THREE.Mesh(new THREE.ConeGeometry(15,52,12,1,true),new THREE.MeshBasicMaterial({color:0x9cecff,transparent:true,opacity:.18,depthWrite:false,side:THREE.DoubleSide}));beam.rotation.z=Math.PI/2;beam.position.set(20,24,0);g.add(beam);}
+  return g;
+}
+function loadWorldLandmarkModels(){
+  if(typeof THREE.GLTFLoader!=='function')return;
+  Object.entries(WORLD_MODEL_DEFS).forEach(([kind,def])=>{
+    if(worldLandmarkLoadStarted[kind])return;worldLandmarkLoadStarted[kind]=true;
+    new THREE.GLTFLoader().load(def.file,gltf=>{
+      const template=prepareWorldModel(gltf.scene,def.size);
+      if(!template){console.warn('Invalid world model; procedural landmark retained:',def.file);return;}
+      worldLandmarkTemplates[kind]=template;worldLandmarkClips[kind]=gltf.animations||[];
+      if(typeof objs!=='undefined'&&objs&&Array.isArray(objs.landmarks))objs.landmarks.forEach(item=>{
+        if(item.kind!==kind||!item.mesh||!item.mesh.parent)return;
+        const old=item.mesh,replacement=makeWorldLandmarkMesh(kind);
+        replacement.position.copy(old.position);replacement.rotation.copy(old.rotation);
+        old.parent.add(replacement);old.parent.remove(old);item.mesh=replacement;
+        if(worldLandmarkClips[kind].length&&THREE.AnimationMixer){item.mixer=new THREE.AnimationMixer(replacement);worldLandmarkClips[kind].forEach(clip=>item.mixer.clipAction(clip).play());}
+      });
+      console.info('World landmark model loaded:',kind);
+    },undefined,error=>console.warn('World model unavailable; procedural fallback retained:',def.file,error));
+  });
+}
+function makeWorldLandmarkMesh(kind){
+  const template=worldLandmarkTemplates[kind];
+  return template?template.clone(true):makeWorldFallback(kind);
+}
+function spawnWorldLandmark(kind,x,z,stage){
+  if(!objs||!Array.isArray(objs.landmarks))return;
+  const item={kind,x,z,stage,age:0,mixer:null,mesh:makeWorldLandmarkMesh(kind)};
+  item.mesh.position.set(x*S,0,z*S);objGroup.add(item.mesh);
+  if(worldLandmarkClips[kind]&&worldLandmarkClips[kind].length&&THREE.AnimationMixer){item.mixer=new THREE.AnimationMixer(item.mesh);worldLandmarkClips[kind].forEach(clip=>item.mixer.clipAction(clip).play());}
+  objs.landmarks.push(item);
+}
+loadWorldLandmarkModels();
 function addCoin(x,alt,z){
   const m=new THREE.Mesh(coinGeo,coinMat);m.position.set(x*S,Y(alt),z*S);objGroup.add(m);
   objs.coins.push({x,alt,z,on:true,mesh:m});
@@ -1125,6 +1192,16 @@ function spawn(until){
     objs.nextStationStage=(objs.nextStationStage||0)+1;
     objs.nextStation=(bossDistanceMeters(objs.nextStationStage)-1100)/M_PER_PX;
   }
+  while(objs.nextLandmark<until){
+    const x=objs.nextLandmark,m=x*M_PER_PX,stage=biomeStageAtMeters(m),within=m-biomeStartMeters(stage);
+    if(within<650){
+      if(stage===1)spawnWorldLandmark('desertOutpost',x,zc(235),stage);
+      if(stage===3)spawnWorldLandmark('iceIsland',x,zc(-220),stage);
+      if(stage===4)spawnWorldLandmark('searchlight',x,zc(215),stage);
+      if(stage%2===0&&stage!==4)spawnWorldLandmark('fighterDefense',x,zc((H(stage,21)<.5?-1:1)*230),stage);
+    }
+    objs.nextLandmark+=650/M_PER_PX;
+  }
   while(objs.nextDefense<until){
     spawnDefenseTurret(objs.nextDefense);
     objs.nextDefense+=850/M_PER_PX;
@@ -1136,6 +1213,10 @@ function spawn(until){
     const bossHp=[250,360,490,650,900][biomeIndex]||250;
     objs.enemies.forEach(other=>{if(!other.boss&&!other.hit){other.hit=true;objGroup.remove(other.mesh);}});
     objs.enemies=objs.enemies.filter(other=>other.boss&&!other.hit);
+    if(Array.isArray(objs.landmarks)){objs.landmarks.forEach(item=>{if(item.mesh)objGroup.remove(item.mesh);});objs.landmarks.length=0;}
+    spawnWorldLandmark('eagleTower',x-900,-220,stage);spawnWorldLandmark('eagleTower',x-900,220,stage);
+    if(biomeIndex===2){spawnWorldLandmark('serpentWater',x-1100,0,stage);spawnWorldLandmark('lighthouse',x-700,0,stage);}
+    if(biomeIndex===4)spawnWorldLandmark('finalCastle',x-100,0,stage);
     objs.enemyShots.forEach(b=>scene.remove(b.mesh));objs.enemyShots.length=0;
     ['coins','rings','birds','fuels','drafts','storms','stations'].forEach(key=>{objs[key].forEach(o=>{if(o.mesh)objGroup.remove(o.mesh);});objs[key]=[];});
     const e={x,alt:250+Math.random()*260,z:zc((Math.random()-.5)*260),phase:Math.random()*6.28,fireT:2.3,hit:false,boss:true,hp:bossHp,maxHp:bossHp,contactHit:false,attackState:'ranged',attackTimer:3.2+Math.random()*1.5,diveWarning:0,diveTimer:0,weaponCycle:0,diveTargetAlt:300,diveTargetZ:0,combatPhase:1,biomeIndex,bossName:BOSS_PROFILES[biomeIndex].name,bossStage:stage+1,hitRadiusX:biomeIndex===0?92:82,hitRadiusY:biomeIndex===0?64:72,hitRadiusZ:biomeIndex===0?112:80,bank:0};
@@ -2045,6 +2126,7 @@ function update(dt){
     if(p.life<=0){p.mesh.visible=false;parts.splice(i,1);continue;}
     p.x+=p.vx*dt;p.alt+=p.vy*dt;p.z+=p.vz*dt;
   }
+  if(objs&&Array.isArray(objs.landmarks))objs.landmarks.forEach(item=>{item.age+=dt;if(item.mixer)item.mixer.update(dt);if(item.kind==='serpentWater'&&item.mesh){item.mesh.position.y=1+Math.sin(time*1.3)*0.22;item.mesh.rotation.y=Math.sin(time*.35)*.025;}});
   for(let i=bossRewardPlanes.length-1;i>=0;i--){
     const r=bossRewardPlanes[i];r.age+=dt;r.life-=dt;
     r.mesh.position.x=(r.originX+Math.sin(r.age*2.1)*90)*S;
@@ -2067,6 +2149,7 @@ function update(dt){
     const keep=o=>{if(o.x<lim&&o.mesh)objGroup.remove(o.mesh);return o.x>=lim;};
     objs.coins=objs.coins.filter(keep);objs.rings=objs.rings.filter(keep);
     objs.birds=objs.birds.filter(keep);objs.enemies=objs.enemies.filter(o=>{if(o.boss&&!o.hit)return true;if(o.x<lim){objGroup.remove(o.mesh);return false;}return true;});objs.fuels=objs.fuels.filter(keep);objs.drafts=objs.drafts.filter(keep);
+    if(Array.isArray(objs.landmarks))objs.landmarks=objs.landmarks.filter(item=>{if(item.x<lim){if(item.mesh)objGroup.remove(item.mesh);if(item.mixer)item.mixer.stopAllAction();return false;}return true;});
     objs.storms=objs.storms.filter(o=>{if(o.x<lim){objGroup.remove(o.mesh);return false;}return true;});objs.stations=objs.stations.filter(o=>{if(o.x<lim){objGroup.remove(o.mesh);return false;}return true;});
   }
   shake=Math.max(0,shake-dt);
