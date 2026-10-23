@@ -1,0 +1,1378 @@
+:root{
+  --ink:#3b2314; --wood:#b9773e; --wood-d:#8a4b1e; --paper:#fff1d6;
+  --gold:#ffc83d; --green:#5cc83a; --green-d:#3c9a22; --red:#e5483a;
+  --font-ui:'Cairo',system-ui,-apple-system,'Segoe UI',Tahoma,sans-serif;
+  --font-big:'Lalezar','Cairo',system-ui,sans-serif;
+
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{margin:0;height:100%;overflow:hidden;background:#5cc8ff;font-family:var(--font-ui);color:var(--ink);touch-action:none}
+
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+#app{position:fixed;inset:0;top:env(safe-area-inset-top,0px);bottom:env(safe-area-inset-bottom,0px);background:linear-gradient(#4fc3ff,#d9f4ff 58%)}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.layer{position:absolute;inset:0;pointer-events:none;display:none}
+.layer.on{display:block}
+#fx{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.ft{position:absolute;top:0;left:0;font-family:var(--font-big);font-size:30px;white-space:nowrap;text-shadow:0 3px 0 rgba(0,0,0,.5),0 0 8px rgba(0,0,0,.3);will-change:transform}
+.pill{display:inline-flex;align-items:center;gap:8px;background:var(--paper);border:3px solid var(--wood-d);border-radius:999px;padding:4px 14px 4px 6px;font-family:var(--font-big);font-size:24px;line-height:1.2;box-shadow:0 3px 0 var(--wood-d);pointer-events:auto}
+.pill i{width:30px;height:30px;border-radius:50%;display:inline-block;flex:none}
+.coin-i{background:radial-gradient(circle at 35% 30%,#fff3a8,#ffc83d 55%,#d18a00);border:2px solid #b8740a}
+.fuel-i{background:var(--red);border-radius:8px!important;border:2px solid #9c2a20}
+.plus{border:0;background:var(--green);color:#fff;font:800 20px/1 var(--font-ui);width:30px;height:30px;border-radius:50%;box-shadow:0 2px 0 var(--green-d);cursor:pointer}
+#top{position:absolute;top:10px;inset-inline:12px;display:flex;gap:8px;align-items:center;justify-content:space-between}
+#title{position:absolute;top:84px;width:100%;text-align:center;font-family:var(--font-big);font-size:46px;color:#fff;text-shadow:0 4px 0 var(--wood-d),0 0 18px rgba(0,0,0,.25)}
+#hint{position:absolute;top:150px;width:100%;text-align:center;font-weight:800;font-size:19px;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.45);padding:0 24px}
+#best{position:absolute;top:196px;width:100%;text-align:center;font-weight:800;font-size:16px;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.4)}
+#cards{position:absolute;bottom:12px;inset-inline:10px;min-width:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-items:stretch}
+.card{min-width:0;overflow:hidden;pointer-events:auto;background:linear-gradient(#c98748,#a9652d);border:3px solid var(--wood-d);border-radius:18px;padding:8px 8px 10px;text-align:center;box-shadow:0 4px 0 var(--wood-d)}
+.card .ic{height:60px;background:radial-gradient(ellipse at 50% 22%,#fffdf1 0%,#ffe8b8 58%,#f3c77d 100%);border-radius:14px;border:2px solid #75401f;display:flex;align-items:center;justify-content:center;margin-bottom:7px;position:relative;overflow:visible;box-shadow:inset 0 2px 0 rgba(255,255,255,.8),inset 0 -3px 0 rgba(138,75,30,.12),0 2px 0 rgba(76,37,12,.22)}
+.card .ic svg{width:50px;height:50px;overflow:visible;filter:drop-shadow(0 2px 1px rgba(73,38,12,.2));transition:transform .18s ease,filter .18s ease}
+.card:active .ic svg{transform:translateY(-2px) scale(1.06);filter:drop-shadow(0 4px 2px rgba(73,38,12,.22))}
+.coin-i{background:radial-gradient(circle at 32% 25%,#fffbd1 0%,#ffe875 22%,#ffc83d 57%,#df9200 82%,#a96500 100%);border:2px solid #a96500;box-shadow:inset 0 1px 0 rgba(255,255,255,.85),0 1px 0 rgba(116,65,0,.3)}
+.fuel-i{background:linear-gradient(135deg,#ff8a67 0%,#f34e3e 48%,#bd252b 100%);border-radius:8px!important;border:2px solid #92231e;box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 1px 0 rgba(116,32,24,.3)}
+.card .lv{position:absolute;top:-10px;inset-inline-start:-8px;background:var(--green);color:#fff;font:800 14px/1 var(--font-ui);min-width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
+.card .nm{font-weight:800;font-size:14px;color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.5)}
+.pips{display:flex;gap:3px;justify-content:center;margin:5px 0 7px}
+.pips b{width:12px;height:10px;border-radius:3px;background:rgba(0,0,0,.35)}
+.pips b.f{background:var(--gold)}
+.btn{min-width:0;max-width:100%;font-family:var(--font-big);font-size:clamp(14px,4.2vw,20px);color:#fff;border:0;border-radius:12px;padding:5px 4px 3px;width:100%;cursor:pointer;text-shadow:0 2px 0 rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;overflow:hidden}
+.btn.up{background:var(--green);box-shadow:0 3px 0 var(--green-d)}
+.btn.up.no{background:#9a8a78;box-shadow:0 3px 0 #6e6155}
+.btn.up .coin-i{width:18px;height:18px;border-radius:50%}
+#meter{position:absolute;bottom:26%;left:50%;transform:translateX(-50%);width:min(78vw,340px);height:30px;background:rgba(0,0,0,.4);border:3px solid #fff;border-radius:999px;overflow:hidden}
+#meter .sweet{position:absolute;top:0;bottom:0;right:0;width:12%;background:repeating-linear-gradient(45deg,#ffc83d,#ffc83d 6px,#ffe27a 6px,#ffe27a 12px);opacity:.9}
+#meter .fill{position:absolute;top:0;bottom:0;left:0;width:0;background:var(--green)}
+#meterTxt{position:absolute;bottom:calc(26% + 42px);width:100%;text-align:center;color:#fff;font-weight:800;font-size:18px;text-shadow:0 2px 0 rgba(0,0,0,.5)}
+#dist{position:absolute;top:10px;width:100%;text-align:center;font-family:var(--font-big);font-size:64px;line-height:1;color:#fff;text-shadow:0 4px 0 rgba(0,0,0,.35)}
+#dist small{font-size:26px;margin-inline-start:6px}
+#runCoins{position:absolute;top:12px;inset-inline-start:12px}
+#alt{position:absolute;top:84px;width:100%;text-align:center;font-weight:800;color:#fff;font-size:16px;text-shadow:0 2px 0 rgba(0,0,0,.4)}
+#boost{position:absolute;bottom:34px;inset-inline-start:18px;width:96px;height:96px;border-radius:50%;border:4px solid #fff;background:radial-gradient(circle at 35% 30%,#ff9a5a,#e5483a 65%,#a82a1f);color:#fff;font-family:var(--font-big);pointer-events:auto;cursor:pointer;box-shadow:0 5px 0 #7a1d15;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+#boost span{font-size:22px}
+#boost em{font-style:normal;font-size:30px}
+#boost.off{filter:grayscale(.9) brightness(.8)}
+#tapHint{position:absolute;bottom:40px;inset-inline-end:18px;color:#fff;font-weight:800;font-size:15px;text-shadow:0 2px 0 rgba(0,0,0,.5);text-align:end;max-width:48vw;transition:opacity .4s}
+#result{background:rgba(20,10,0,.55);pointer-events:auto;align-items:center;justify-content:center}
+#result.on{display:flex}
+.panel{width:min(88vw,380px);background:var(--paper);border:5px solid var(--wood-d);border-radius:26px;padding:20px 18px 18px;text-align:center;box-shadow:0 8px 0 var(--wood-d)}
+.panel h2{margin:0;font-family:var(--font-big);font-weight:400;font-size:34px}
+.panel .big{font-family:var(--font-big);font-size:68px;line-height:1.05;color:var(--wood-d)}
+.panel .big small{font-size:26px}
+.rec{display:inline-block;background:var(--red);color:#fff;font-weight:800;border-radius:999px;padding:2px 14px;margin:4px 0}
+.rows{margin:10px 0 14px;font-weight:800;font-size:17px}
+.rows div{display:flex;justify-content:space-between;padding:5px 4px;border-bottom:2px dashed rgba(138,75,30,.35)}
+.rows div:last-child{border:0;font-size:21px;color:var(--green-d)}
+.go{font-family:var(--font-big);font-size:28px;background:var(--green);color:#fff;border:0;border-radius:16px;padding:8px 10px 4px;width:100%;box-shadow:0 5px 0 var(--green-d);cursor:pointer;text-shadow:0 2px 0 rgba(0,0,0,.3)}
+#toast{position:absolute;top:36%;width:100%;text-align:center;font-family:var(--font-big);font-size:30px;color:#fff;text-shadow:0 3px 0 rgba(0,0,0,.45);opacity:0;transition:opacity .25s;pointer-events:none}
+#toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){#toast,#tapHint{transition:none}}
+button:focus-visible{outline:4px solid #fff;outline-offset:2px}
+
+/* Keep the upgrade cards fixed to their grid tracks on narrow mobile screens. */
+@media(max-width:380px){
+  #cards{inset-inline:6px;gap:5px}
+  .card{padding:7px 4px 9px;border-radius:14px}
+  .card .nm{font-size:12px;line-height:1.25;min-height:30px;display:flex;align-items:center;justify-content:center}
+  .pips{gap:2px}
+  .pips b{width:8px;height:8px}
+  .btn.up .coin-i{width:14px;height:14px;flex:0 0 14px}
+}
+
+
+/* Premium arcade polish: tactile controls, soft highlights and upgrade feedback. */
+.pill{background:linear-gradient(145deg,#fff8e6,#ffe6b6);box-shadow:0 4px 0 var(--wood-d),inset 0 2px 0 rgba(255,255,255,.9);text-shadow:0 1px 0 rgba(255,255,255,.8)}
+#title{letter-spacing:.2px;-webkit-text-stroke:.35px rgba(138,75,30,.25);text-shadow:0 3px 0 #8a4b1e,0 6px 0 rgba(91,43,14,.22),0 0 22px rgba(255,255,255,.32)}
+#hint{filter:drop-shadow(0 2px 4px rgba(29,82,118,.18))}
+#best:not(:empty){width:max-content;max-width:90%;left:50%;transform:translateX(-50%);padding:3px 14px;background:rgba(41,104,145,.32);border:1px solid rgba(255,255,255,.45);border-radius:999px;backdrop-filter:blur(5px)}
+.card{position:relative;background:linear-gradient(155deg,#d99852 0%,#bf793b 48%,#a85e2b 100%);border-color:#75401f;box-shadow:0 5px 0 #75401f,0 9px 16px rgba(66,35,12,.18),inset 0 1px 0 rgba(255,231,185,.8);transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
+.card::before{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:linear-gradient(125deg,rgba(255,255,255,.18),transparent 36%,transparent 68%,rgba(88,38,9,.08));z-index:0}
+.card>*{position:relative;z-index:1}
+.card .ic{box-shadow:inset 0 2px 0 rgba(255,255,255,.92),inset 0 -3px 0 rgba(138,75,30,.12),0 3px 0 rgba(76,37,12,.18)}
+.card .lv{background:linear-gradient(145deg,#7ee65b,#37a923);box-shadow:0 2px 0 #287b19,0 0 0 2px rgba(255,255,255,.2);text-shadow:0 1px 1px rgba(0,0,0,.25)}
+.pips b{box-shadow:inset 0 1px 2px rgba(0,0,0,.2);transition:background .18s ease,transform .18s ease,box-shadow .18s ease}
+.pips b.f{background:linear-gradient(180deg,#fff08a,#ffc629);box-shadow:0 0 5px rgba(255,216,65,.45),inset 0 1px 0 rgba(255,255,255,.65)}
+.btn{position:relative;min-height:34px;transition:transform .12s ease,filter .12s ease,box-shadow .12s ease}
+.btn.up{background:linear-gradient(180deg,#70e34d 0%,#4cbd2d 58%,#3da122 100%);box-shadow:0 4px 0 var(--green-d),inset 0 1px 0 rgba(255,255,255,.42)}
+.btn.up.no{background:linear-gradient(180deg,#b5a99a,#8d7e6d);box-shadow:0 4px 0 #6e6155,inset 0 1px 0 rgba(255,255,255,.25)}
+.btn.up:active,.plus:active,.go:active{transform:translateY(3px);filter:brightness(.96);box-shadow:0 1px 0 var(--green-d)}
+.btn.up .coin-i{flex:0 0 18px;box-shadow:inset 0 1px 0 rgba(255,255,255,.85),0 1px 0 rgba(116,65,0,.3)}
+.upgrade-arrow,.max-mark{width:17px;height:17px;flex:0 0 17px;filter:drop-shadow(0 1px 0 rgba(0,0,0,.2))}
+.card.just-upgraded{animation:levelCardPop .48s cubic-bezier(.2,.8,.25,1) both;border-color:#ffe27a;box-shadow:0 5px 0 #75401f,0 0 0 2px rgba(255,226,122,.55),0 0 22px rgba(255,209,60,.55)}
+.card.just-upgraded::before{background:linear-gradient(115deg,transparent 20%,rgba(255,255,255,.8) 43%,rgba(255,243,173,.2) 52%,transparent 70%);background-size:240% 100%;animation:upgradeShine .62s ease-out both}
+.card.just-upgraded .lv{animation:levelBadgePop .45s cubic-bezier(.2,.8,.25,1) both}
+/* Keep boost pinned to the lower-left corner in RTL too; never let it join HUD flow. */
+#boost{position:absolute;left:18px;right:auto;inset-inline-start:auto;bottom:34px;z-index:6;overflow:hidden;box-shadow:0 5px 0 #7a1d15,0 8px 18px rgba(122,29,21,.25),inset 0 2px 0 rgba(255,255,255,.35);background:radial-gradient(circle at 32% 22%,#ffbc79 0%,#ff7950 32%,#e5483a 68%,#a82a1f 100%)}
+/* Place the help text on the opposite side with enough clearance from boost. */
+#tapHint{right:18px;left:auto;inset-inline-end:auto;max-width:min(44vw,360px);padding:0 4px;text-align:right}
+@media(max-width:380px){
+  #boost{left:12px;bottom:22px;width:82px;height:82px}
+  #boost span{font-size:18px}
+  #boost em{font-size:26px}
+  #tapHint{right:12px;bottom:24px;max-width:calc(100vw - 118px);font-size:12px}
+}
+@media(max-height:560px){
+  #boost{bottom:16px;width:76px;height:76px}
+  #boost span{font-size:17px}
+  #boost em{font-size:24px}
+  #tapHint{bottom:20px;font-size:12px}
+}
+#boost::before{content:"";position:absolute;inset:6px;border:1px solid rgba(255,255,255,.55);border-radius:50%;pointer-events:none}
+#boost span,#boost em{position:relative;z-index:1}
+.plus{background:linear-gradient(180deg,#7bea54,#43b92c);box-shadow:0 3px 0 var(--green-d),inset 0 1px 0 rgba(255,255,255,.5);transition:transform .12s ease,filter .12s ease}
+.go{background:linear-gradient(180deg,#75e954,#48bf2d 65%,#3ba222);box-shadow:0 5px 0 var(--green-d),inset 0 1px 0 rgba(255,255,255,.45);transition:transform .12s ease,filter .12s ease}
+.panel{box-shadow:0 8px 0 var(--wood-d),0 16px 35px rgba(0,0,0,.25),inset 0 2px 0 rgba(255,255,255,.8)}
+#toast{padding-inline:16px;text-shadow:0 3px 0 rgba(94,42,12,.7),0 0 18px rgba(255,210,74,.35)}
+@keyframes levelCardPop{0%{transform:scale(1)}38%{transform:scale(1.035) translateY(-3px)}72%{transform:scale(.99)}100%{transform:scale(1)}}
+@keyframes levelBadgePop{0%{transform:scale(.55) rotate(-18deg)}70%{transform:scale(1.18) rotate(5deg)}100%{transform:scale(1) rotate(0)}}
+@keyframes upgradeShine{0%{background-position:120% 0}100%{background-position:-130% 0}}
+@media(hover:hover){.card:hover{transform:translateY(-2px);box-shadow:0 7px 0 #75401f,0 12px 18px rgba(66,35,12,.2),inset 0 1px 0 rgba(255,231,185,.8)}.btn.up:hover:not(.no){filter:brightness(1.06)}}
+@media(prefers-reduced-motion:reduce){.card,.card .ic svg,.pips b,.btn,.plus,.go{transition:none}.card.just-upgraded,.card.just-upgraded::before,.card.just-upgraded .lv{animation:none}}
+
+
+/* Flight navigation HUD */
+#routeInfo,#biomeBadge{
+  position:absolute;left:50%;transform:translateX(-50%);
+  width:max-content;max-width:88vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  border:1px solid rgba(255,255,255,.62);border-radius:999px;
+  padding:4px 12px;color:#fff;font-weight:800;font-size:13px;line-height:1.35;
+  text-shadow:0 1px 3px rgba(0,0,0,.55);
+  background:rgba(20,52,70,.55);backdrop-filter:blur(5px);
+  box-shadow:0 3px 12px rgba(0,0,0,.12);
+}
+#routeInfo{top:116px;border-color:rgba(255,216,74,.85)}
+#biomeBadge{top:150px;background:rgba(20,52,70,.38)}
+@media(max-height:560px){
+  #routeInfo{top:105px}
+  #biomeBadge{top:135px}
+}
+
+
+/* Flight controls: boost on the right, with a compact simulator-style route HUD above it. */
+#boost{left:auto;right:18px;inset-inline-start:auto;inset-inline-end:18px;bottom:28px}
+#tapHint{right:auto;left:18px;inset-inline-end:auto;inset-inline-start:18px;text-align:left;max-width:min(44vw,360px)}
+#routeInfo{
+  top:auto;left:auto;right:18px;bottom:138px;transform:none;
+  width:176px;max-width:calc(100vw - 36px);white-space:normal;
+  padding:10px 12px 9px;border:1px solid rgba(137,224,255,.7);border-radius:16px;
+  background:linear-gradient(145deg,rgba(8,35,58,.88),rgba(14,71,99,.76));
+  box-shadow:0 7px 22px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.18);
+  backdrop-filter:blur(9px);text-shadow:0 1px 2px rgba(0,0,0,.55);
+  overflow:visible;
+}
+.route-head{display:flex;align-items:center;gap:6px;color:#b9eeff;font-size:11px;font-weight:800;letter-spacing:.1px}
+.route-head svg{width:18px;height:18px;flex:0 0 18px;color:#70e4ff}
+.route-distance{display:flex;align-items:baseline;gap:5px;margin:2px 0 5px;color:#fff}
+.route-distance strong{font:800 29px/1.1 var(--font-ui);font-variant-numeric:tabular-nums;text-shadow:0 0 12px rgba(92,222,255,.28)}
+.route-distance small{font-size:13px;color:#b9eeff;font-weight:800}
+.route-track{height:6px;border-radius:999px;background:rgba(255,255,255,.2);overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.35)}
+.route-track span{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,#3ad8ff,#9bffdc);box-shadow:0 0 9px rgba(58,216,255,.55);transition:width .18s linear}
+.route-foot{display:flex;justify-content:space-between;gap:8px;margin-top:5px;font-size:10px;color:rgba(255,255,255,.82)}
+#biomeBadge{top:150px}
+@media(max-width:380px){
+  #boost{right:12px;left:auto;bottom:22px;width:82px;height:82px}
+  #tapHint{left:12px;right:auto;bottom:24px;max-width:calc(100vw - 118px);font-size:12px;text-align:left}
+  #routeInfo{right:12px;bottom:116px;width:158px;padding:8px 10px}
+  .route-distance strong{font-size:25px}
+}
+@media(max-height:560px){
+  #boost{right:16px;left:auto;bottom:16px;width:76px;height:76px}
+  #tapHint{left:16px;right:auto;bottom:20px;font-size:12px}
+  #routeInfo{right:16px;bottom:102px;width:154px;padding:7px 9px}
+  .route-distance strong{font-size:23px}
+}
+
+
+/* Final flight HUD layout: navigation at the upper-left, boost right, fire left. */
+#routeInfo{
+  top:12px;left:12px;right:auto;bottom:auto;transform:none;
+  width:158px;max-width:calc(100vw - 24px);padding:9px 10px 8px;
+}
+#dist{top:108px;font-size:clamp(48px,14vw,64px)}
+#alt{top:174px}
+#biomeBadge{top:207px}
+#boost{
+  right:18px;left:auto;inset-inline-start:auto;inset-inline-end:18px;
+  bottom:28px;width:88px;height:88px;z-index:7;
+}
+#fire{
+  position:absolute;left:18px;right:auto;bottom:28px;z-index:7;
+  width:88px;height:88px;border:3px solid rgba(255,255,255,.96);border-radius:50%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
+  color:#fff;font:800 16px/1.15 var(--font-ui);cursor:pointer;pointer-events:auto;
+  background:radial-gradient(circle at 32% 22%,#7ff5ff 0%,#18a8d1 40%,#12638d 78%,#073b60 100%);
+  box-shadow:0 5px 0 #073b60,0 8px 18px rgba(0,0,0,.28),inset 0 2px 0 rgba(255,255,255,.45);
+  touch-action:manipulation;
+}
+#fire svg{width:35px;height:35px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.25))}
+#fire span{position:relative;z-index:1}
+#fire:active{transform:translateY(3px);box-shadow:0 2px 0 #073b60,0 4px 10px rgba(0,0,0,.22)}
+#tapHint{
+  left:112px;right:112px;inset-inline-start:auto;inset-inline-end:auto;
+  bottom:30px;max-width:none;padding:0 6px;text-align:center;
+}
+@media(max-width:380px){
+  #routeInfo{top:10px;left:10px;right:auto;bottom:auto;width:148px;padding:7px 8px}
+  .route-head{font-size:10px}
+  .route-distance strong{font-size:23px}
+  #dist{top:105px;font-size:48px}
+  #alt{top:160px;font-size:13px}
+  #biomeBadge{top:188px}
+  #boost{right:12px;left:auto;bottom:20px;width:76px;height:76px}
+  #boost span{font-size:17px}
+  #boost em{font-size:24px}
+  #fire{left:12px;right:auto;bottom:20px;width:76px;height:76px;font-size:14px}
+  #fire svg{width:29px;height:29px}
+  #tapHint{left:94px;right:94px;bottom:22px;font-size:11px;line-height:1.3}
+}
+@media(max-height:560px){
+  #routeInfo{top:8px;left:8px;right:auto;bottom:auto;width:142px;padding:6px 8px}
+  .route-distance strong{font-size:21px}
+  #dist{top:82px;font-size:42px}
+  #alt{top:132px;font-size:12px}
+  #biomeBadge{top:155px;font-size:11px}
+  #boost{right:12px;left:auto;bottom:12px;width:68px;height:68px}
+  #boost span{font-size:15px}
+  #boost em{font-size:21px}
+  #fire{left:12px;right:auto;bottom:12px;width:68px;height:68px;font-size:12px}
+  #fire svg{width:25px;height:25px}
+  #tapHint{left:86px;right:86px;bottom:12px;font-size:10px}
+}
+
+
+/* Hotfix: force the red boost control to remain visible above the flight HUD. */
+#hud.on #boost,
+#boost{
+  display:flex !important;
+  position:absolute !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  z-index:30 !important;
+  left:auto !important;
+  right:max(14px, env(safe-area-inset-right, 0px)) !important;
+  inset-inline-start:auto !important;
+  inset-inline-end:max(14px, env(safe-area-inset-right, 0px)) !important;
+  bottom:max(28px, env(safe-area-inset-bottom, 0px)) !important;
+  width:88px !important;
+  height:88px !important;
+  min-width:88px;
+  min-height:88px;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:center !important;
+  overflow:visible !important;
+  pointer-events:auto !important;
+  transform:none;
+  background:radial-gradient(circle at 32% 22%,#ffbc79 0%,#ff7950 32%,#e5483a 68%,#a82a1f 100%) !important;
+  border:4px solid #fff !important;
+  border-radius:50% !important;
+  box-shadow:0 5px 0 #7a1d15,0 8px 18px rgba(122,29,21,.35),inset 0 2px 0 rgba(255,255,255,.35) !important;
+  color:#fff !important;
+}
+#boost span,#boost em{display:block !important;visibility:visible !important;opacity:1 !important;color:#fff !important;position:relative;z-index:2}
+@media(max-width:380px){
+  #hud.on #boost,#boost{
+    width:76px !important;height:76px !important;min-width:76px;min-height:76px;
+    right:max(12px, env(safe-area-inset-right, 0px)) !important;
+    inset-inline-end:max(12px, env(safe-area-inset-right, 0px)) !important;
+    bottom:max(20px, env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+@media(max-height:560px){
+  #hud.on #boost,#boost{
+    width:68px !important;height:68px !important;min-width:68px;min-height:68px;
+    bottom:max(12px, env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+
+
+/* Final fix: keep the two flight controls separated at opposite screen edges. */
+#hud.on #boost, #boost {
+  left: auto !important;
+  right: max(12px, env(safe-area-inset-right, 0px)) !important;
+  inset-inline-start: auto !important;
+  inset-inline-end: max(12px, env(safe-area-inset-right, 0px)) !important;
+  bottom: max(28px, env(safe-area-inset-bottom, 0px)) !important;
+  width: clamp(64px, 19vw, 88px) !important;
+  height: clamp(64px, 19vw, 88px) !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  z-index: 30 !important;
+}
+#hud.on #fire, #fire {
+  left: max(12px, env(safe-area-inset-left, 0px)) !important;
+  right: auto !important;
+  inset-inline-start: max(12px, env(safe-area-inset-left, 0px)) !important;
+  inset-inline-end: auto !important;
+  bottom: max(28px, env(safe-area-inset-bottom, 0px)) !important;
+  width: clamp(64px, 19vw, 88px) !important;
+  height: clamp(64px, 19vw, 88px) !important;
+  z-index: 30 !important;
+}
+#tapHint {
+  left: 50% !important;
+  right: auto !important;
+  inset-inline-start: auto !important;
+  inset-inline-end: auto !important;
+  bottom: max(30px, env(safe-area-inset-bottom, 0px)) !important;
+  width: min(34vw, 240px) !important;
+  transform: translateX(-50%);
+  text-align: center !important;
+}
+@media (max-width: 380px) {
+  #hud.on #boost, #boost, #hud.on #fire, #fire {
+    width: 68px !important;
+    height: 68px !important;
+  }
+  #tapHint { width: 30vw !important; bottom: max(22px, env(safe-area-inset-bottom, 0px)) !important; }
+}
+@media (max-height: 560px) {
+  #hud.on #boost, #boost, #hud.on #fire, #fire {
+    bottom: max(12px, env(safe-area-inset-bottom, 0px)) !important;
+  }
+  #tapHint { bottom: max(12px, env(safe-area-inset-bottom, 0px)) !important; }
+}
+
+
+/* Aircraft hangar: compact fleet picker and calmer glass HUD. */
+#fleet{
+  position:absolute;top:230px;left:12px;right:12px;
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;
+  pointer-events:auto;max-width:520px;margin-inline:auto;
+}
+.fleet-btn{
+  min-width:0;min-height:58px;padding:5px 3px 4px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  color:#fff;font-family:var(--font-ui);font-weight:800;
+  border:1px solid rgba(255,255,255,.55);border-radius:13px;
+  background:linear-gradient(150deg,rgba(16,52,79,.68),rgba(24,94,122,.54));
+  box-shadow:0 3px 10px rgba(15,50,70,.12);
+  backdrop-filter:blur(5px);cursor:pointer;overflow:hidden;
+}
+.fleet-btn.selected{
+  border:2px solid #ffe27a;
+  background:linear-gradient(150deg,rgba(19,100,127,.92),rgba(23,61,100,.82));
+  box-shadow:0 0 0 1px rgba(255,226,122,.25),0 0 14px rgba(90,225,255,.22);
+}
+.fleet-btn.locked{opacity:.68;background:rgba(28,40,55,.48)}
+.fleet-icon{font-size:19px;line-height:1.05;color:#b9f4ff}
+.fleet-name{font-size:clamp(10px,2.8vw,12px);white-space:nowrap;text-overflow:ellipsis;max-width:100%;overflow:hidden}
+.fleet-btn small{font-size:9px;font-weight:600;opacity:.86;white-space:nowrap}
+#routeInfo{
+  width:clamp(124px,36vw,148px);
+  padding:7px 8px 6px;
+  border-radius:13px;
+  background:rgba(10,35,53,.48);
+  border:1px solid rgba(177,232,255,.42);
+  box-shadow:0 4px 14px rgba(0,0,0,.13);
+  backdrop-filter:blur(6px);
+}
+.route-head{font-size:9px;gap:4px}
+.route-head svg{width:14px;height:14px;flex-basis:14px}
+.route-distance{margin:2px 0 4px}
+.route-distance strong{font-size:23px}
+.route-distance small{font-size:11px}
+.route-track{height:4px}
+.route-foot{font-size:9px;margin-top:4px}
+@media(max-width:380px){
+  #fleet{left:7px;right:7px;gap:4px}
+  .fleet-btn{min-height:52px;border-radius:10px}
+  .fleet-icon{font-size:17px}
+  .fleet-name{font-size:10px}
+  .fleet-btn small{font-size:8px}
+  #routeInfo{width:124px;padding:6px 7px}
+  .route-distance strong{font-size:21px}
+}
+@media(max-height:600px){
+  #title{top:48px;font-size:36px}
+  #hint{top:96px;font-size:13px}
+  #best{top:132px;font-size:12px}
+  #fleet{top:164px}
+  #fleet .fleet-btn{min-height:48px}
+  #cards{bottom:8px}
+  .card .ic{height:42px;margin-bottom:4px}
+  .card .ic svg{width:38px;height:38px}
+  .pips{margin:3px 0 5px}
+  .btn{min-height:29px}
+}
+
+
+/* Compact circular aircraft fuel instrument */
+#fuelGauge{
+  position:absolute;top:12px;right:12px;width:72px;height:72px;z-index:5;
+  border:1px solid rgba(204,244,255,.45);border-radius:50%;
+  background:linear-gradient(145deg,rgba(9,35,55,.78),rgba(12,59,79,.58));
+  box-shadow:0 4px 14px rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,.18);
+  backdrop-filter:blur(7px);color:#fff;pointer-events:none;
+}
+#fuelGauge svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+#fuelGauge circle{fill:none;stroke-width:5}
+#fuelGauge .fuel-track{stroke:rgba(255,255,255,.18)}
+#fuelGauge .fuel-arc{stroke:#70f0b0;stroke-linecap:round;stroke-dasharray:182.2;stroke-dashoffset:0;transition:stroke-dashoffset .18s linear,stroke .2s}
+.fuel-readout{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;text-shadow:0 1px 3px rgba(0,0,0,.55)}
+.fuel-readout strong{font:800 17px/1 var(--font-ui);letter-spacing:-.4px}
+.fuel-readout small{font:700 8px/1.2 var(--font-ui);white-space:nowrap;opacity:.92}
+#fuelGauge.low .fuel-arc{stroke:#ffd166}
+#fuelGauge.empty .fuel-arc{stroke:#ff5d67}
+#fuelGauge.empty .fuel-readout strong{color:#ff9a9f}
+#fuelGauge.launching{box-shadow:0 0 0 2px rgba(112,240,176,.16),0 0 18px rgba(112,240,176,.24)}
+@media(max-width:380px){
+  #fuelGauge{width:64px;height:64px;top:10px;right:10px}
+  .fuel-readout strong{font-size:15px}
+  .fuel-readout small{font-size:7px}
+}
+@media(max-height:560px){
+  #fuelGauge{width:58px;height:58px;top:8px;right:8px}
+  .fuel-readout strong{font-size:14px}
+}
+
+
+/* Skill chain and aerial boss indicators */
+#comboHud,#bossHud{
+  position:absolute;left:50%;transform:translateX(-50%);z-index:8;
+  color:#fff;text-align:center;text-shadow:0 1px 3px rgba(0,0,0,.65);
+  border:1px solid rgba(255,255,255,.48);backdrop-filter:blur(7px);
+  box-shadow:0 4px 14px rgba(0,0,0,.18);pointer-events:none;
+}
+#comboHud{
+  top:240px;display:none;align-items:center;gap:9px;padding:5px 13px;
+  border-radius:999px;background:linear-gradient(135deg,rgba(123,73,10,.82),rgba(180,104,18,.76));
+}
+#comboHud.on{display:flex;animation:comboPop .22s ease-out}
+#comboHud span{font-size:11px;font-weight:800;white-space:nowrap}
+#comboHud strong{font:800 19px/1 var(--font-ui);color:#ffe27a}
+#bossHud{
+  top:278px;width:min(220px,58vw);display:none;flex-direction:column;gap:4px;
+  padding:7px 11px;border-radius:13px;background:linear-gradient(145deg,rgba(75,17,29,.9),rgba(28,22,43,.82));
+  border-color:rgba(255,130,130,.7)
+}
+#bossHud.on{display:flex;animation:bossIn .28s ease-out}
+#bossHud strong{font-size:12px;letter-spacing:.3px;color:#ffd6d3}
+.boss-track{height:7px;border-radius:999px;overflow:hidden;background:rgba(0,0,0,.45);box-shadow:inset 0 1px 2px rgba(0,0,0,.4)}
+.boss-track span{display:block;width:100%;height:100%;border-radius:inherit;background:linear-gradient(90deg,#ff4e57,#ffb05e);box-shadow:0 0 8px rgba(255,88,88,.45);transition:width .15s}
+#bossHealthText{font:800 10px/1 var(--font-ui);color:#fff0ed}
+.result-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:8px 0 14px}
+.result-stats div{display:flex;align-items:center;justify-content:space-between;gap:5px;padding:5px 8px;border-radius:10px;background:rgba(185,119,62,.12);border:1px solid rgba(138,75,30,.16)}
+.result-stats small{font-size:11px;font-weight:800;color:#6b442a}
+.result-stats strong{font-size:14px;color:#3b2314;white-space:nowrap}
+@keyframes comboPop{from{opacity:0;transform:translateX(-50%) scale(.85)}to{opacity:1;transform:translateX(-50%) scale(1)}}
+@keyframes bossIn{from{opacity:0;transform:translateX(-50%) translateY(-5px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@media(max-width:380px){
+  #comboHud{top:228px;padding:4px 10px;gap:7px}
+  #comboHud span{font-size:10px}
+  #comboHud strong{font-size:17px}
+  #bossHud{top:263px;width:min(190px,60vw);padding:6px 9px}
+  .result-stats{gap:4px;margin:6px 0 11px}
+  .result-stats div{padding:4px 6px}
+  .result-stats small{font-size:10px}
+  .result-stats strong{font-size:13px}
+}
+@media(max-height:560px){
+  #comboHud{top:197px}
+  #bossHud{top:232px}
+}
+
+@media(max-height:560px){
+  #result .panel{max-height:calc(100vh - 16px);overflow-y:auto;padding:10px 14px 12px;border-width:4px}
+  #result .panel h2{font-size:27px}
+  #result .panel .big{font-size:48px}
+  #result .panel .big small{font-size:20px}
+  #result .rows{font-size:13px;margin:5px 0 7px}
+  #result .rows div{padding:3px}
+  #result .rows div:last-child{font-size:16px}
+  .result-stats{margin:5px 0 8px;gap:4px}
+  .result-stats div{padding:3px 6px}
+  .result-stats small{font-size:9px}
+  .result-stats strong{font-size:12px}
+  #result .go{font-size:22px;padding:5px 8px 3px}
+}
+
+
+/* Hangar progression: explain each upgrade and show real stats for the selected aircraft. */
+#aircraftStats{
+  position:absolute;top:auto;bottom:188px;left:12px;right:12px;width:min(520px,calc(100% - 24px));
+  margin-inline:auto;padding:9px 11px 10px;border-radius:17px;
+  border:1px solid rgba(255,255,255,.78);
+  background:linear-gradient(145deg,rgba(255,249,229,.94),rgba(255,231,190,.9));
+  box-shadow:0 5px 0 rgba(117,64,31,.5),0 10px 24px rgba(46,54,54,.14),inset 0 1px 0 #fff;
+  backdrop-filter:blur(8px);pointer-events:none;
+}
+.aircraft-stats-head{display:flex;align-items:center;gap:8px;min-width:0;margin-bottom:8px}
+.aircraft-stats-icon{display:flex;align-items:center;justify-content:center;flex:0 0 34px;height:34px;border-radius:11px;color:#fff;font-size:21px;background:linear-gradient(145deg,#4bc5e2,#2476c9);box-shadow:0 3px 0 #1c568f}
+.aircraft-stats-head>div{display:flex;flex-direction:column;min-width:0;flex:1}
+.aircraft-stats-head strong{font-size:14px;line-height:1.35;color:#3b2314;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.aircraft-stats-head small{font-size:10px;line-height:1.4;font-weight:800;color:#76553a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stats-chip{font-size:9px;font-weight:800;white-space:nowrap;color:#256b37;background:#d8f3c9;border:1px solid #9ad47c;border-radius:999px;padding:3px 6px}
+.aircraft-stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.aircraft-stat{min-width:0;padding:5px 6px 6px;border:1px solid rgba(117,64,31,.13);border-radius:9px;background:rgba(255,255,255,.53)}
+.aircraft-stat>div{display:flex;flex-direction:column;gap:1px;min-width:0}
+.aircraft-stat span{font-size:9px;font-weight:800;color:#76553a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.aircraft-stat strong{font-size:12px;line-height:1.3;color:#3b2314;white-space:nowrap}
+.aircraft-stat i{display:block;height:5px;margin-top:4px;border-radius:999px;overflow:hidden;background:rgba(59,35,20,.12)}
+.aircraft-stat i b{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#4eae37,#a7df53)}
+.aircraft-stat.fire i b{background:linear-gradient(90deg,#f4a42c,#e85d37)}
+.aircraft-stat.shield i b{background:linear-gradient(90deg,#4aa7e8,#7659d9)}
+.upgrade-desc{min-height:25px;margin:3px 0 2px;font-size:10px;line-height:1.3;font-weight:800;color:#ffedce;text-shadow:0 1px 1px rgba(65,28,8,.35);display:flex;align-items:center;justify-content:center}
+.card .nm{min-height:30px;display:flex;align-items:center;justify-content:center;line-height:1.25}
+@media(max-width:600px){
+  #aircraftStats{top:auto;bottom:156px;left:7px;right:7px;width:calc(100% - 14px);padding:7px 8px 8px;border-radius:14px}
+  .aircraft-stats-head{gap:6px;margin-bottom:6px}
+  .aircraft-stats-icon{flex-basis:29px;height:29px;border-radius:9px;font-size:18px}
+  .aircraft-stats-head strong{font-size:12px}
+  .aircraft-stats-head small{font-size:9px}
+  .stats-chip{font-size:8px;padding:2px 5px}
+  .aircraft-stat-grid{gap:4px}
+  .aircraft-stat{padding:4px 4px 5px;border-radius:7px}
+  .aircraft-stat span{font-size:8px}
+  .aircraft-stat strong{font-size:11px}
+  .aircraft-stat i{height:4px;margin-top:3px}
+  .upgrade-desc{font-size:9px;min-height:29px;margin:2px 0}
+}
+@media(max-width:380px){
+  #aircraftStats{top:auto;bottom:150px;left:5px;right:5px;width:calc(100% - 10px);padding:6px 6px 7px}
+  .aircraft-stats-head strong{font-size:11px}
+  .aircraft-stats-head small{font-size:8px}
+  .aircraft-stat-grid{gap:3px}
+  .aircraft-stat{padding:4px 3px}
+  .aircraft-stat span{font-size:7px}
+  .aircraft-stat strong{font-size:10px}
+  .upgrade-desc{font-size:8px;min-height:30px}
+  .card .nm{font-size:11px;min-height:29px}
+}
+@media(max-height:600px){
+  #aircraftStats{top:auto;bottom:150px}
+  #cards{bottom:8px}
+  .upgrade-desc{min-height:25px;font-size:9px}
+}
+@media(max-height:560px){
+  #aircraftStats{top:auto;bottom:150px;padding:5px 7px 6px}
+  .aircraft-stats-head{margin-bottom:4px}
+  .aircraft-stats-icon{flex-basis:25px;height:25px;font-size:16px}
+  .aircraft-stat{padding:3px}
+  .aircraft-stat span{font-size:7px}
+  .aircraft-stat strong{font-size:10px}
+  .upgrade-desc{min-height:23px;font-size:8px}
+}
+
+@media(max-height:460px){
+  #aircraftStats{top:auto;bottom:125px;padding:4px 6px 5px}
+  .aircraft-stats-head{margin-bottom:3px}
+  .aircraft-stats-icon{flex-basis:22px;height:22px;font-size:14px}
+  .aircraft-stats-head strong{font-size:10px}
+  .aircraft-stats-head small{font-size:7px}
+  .stats-chip{font-size:7px}
+  .aircraft-stat-grid{gap:2px}
+  .aircraft-stat{padding:2px}
+  .aircraft-stat span{font-size:6px}
+  .aircraft-stat strong{font-size:9px}
+  .aircraft-stat i{height:3px;margin-top:2px}
+  #cards{bottom:5px;gap:4px}
+  .card{padding:4px 3px 6px;border-width:2px;border-radius:10px}
+  .card .ic{height:30px;margin-bottom:3px;border-radius:8px}
+  .card .ic svg{width:28px;height:28px}
+  .card .nm{min-height:22px;font-size:9px}
+  .upgrade-desc{display:none}
+  .pips{margin:2px 0 4px}
+  .pips b{width:7px;height:6px}
+  .btn{min-height:24px;font-size:12px;padding:3px 2px}
+  .btn.up .coin-i{width:11px;height:11px;flex-basis:11px}
+}
+
+
+/* Daily missions: compact entry point and touch-friendly progress dialog. */
+.missions-toggle{
+  flex:none;min-height:38px;padding:5px 10px;border:2px solid #8a4b1e;border-radius:999px;
+  background:linear-gradient(145deg,#fff1b5,#ffc83d);color:#553014;
+  box-shadow:0 3px 0 #8a4b1e;font:800 11px/1.2 var(--font-ui);white-space:nowrap;
+  pointer-events:auto;cursor:pointer;touch-action:manipulation;
+}
+.missions-toggle:active{transform:translateY(2px);box-shadow:0 1px 0 #8a4b1e}
+.missions-overlay{
+  position:absolute;inset:0;z-index:100;display:none;align-items:center;justify-content:center;
+  padding:16px;background:rgba(8,25,42,.68);backdrop-filter:blur(7px);pointer-events:auto;
+}
+.missions-overlay.open{display:flex}
+.missions-panel{
+  width:min(460px,100%);max-height:calc(100% - 20px);overflow-y:auto;overscroll-behavior:contain;
+  padding:17px;border:3px solid #8a4b1e;border-radius:22px;
+  background:linear-gradient(155deg,#fff8e8,#f6d5a5);color:#3b2314;
+  box-shadow:0 8px 0 rgba(74,38,15,.65),0 18px 45px rgba(0,0,0,.32);
+  pointer-events:auto;touch-action:pan-y;
+}
+.missions-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:13px}
+.missions-head h2{margin:0;font:800 26px/1.2 var(--font-big)}
+.missions-head p{margin:4px 0 0;font-size:12px;font-weight:700;color:#795333}
+.missions-close{
+  flex:none;width:38px;height:38px;border:2px solid #8a4b1e;border-radius:50%;
+  background:#fff1d6;color:#633a1d;font:800 27px/1 var(--font-ui);cursor:pointer;pointer-events:auto;
+}
+.mission-row{padding:11px 12px;margin:8px 0;border:1px solid rgba(138,75,30,.2);border-radius:14px;background:rgba(255,255,255,.62)}
+.mission-row.completed{border-color:rgba(60,154,34,.45);background:rgba(220,248,204,.72)}
+.mission-row-head,.mission-row-foot{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mission-row-head>div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.mission-row-head strong{font-size:14px}
+.mission-row-head small,.mission-row-foot small{font-size:10px;font-weight:700;color:#795333}
+.mission-reward{flex:none;padding:4px 7px;border-radius:999px;background:#ffedb0;color:#72400d;font-size:11px;font-weight:800}
+.mission-progress{height:8px;margin:9px 0 6px;border-radius:999px;overflow:hidden;background:rgba(59,35,20,.12)}
+.mission-progress span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#42a52c,#b2df53);transition:width .2s}
+.mission-row-foot b{font-size:10px;color:#28762b}
+.missions-foot{margin:12px 0 0;text-align:center;font-size:10px;font-weight:700;color:#795333}
+@media(max-width:380px){
+  #top{inset-inline:7px;gap:5px}
+  .missions-toggle{min-height:34px;padding:4px 7px;font-size:10px}
+  .pill{gap:5px;padding-inline:8px 5px;font-size:20px}
+  .pill i{width:25px;height:25px}
+  .plus{width:25px;height:25px}
+  .missions-panel{padding:12px;border-radius:17px}
+  .missions-head h2{font-size:23px}
+  .mission-row{padding:9px}
+}
+@media(max-height:460px){
+  .missions-overlay{padding:8px}
+  .missions-panel{max-height:calc(100% - 8px);padding:10px 12px;border-radius:15px}
+  .missions-head{margin-bottom:7px}
+  .missions-head h2{font-size:20px}
+  .missions-head p{font-size:10px}
+  .missions-close{width:30px;height:30px;font-size:22px}
+  .mission-row{padding:7px 9px;margin:5px 0}
+  .mission-row-head strong{font-size:12px}
+  .mission-row-head small,.mission-row-foot small{font-size:9px}
+  .mission-progress{height:6px;margin:6px 0 4px}
+  .missions-foot{margin-top:7px;font-size:9px}
+}
+
+
+/* Layout correction: reserve a real slot for aircraft stats above the three upgrade cards. */
+#hangar{
+  --upgrade-cards-height:190px;
+  --upgrade-cards-bottom:12px;
+  --aircraft-stats-gap:8px;
+}
+#hangar #cards{
+  height:var(--upgrade-cards-height);
+  bottom:var(--upgrade-cards-bottom);
+}
+#hangar #aircraftStats{
+  top:auto;
+  bottom:calc(var(--upgrade-cards-bottom) + var(--upgrade-cards-height) + var(--aircraft-stats-gap));
+}
+@media(max-width:600px){
+  #hangar{--upgrade-cards-height:180px}
+}
+@media(max-height:600px){
+  #hangar{
+    --upgrade-cards-height:158px;
+    --upgrade-cards-bottom:8px;
+    --aircraft-stats-gap:7px;
+  }
+}
+@media(max-height:560px){
+  #hangar{--upgrade-cards-height:145px}
+}
+@media(max-height:460px){
+  #hangar{
+    --upgrade-cards-height:120px;
+    --upgrade-cards-bottom:5px;
+    --aircraft-stats-gap:6px;
+  }
+}
+
+
+/* Fixed-size upgrade cards: keep every inner element inside the same card box after upgrades. */
+#hangar #cards{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  align-items:stretch;
+  min-height:0;
+}
+#hangar #cards>.card{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  justify-content:flex-start;
+  width:100%;
+  height:100%;
+  min-width:0;
+  min-height:0;
+  padding:7px 6px 8px;
+  gap:0;
+  contain:layout paint;
+}
+#hangar #cards>.card .ic{
+  flex:0 0 44px;
+  height:44px;
+  min-height:0;
+  margin:0 0 4px;
+}
+#hangar #cards>.card .ic svg{
+  width:38px;
+  height:38px;
+  max-width:100%;
+  max-height:100%;
+}
+#hangar #cards>.card .lv{
+  top:-5px;
+  inset-inline-start:-5px;
+  z-index:2;
+}
+#hangar #cards>.card .nm{
+  flex:0 0 29px;
+  min-height:0;
+  max-height:29px;
+  margin:0;
+  overflow:hidden;
+  overflow-wrap:anywhere;
+  font-size:clamp(10px,2.8vw,13px);
+  line-height:1.2;
+}
+#hangar #cards>.card .upgrade-desc{
+  flex:1 1 auto;
+  min-height:0;
+  max-height:34px;
+  margin:2px 0;
+  overflow:hidden;
+  overflow-wrap:anywhere;
+  font-size:clamp(8px,2.2vw,10px);
+  line-height:1.2;
+}
+#hangar #cards>.card .pips{
+  flex:0 0 14px;
+  min-height:14px;
+  align-items:center;
+  gap:3px;
+  margin:3px 0 5px;
+}
+#hangar #cards>.card .pips b{
+  flex:0 1 12px;
+  min-width:0;
+  height:8px;
+}
+#hangar #cards>.card>.btn{
+  flex:0 0 32px;
+  width:100%;
+  min-width:0;
+  min-height:32px;
+  max-height:32px;
+  margin-top:auto;
+  padding:3px 2px;
+  gap:3px;
+  font-size:clamp(10px,3vw,15px);
+  line-height:1;
+  overflow:hidden;
+}
+#hangar #cards>.card>.btn span{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:clip;
+}
+#hangar #cards>.card>.btn .coin-i{
+  flex:0 0 14px;
+  width:14px;
+  height:14px;
+}
+#hangar #cards>.card>.btn .upgrade-arrow,
+#hangar #cards>.card>.btn .max-mark{
+  flex:0 0 13px;
+  width:13px;
+  height:13px;
+}
+@media(max-width:380px){
+  #hangar #cards>.card{padding:6px 3px 7px}
+  #hangar #cards>.card .ic{flex-basis:38px;height:38px;margin-bottom:3px}
+  #hangar #cards>.card .ic svg{width:32px;height:32px}
+  #hangar #cards>.card .nm{flex-basis:27px;max-height:27px;font-size:10px}
+  #hangar #cards>.card .upgrade-desc{font-size:8px;max-height:30px}
+  #hangar #cards>.card .pips{flex-basis:12px;min-height:12px;gap:2px;margin:2px 0 4px}
+  #hangar #cards>.card .pips b{flex-basis:8px;height:7px}
+  #hangar #cards>.card>.btn{flex-basis:29px;min-height:29px;max-height:29px;font-size:10px}
+  #hangar #cards>.card>.btn .coin-i{flex-basis:11px;width:11px;height:11px}
+}
+@media(max-height:600px){
+  #hangar #cards>.card{padding:5px 4px 6px}
+  #hangar #cards>.card .ic{flex-basis:34px;height:34px;margin-bottom:3px}
+  #hangar #cards>.card .ic svg{width:29px;height:29px}
+  #hangar #cards>.card .nm{flex-basis:24px;max-height:24px;font-size:10px}
+  #hangar #cards>.card .upgrade-desc{max-height:28px;font-size:8px}
+  #hangar #cards>.card .pips{flex-basis:11px;min-height:11px;margin:2px 0 3px}
+  #hangar #cards>.card>.btn{flex-basis:27px;min-height:27px;max-height:27px;font-size:10px}
+}
+@media(max-height:460px){
+  #hangar #cards>.card{padding:3px 2px 4px}
+  #hangar #cards>.card .ic{flex-basis:27px;height:27px;margin-bottom:2px}
+  #hangar #cards>.card .ic svg{width:23px;height:23px}
+  #hangar #cards>.card .nm{flex-basis:21px;max-height:21px;font-size:9px}
+  #hangar #cards>.card .upgrade-desc{display:none}
+  #hangar #cards>.card .pips{flex-basis:9px;min-height:9px;margin:1px 0 3px;gap:2px}
+  #hangar #cards>.card .pips b{flex-basis:7px;height:6px}
+  #hangar #cards>.card>.btn{flex-basis:23px;min-height:23px;max-height:23px;font-size:9px}
+  #hangar #cards>.card>.btn .coin-i{flex-basis:10px;width:10px;height:10px}
+}
+
+
+/* Aircraft-specific special ability: compact center control for mobile flight. */
+#specialAbility{
+  position:absolute;left:50%;bottom:27px;transform:translateX(-50%);
+  width:66px;height:66px;z-index:7;pointer-events:auto;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  border:2px solid rgba(255,255,255,.9);border-radius:50%;
+  color:#fff;background:radial-gradient(circle at 32% 20%,#8b9cff,#6255d9 65%,#34258f);
+  box-shadow:0 4px 0 #30227e,0 7px 16px rgba(48,34,126,.28),inset 0 1px 0 rgba(255,255,255,.45);
+  font-family:var(--font-ui);line-height:1;touch-action:manipulation;
+}
+#specialAbility strong{font-size:19px;line-height:1.1}
+#specialAbility span{font-size:11px;font-weight:900}
+#specialAbility small{font-size:9px;font-weight:800;opacity:.9}
+#specialAbility.cooldown{filter:saturate(.45);background:radial-gradient(circle at 32% 20%,#85889a,#55596b 70%,#343746)}
+#specialAbility.ready{animation:abilityReady 2.4s ease-in-out infinite}
+#specialAbility:active{transform:translate(-50%,3px);box-shadow:0 1px 0 #30227e,0 3px 8px rgba(48,34,126,.25)}
+@keyframes abilityReady{0%,100%{box-shadow:0 4px 0 #30227e,0 7px 16px rgba(48,34,126,.28)}50%{box-shadow:0 4px 0 #30227e,0 0 18px rgba(139,156,255,.72)}}
+@media(max-width:380px){
+  #specialAbility{width:58px;height:58px;bottom:19px}
+  #specialAbility strong{font-size:17px}
+  #specialAbility span{font-size:10px}
+  #specialAbility small{font-size:8px}
+}
+@media(max-height:560px){
+  #specialAbility{width:54px;height:54px;bottom:12px}
+  #specialAbility strong{font-size:16px}
+  #specialAbility span{font-size:9px}
+  #specialAbility small{font-size:8px}
+}
+@media(prefers-reduced-motion:reduce){#specialAbility.ready{animation:none}}
+
+
+/* Keep the flight hint clear of all three touch controls. */
+#tapHint{
+  left:50% !important;right:auto !important;inset-inline-start:auto !important;inset-inline-end:auto !important;
+  bottom:104px !important;width:min(78vw,460px) !important;max-width:min(78vw,460px) !important;
+  transform:translateX(-50%);text-align:center !important;
+}
+@media(max-width:380px){
+  #tapHint{bottom:82px !important;width:76vw !important;max-width:76vw !important;font-size:11px !important}
+}
+@media(max-height:560px){
+  #tapHint{bottom:72px !important;width:min(76vw,440px) !important;max-width:min(76vw,440px) !important;font-size:10px !important}
+}
+
+
+/* Keep the fuel gauge centered at the top of the gameplay screen on every device. */
+#fuelGauge{
+  top:calc(10px + env(safe-area-inset-top,0px));
+  left:50%;
+  right:auto;
+  transform:translateX(-50%);
+}
+@media(max-width:380px){
+  #fuelGauge{
+    top:calc(10px + env(safe-area-inset-top,0px));
+    left:50%;
+    right:auto;
+    transform:translateX(-50%);
+  }
+}
+@media(max-height:560px){
+  #fuelGauge{
+    top:calc(8px + env(safe-area-inset-top,0px));
+    left:50%;
+    right:auto;
+    transform:translateX(-50%);
+  }
+}
+
+
+/* Claude backup features: story, codex, sound toggle and pause overlays. */
+#storyBtn,#muteBtn{position:absolute;top:60px;z-index:8;pointer-events:auto;font:800 13px var(--font-ui);color:#fff;border:3px solid #fff;border-radius:999px;padding:4px 10px;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.25)}
+#storyBtn{right:12px;background:#7a35c9}
+#muteBtn{left:12px;background:#2f8fe0}
+
+.ov{position:absolute;inset:0;z-index:30;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(10,12,32,.72);pointer-events:auto}
+.ov.on{display:flex}
+.sheet{width:min(90vw,420px);max-height:88%;overflow:auto;background:var(--paper);border:5px solid var(--wood-d);border-radius:26px;padding:20px 18px 18px;text-align:center;box-shadow:0 8px 0 var(--wood-d);touch-action:pan-y}
+.sheet.dark{background:linear-gradient(#1d2250,#2c2368);color:#fff;border-color:#8f7bff;box-shadow:0 8px 0 #3d2f8f}
+.sheet h2{margin:0 0 6px;font-family:var(--font-big);font-weight:400;font-size:34px}
+.sheet .kick{font-weight:800;font-size:14px;color:#ffc83d;letter-spacing:.5px}
+.sheet p{font-weight:600;font-size:17px;line-height:1.8;margin:8px 0}
+.sheet .go{margin-top:8px}
+.sheet .go.alt{background:#7a35c9;box-shadow:0 5px 0 #4b1f85}
+.sheet .go.red{background:#c2381f;box-shadow:0 5px 0 #7a1d15}
+.page{background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.2);border-radius:14px;padding:6px 12px;margin:8px 0;text-align:start}
+.page h4{margin:2px 0;font-size:16px;color:#ffc83d}
+.page p{font-size:14px;margin:2px 0}
+.page.lock{opacity:.5;text-align:center}
+@media(max-width:380px){#storyBtn,#muteBtn{top:58px;font-size:11px;padding:3px 7px}}
+@media(prefers-reduced-motion:reduce){.ov{transition:none}}
+
+/* Combat expansion: guided missiles, storm vortexes and service stations */
+#missile{position:absolute;bottom:128px;inset-inline-start:24px;width:68px;height:68px;border:3px solid #fff;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffb08a,#e5483a 66%,#8d2119);color:#fff;font:800 14px var(--font-ui);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;box-shadow:0 4px 0 #7a1d15;pointer-events:auto;touch-action:none;cursor:pointer;z-index:3}
+#missile em{font-style:normal;font-size:20px;line-height:1}
+#missile.off{filter:grayscale(.9) brightness(.75)}
+#fire{z-index:2}
+.station-sheet .perk{display:flex;gap:12px;align-items:center;text-align:start;width:100%;background:#fff;color:var(--ink);border:3px solid var(--wood-d);border-radius:16px;padding:9px 12px;margin:8px 0;cursor:pointer;font-family:var(--font-ui);box-shadow:0 3px 0 var(--wood-d)}
+.station-sheet .perk .e{font-size:28px;flex:none}
+.station-sheet .perk b{display:block;font-size:17px}
+.station-sheet .perk small{display:block;font-size:12px;font-weight:700;opacity:.82;line-height:1.5}
+.station-sheet{max-height:88%;overflow:auto}
+@media(max-height:700px){#missile{bottom:112px;width:58px;height:58px}#boost{width:68px;height:68px}}
+
+
+/* Field upgrade station — clean tactical console */
+.station-sheet{
+  width:min(620px,94vw);
+  max-height:min(88dvh,820px);
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  padding:clamp(18px,4vw,30px);
+  border:1px solid rgba(140,245,255,.52);
+  border-radius:26px;
+  background:linear-gradient(155deg,rgba(20,35,57,.98),rgba(8,16,31,.98) 70%);
+  color:#f4fbff;
+  box-shadow:0 24px 80px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.08);
+}
+.station-sheet .kick{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 11px;
+  border:1px solid rgba(126,236,255,.34);
+  border-radius:999px;
+  background:rgba(53,190,221,.1);
+  color:#9defff;
+  letter-spacing:.02em;
+}
+.station-sheet h2{
+  margin:12px 0 6px;
+  color:#fff;
+  font-size:clamp(25px,5vw,34px);
+  line-height:1.25;
+  text-shadow:0 2px 22px rgba(69,208,255,.18);
+}
+.station-sheet #stationDesc{
+  margin:0 0 18px;
+  color:#b8c9d9;
+  font-size:14px;
+  line-height:1.8;
+}
+.station-sheet #stationPerks{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:11px;
+}
+.station-sheet .perk{
+  position:relative;
+  display:grid;
+  grid-template-columns:46px minmax(0,1fr) auto;
+  gap:10px;
+  align-items:center;
+  min-height:104px;
+  margin:0;
+  padding:13px 11px;
+  overflow:hidden;
+  text-align:start;
+  color:#edf7ff;
+  border:1px solid rgba(142,188,220,.2);
+  border-radius:17px;
+  background:linear-gradient(145deg,rgba(32,55,79,.94),rgba(18,31,50,.96));
+  box-shadow:0 5px 0 rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.045);
+  transition:transform .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.station-sheet .perk::before{
+  content:"";
+  position:absolute;
+  inset-inline-start:0;
+  top:14px;
+  bottom:14px;
+  width:3px;
+  border-radius:3px;
+  background:linear-gradient(#69eaff,#6c8cff);
+  opacity:.72;
+}
+.station-sheet .perk:hover,
+.station-sheet .perk:focus-visible{
+  outline:none;
+  transform:translateY(-2px);
+  border-color:rgba(105,234,255,.72);
+  background:linear-gradient(145deg,rgba(39,76,103,.98),rgba(18,39,62,.98));
+  box-shadow:0 8px 20px rgba(0,0,0,.2),0 0 0 2px rgba(105,234,255,.08);
+}
+.station-sheet .perk:active{transform:translateY(1px)}
+.station-sheet .perk .perk-icon{
+  display:grid;
+  place-items:center;
+  width:44px;
+  height:44px;
+  border:1px solid rgba(133,228,255,.24);
+  border-radius:13px;
+  background:linear-gradient(145deg,rgba(61,178,213,.22),rgba(78,102,195,.15));
+  font-size:24px;
+  flex:none;
+}
+.station-sheet .perk .perk-copy{min-width:0}
+.station-sheet .perk b{
+  display:block;
+  margin-bottom:4px;
+  color:#f5fbff;
+  font-size:clamp(13px,2.8vw,16px);
+  font-weight:900;
+  line-height:1.4;
+}
+.station-sheet .perk small{
+  display:block;
+  color:#b6c8da;
+  font-size:11px;
+  font-weight:600;
+  line-height:1.6;
+}
+.station-sheet .perk .perk-index{
+  align-self:start;
+  color:#83dff5;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.08em;
+  opacity:.75;
+}
+#fire{touch-action:none;user-select:none;-webkit-user-select:none}
+#fire:active{filter:brightness(1.25);transform:scale(.97)}
+@media(max-width:440px){
+  .station-sheet{width:94vw;padding:16px;border-radius:21px}
+  .station-sheet #stationPerks{gap:8px}
+  .station-sheet .perk{grid-template-columns:36px minmax(0,1fr);gap:8px;min-height:100px;padding:11px 9px}
+  .station-sheet .perk .perk-icon{width:36px;height:36px;border-radius:11px;font-size:21px}
+  .station-sheet .perk .perk-index{display:none}
+  .station-sheet .perk small{font-size:10px}
+}
+@media(max-width:350px){
+  .station-sheet #stationPerks{grid-template-columns:1fr}
+  .station-sheet .perk{grid-template-columns:42px minmax(0,1fr) auto;min-height:82px}
+  .station-sheet .perk .perk-icon{width:40px;height:40px}
+  .station-sheet .perk .perk-index{display:block}
+}
+@media(prefers-reduced-motion:reduce){
+  .station-sheet .perk{transition:none}
+}
+
+.station-sheet .station-tip{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin:0 0 12px;
+  padding:9px 11px;
+  border:1px solid rgba(127,211,242,.16);
+  border-radius:12px;
+  background:rgba(8,20,36,.56);
+  color:#9fb8cb;
+  font-size:11px;
+  font-weight:800;
+}
+.station-sheet .station-tip>span:first-child{color:#78e7ff;font-size:15px}
+.station-sheet .station-live{
+  margin-inline-start:auto;
+  padding:4px 7px;
+  border-radius:7px;
+  background:rgba(79,210,160,.1);
+  color:#83e5ba;
+  white-space:nowrap;
+}
+
+
+/* Boss attack telegraph and modern combo feedback */
+#bossWarning{
+  position:absolute;
+  top:194px;
+  left:50%;
+  z-index:12;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  width:max-content;
+  max-width:min(92vw,360px);
+  padding:9px 14px;
+  transform:translateX(-50%);
+  border:1px solid rgba(255,88,132,.78);
+  border-radius:13px;
+  background:linear-gradient(115deg,rgba(73,12,39,.96),rgba(29,17,43,.94));
+  box-shadow:0 0 0 1px rgba(255,58,117,.12),0 0 24px rgba(255,44,106,.22),0 8px 22px rgba(0,0,0,.3);
+  color:#fff1f5;
+  text-align:center;
+  pointer-events:none;
+  backdrop-filter:blur(8px);
+}
+#bossWarning.on{display:flex;animation:warningPulse .72s ease-in-out infinite alternate}
+#bossWarning .warning-mark{
+  display:grid;
+  place-items:center;
+  flex:none;
+  width:23px;height:23px;
+  border-radius:7px;
+  background:#ff3e78;
+  color:#fff;
+  font:1000 16px/1 var(--font-ui);
+  box-shadow:0 0 14px rgba(255,62,120,.4);
+}
+#bossWarning strong{font-size:clamp(11px,2.8vw,14px);font-weight:950;letter-spacing:.01em}
+#bossWarning .warning-lines{color:#ff7198;font-size:11px;font-weight:1000;letter-spacing:2px}
+#bossWarning.dive{border-color:#ffb26b;background:linear-gradient(115deg,rgba(112,29,25,.98),rgba(62,18,37,.96));box-shadow:0 0 28px rgba(255,79,60,.3),0 8px 22px rgba(0,0,0,.3)}
+#bossWarning.dive .warning-mark{background:#ff6a42}
+#comboHud{
+  gap:10px;
+  padding:7px 15px;
+  border:1px solid rgba(132,224,255,.58);
+  background:linear-gradient(115deg,rgba(12,50,86,.93),rgba(51,34,116,.92));
+  box-shadow:0 0 0 1px rgba(95,210,255,.1),0 0 22px rgba(63,156,255,.2),0 6px 18px rgba(0,0,0,.24);
+}
+#comboHud span{font-size:10px;letter-spacing:.06em;color:#d5f5ff}
+#comboHud strong{font:1000 21px/1 var(--font-ui);color:#a6f5ff;text-shadow:0 0 12px rgba(82,231,255,.55)}
+#comboHud>i{font-style:normal;color:#7beeff;font-size:13px}
+#comboHud.hot{
+  border-color:rgba(255,180,87,.8);
+  background:linear-gradient(115deg,rgba(112,42,26,.96),rgba(103,34,83,.94));
+  box-shadow:0 0 24px rgba(255,115,65,.27),0 6px 18px rgba(0,0,0,.24);
+}
+#comboHud.hot strong,#comboHud.hot>i{color:#ffd18a;text-shadow:0 0 13px rgba(255,156,72,.65)}
+#comboHud.ultra{
+  border-color:rgba(255,237,151,.94);
+  background:linear-gradient(110deg,rgba(105,57,12,.97),rgba(101,27,83,.96),rgba(23,56,118,.96));
+  box-shadow:0 0 28px rgba(255,213,103,.38),0 0 0 1px rgba(255,255,255,.12),0 7px 22px rgba(0,0,0,.3);
+  animation:comboLegendary .8s ease-in-out infinite alternate;
+}
+#comboHud.ultra strong,#comboHud.ultra>i{color:#fff2a9;text-shadow:0 0 15px rgba(255,225,109,.9)}
+#weaponSwitch{
+  position:absolute;
+  left:20px;
+  bottom:126px;
+  z-index:7;
+  width:82px;
+  min-height:61px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:2px;
+  padding:6px 5px;
+  border:1px solid rgba(149,223,255,.7);
+  border-radius:15px;
+  color:#effbff;
+  background:linear-gradient(145deg,rgba(30,76,113,.96),rgba(17,35,76,.96));
+  box-shadow:0 4px 0 rgba(5,20,49,.9),0 7px 18px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.17);
+  font-family:var(--font-ui);
+  line-height:1.15;
+  cursor:pointer;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+#weaponSwitch .weapon-symbol{font-size:18px;color:#8df1ff;line-height:1}
+#weaponSwitch strong{font-size:12px;font-weight:1000}
+#weaponSwitch small{font-size:9px;color:#b9d8ef;font-weight:700;white-space:nowrap}
+#weaponSwitch[data-mode="spread"]{border-color:rgba(154,175,255,.9);background:linear-gradient(145deg,rgba(59,73,143,.98),rgba(32,38,92,.98))}
+#weaponSwitch[data-mode="spread"] .weapon-symbol{color:#b7c5ff}
+#weaponSwitch[data-mode="plasma"]{border-color:rgba(220,151,255,.9);background:linear-gradient(145deg,rgba(99,46,137,.98),rgba(49,29,94,.98))}
+#weaponSwitch[data-mode="plasma"] .weapon-symbol{color:#e9b9ff;text-shadow:0 0 12px rgba(207,120,255,.65)}
+#weaponSwitch:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(5,20,49,.9),0 3px 9px rgba(0,0,0,.2)}
+#weaponSwitch.pulse{animation:weaponPulse .26s ease-out}
+#fire{touch-action:none;user-select:none;-webkit-user-select:none}
+@keyframes warningPulse{from{filter:brightness(.92);opacity:.92}to{filter:brightness(1.18);opacity:1}}
+@keyframes comboLegendary{from{filter:brightness(.96);transform:translateX(-50%) scale(1)}to{filter:brightness(1.16);transform:translateX(-50%) scale(1.045)}}
+@keyframes weaponPulse{0%{filter:brightness(1);transform:scale(1)}55%{filter:brightness(1.45);transform:scale(1.06)}100%{filter:brightness(1);transform:scale(1)}}
+@media(max-width:380px){
+  #bossWarning{top:202px;gap:7px;padding:8px 10px;max-width:94vw}
+  #comboHud{top:249px;gap:7px;padding:6px 10px}
+  #comboHud span{font-size:9px}
+  #comboHud strong{font-size:18px}
+  #weaponSwitch{left:12px;bottom:105px;width:76px;min-height:57px;border-radius:13px}
+  #weaponSwitch strong{font-size:11px}
+  #weaponSwitch small{font-size:8px}
+}
+@media(max-height:560px){
+  #bossWarning{top:130px}
+  #comboHud{top:174px}
+  #bossHud{top:210px}
+  #weaponSwitch{bottom:104px}
+}
+@media(prefers-reduced-motion:reduce){
+  #bossWarning.on,#comboHud.ultra,#weaponSwitch.pulse{animation:none}
+}
+
+
+/* Claude-matched cannon heat and overheat feedback */
+#heat{
+  position:absolute;left:50%;top:238px;transform:translateX(-50%);
+  width:min(190px,42vw);height:13px;border:2px solid rgba(255,255,255,.92);
+  border-radius:999px;background:rgba(20,26,39,.78);overflow:hidden;
+  box-shadow:0 3px 10px rgba(0,0,0,.28);z-index:6;pointer-events:none;
+}
+#heatFill{
+  width:0;height:100%;border-radius:inherit;
+  background:linear-gradient(90deg,#58edac 0%,#ffe15c 58%,#ff613f 100%);
+  transition:width .08s linear;
+}
+#heat span{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  color:#fff;font:800 8px/1 var(--font-ui);text-shadow:0 1px 3px #111;letter-spacing:.2px;
+}
+#heat.hot{border-color:#ffd56b;box-shadow:0 0 12px rgba(255,180,60,.4)}
+#heat.overheat{border-color:#ff4e57;animation:cannonOverheat .42s steps(2,end) infinite}
+#heat.overheat #heatFill{background:#ff3d4e}
+#fire.off{filter:grayscale(.85) brightness(.65);animation:none}
+@keyframes cannonOverheat{50%{box-shadow:0 0 14px rgba(255,50,70,.9)}}
+@media(max-width:380px){#heat{top:216px;width:150px;height:12px}}
+@media(max-height:560px){#heat{top:190px;width:150px;height:11px}}
+
+
+/* Claude-style enemy target lock: screen-space reticle; never intercepts touch controls. */
+.target-lock{
+  position:absolute;left:0;top:0;width:58px;height:58px;z-index:24;
+  pointer-events:none;will-change:transform;color:#9df7ff;
+  filter:drop-shadow(0 0 5px rgba(0,0,0,.8));
+}
+.target-lock[hidden]{display:none!important}
+.target-lock .lock-corner{
+  position:absolute;width:15px;height:15px;border-color:currentColor;border-style:solid;
+}
+.target-lock .tl{left:0;top:0;border-width:3px 0 0 3px;border-top-left-radius:4px}
+.target-lock .tr{right:0;top:0;border-width:3px 3px 0 0;border-top-right-radius:4px}
+.target-lock .bl{left:0;bottom:0;border-width:0 0 3px 3px;border-bottom-left-radius:4px}
+.target-lock .br{right:0;bottom:0;border-width:0 3px 3px 0;border-bottom-right-radius:4px}
+.target-lock .lock-dot{
+  position:absolute;left:50%;top:50%;width:5px;height:5px;
+  border:1px solid currentColor;border-radius:50%;transform:translate(-50%,-50%);
+}
+.target-lock small{
+  position:absolute;top:calc(100% + 5px);left:50%;transform:translateX(-50%);
+  white-space:nowrap;padding:2px 7px;border-radius:6px;
+  background:rgba(8,22,34,.82);border:1px solid currentColor;
+  color:#eaffff;font:800 11px/1.5 var(--font-ui);
+}
+.target-lock.boss-lock{color:#ff7799;animation:targetPulse .65s ease-in-out infinite alternate}
+@keyframes targetPulse{from{opacity:.72}to{opacity:1;filter:drop-shadow(0 0 9px currentColor)}}
+@media(prefers-reduced-motion:reduce){.target-lock.boss-lock{animation:none}}
+
+
+/* Dedicated boss arena HUD: persistent health, phase progression, and weapon state. */
+#bossHud{top:calc(84px + env(safe-area-inset-top,0px));width:min(310px,74vw);gap:6px;padding:10px 13px 9px;border:1px solid rgba(255,120,146,.86);border-radius:15px;background:linear-gradient(135deg,rgba(44,8,24,.94),rgba(17,23,43,.93));box-shadow:0 0 0 1px rgba(255,76,115,.16),0 8px 26px rgba(0,0,0,.28),0 0 22px rgba(255,52,100,.12)}
+#bossHud strong{font-size:14px;color:#fff0f2;letter-spacing:.5px}
+.boss-hud-kicker{font:800 9px/1.2 var(--font-ui);letter-spacing:1.1px;color:#ff9cb3;text-transform:uppercase}
+#bossHud .boss-track{height:10px;border:1px solid rgba(255,255,255,.16);background:rgba(0,0,0,.55)}
+#bossHud .boss-track span{background:linear-gradient(90deg,#ff304f 0%,#ff5d72 48%,#ffc16b 100%);box-shadow:0 0 12px rgba(255,66,98,.62)}
+.boss-hud-meta{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.boss-hud-meta small{font:800 10px/1.3 var(--font-ui);color:#ffe5e9}
+#bossWeaponText{font:800 10px/1.4 var(--font-ui);color:#ffc5d1;padding-top:4px;border-top:1px solid rgba(255,255,255,.12)}
+@media(max-width:380px){#bossHud{top:calc(78px + env(safe-area-inset-top,0px));width:min(278px,76vw);padding:8px 10px}#bossHud strong{font-size:12px}.boss-hud-meta small,#bossWeaponText{font-size:9px}}
+@media(max-height:560px){#bossHud{top:calc(68px + env(safe-area-inset-top,0px));gap:4px;padding:6px 9px}#bossHud .boss-track{height:7px}}
+
+/* Tactical fire selector: cycles smart homing, precision lock, and spread fire. */
+#aimMode{position:absolute;bottom:206px;inset-inline-start:22px;min-width:98px;height:34px;padding:0 10px;border:1px solid rgba(159,226,255,.8);border-radius:999px;background:linear-gradient(135deg,rgba(10,31,54,.94),rgba(25,65,91,.92));color:#e6f8ff;font:900 10px var(--font-ui);box-shadow:0 4px 12px rgba(0,0,0,.28);pointer-events:auto;touch-action:manipulation;cursor:pointer;z-index:4}
+#aimMode.active{border-color:#80ffd5;box-shadow:0 0 0 1px rgba(128,255,213,.25),0 0 14px rgba(69,255,202,.2)}
+#aimMode:active{transform:scale(.97)}
+@media(max-width:380px){#aimMode{bottom:194px;inset-inline-start:12px;min-width:88px;height:31px;font-size:9px}}
+@media(max-height:560px){#aimMode{bottom:178px;height:29px}}
+
+
+/* Full-screen cinematic prologue. The supplied intro video lives at src/assets/cinematics/intro.mp4. */
+.cinematic-intro{
+  position:fixed;inset:0;z-index:1000;background:#02050c;color:#fff;
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
+}
+.cinematic-intro[hidden]{display:none!important}
+.cinematic-video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#02050c}
+.cinematic-vignette{position:absolute;inset:0;pointer-events:none;background:linear-gradient(0deg,rgba(0,0,0,.84),transparent 35%,rgba(0,0,0,.18) 70%,rgba(0,0,0,.5))}
+.cinematic-caption{position:absolute;left:6vw;right:6vw;bottom:clamp(64px,10vh,110px);text-align:center;text-shadow:0 2px 14px #000;pointer-events:none}
+.cinematic-kicker{display:block;font:800 11px/1.4 var(--font-ui);letter-spacing:2px;color:#ffd36e;margin-bottom:10px}
+.cinematic-caption strong{display:block;font:400 clamp(20px,4.8vw,38px)/1.5 var(--font-big);color:#fff}
+.cinematic-skip{position:absolute;top:calc(16px + env(safe-area-inset-top,0px));inset-inline-end:16px;z-index:2;border:1px solid rgba(255,255,255,.55);border-radius:999px;background:rgba(5,12,22,.72);color:#fff;padding:10px 16px;font:800 13px var(--font-ui);cursor:pointer;backdrop-filter:blur(10px)}
+.boss-identity{display:flex;align-items:center;justify-content:center;gap:10px;min-width:0}
+#bossPortrait{width:48px;height:48px;object-fit:contain;flex:0 0 48px;border-radius:10px;border:1px solid rgba(255,160,180,.65);background:rgba(0,0,0,.28);filter:drop-shadow(0 0 8px rgba(255,72,120,.2))}
+#bossPortrait[hidden]{display:none!important}
+.boss-identity strong{min-width:0}
+@media(max-width:380px){#bossPortrait{width:38px;height:38px;flex-basis:38px}.cinematic-caption{bottom:70px}}
+@media(prefers-reduced-motion:reduce){.cinematic-intro *{animation:none!important;transition:none!important}}
+
+
+/* Accessible in-game back controls for story and codex overlays. */
+.overlay-back{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;margin:0 0 12px auto;padding:7px 14px;border:2px solid rgba(255,255,255,.75);border-radius:999px;background:rgba(255,255,255,.12);color:#fff;font:800 14px var(--font-ui);cursor:pointer;pointer-events:auto}
+.overlay-back:active{transform:translateY(1px)}
+.overlay-back:focus-visible{outline:3px solid #ffc83d;outline-offset:3px}
+#story .sheet,#codex .sheet{overscroll-behavior:contain}
+
+
+/* Pause-button visual treatment is defined in the base button rule; HUD positioning is centralized below. */
+#bossBlastOverlay{position:fixed;inset:0;z-index:18;pointer-events:none;opacity:0;background:radial-gradient(circle at 54% 46%,rgba(255,248,207,.86) 0%,rgba(255,126,65,.34) 24%,rgba(24,10,36,0) 72%);mix-blend-mode:screen}
+#bossBlastOverlay.on{animation:bossBlastFlash .76s ease-out both}
+#bossBlastOverlay.final.on{background:radial-gradient(circle at 54% 46%,rgba(255,255,255,.98) 0%,rgba(255,78,112,.62) 18%,rgba(108,52,255,.22) 43%,rgba(0,0,0,0) 76%);animation:bossFinalBlast 1.12s cubic-bezier(.16,.72,.24,1) both}
+@keyframes bossBlastFlash{0%{opacity:0}12%{opacity:1}40%{opacity:.72}100%{opacity:0}}
+@keyframes bossFinalBlast{0%{opacity:0;filter:brightness(1)}10%{opacity:1;filter:brightness(1.9)}28%{opacity:.9;filter:brightness(1.45)}60%{opacity:.42;filter:brightness(1.1)}100%{opacity:0;filter:brightness(1)}}
+@media(prefers-reduced-motion:reduce){#bossBlastOverlay.on,#bossBlastOverlay.final.on{animation-duration:.25s}}
+
+
+/* Pilot aircraft health indicator, projected directly above the aircraft. */
+#playerHealth{position:absolute;z-index:10;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:7px;width:174px;padding:7px 9px;border:1px solid rgba(143,238,255,.72);border-radius:12px;background:linear-gradient(135deg,rgba(8,24,46,.92),rgba(15,62,81,.8));box-shadow:0 0 14px rgba(75,217,255,.2),inset 0 1px 0 rgba(255,255,255,.16);color:#fff;pointer-events:none;backdrop-filter:blur(6px);transition:border-color .15s,box-shadow .15s;will-change:left,top}
+.player-health-icon{display:grid;place-items:center;flex:0 0 25px;height:25px;border-radius:8px;background:rgba(90,220,255,.18);color:#8ff4ff;font-size:19px;text-shadow:0 0 8px rgba(105,237,255,.65)}
+.player-health-copy{flex:1;min-width:0}.player-health-copy b{display:block;font:800 9px/1.2 var(--font-ui);letter-spacing:.02em;color:#d9f8ff;margin-bottom:5px}
+.player-health-track{height:6px;border-radius:8px;overflow:hidden;background:rgba(255,255,255,.17);box-shadow:inset 0 1px 2px rgba(0,0,0,.35)}
+#playerHealthFill{display:block;width:100%;height:100%;border-radius:8px;background:linear-gradient(90deg,#42f0bd,#91ffdd);box-shadow:0 0 8px rgba(66,240,189,.55);transition:width .18s ease,background .18s}
+#playerHealthText{font:900 11px/1 var(--font-ui);min-width:31px;text-align:right;color:#d9fff3}
+#playerHealth.low{border-color:rgba(255,190,85,.9);box-shadow:0 0 15px rgba(255,166,57,.26)}
+#playerHealth.low #playerHealthFill{background:linear-gradient(90deg,#ff9f43,#ffe17a)}
+#playerHealth.critical{border-color:#ff4e68;box-shadow:0 0 20px rgba(255,52,91,.5);animation:playerHealthPulse .55s ease-in-out infinite alternate}
+#playerHealth.critical #playerHealthFill{background:linear-gradient(90deg,#ff3155,#ff8b77)}
+#playerHealth.hit{box-shadow:0 0 24px rgba(255,55,79,.78);border-color:#ff4e68}
+@keyframes playerHealthPulse{from{filter:brightness(.88)}to{filter:brightness(1.35)}}
+@media(max-width:380px){#playerHealth{width:150px;padding:6px 7px;gap:5px}.player-health-icon{flex-basis:22px;height:22px}.player-health-copy b{font-size:8px}}
+
+/* Pause button centered between the coin counter and fuel gauge. */
+#pauseBtn{position:absolute;z-index:10;width:42px;height:42px;border:3px solid rgba(255,255,255,.96);border-radius:50%;background:linear-gradient(145deg,rgba(24,44,72,.92),rgba(7,15,30,.9));color:#fff;font:800 18px var(--font-ui);box-shadow:0 0 0 3px rgba(95,214,255,.12),0 4px 14px rgba(0,0,0,.3);pointer-events:auto;cursor:pointer;touch-action:manipulation}
+
+/* Upgrade rarity and synergy cues for the tactical station. */
+.perk.rarity-common{border-color:#8ca3b8}.perk.rarity-rare{border-color:#47a8ff;box-shadow:0 0 0 1px rgba(71,168,255,.25)}.perk.rarity-legendary{border-color:#ffca52;box-shadow:0 0 0 1px rgba(255,202,82,.4)}.perk-synergy{color:#65e4ff!important;font-weight:800}
+
+
+/* Flight HUD: pause centered; fuel dial between pause and coins. */
+#runCoins{
+  top:12px !important;
+  right:12px !important;
+  left:auto !important;
+  inset-inline-start:auto !important;
+  inset-inline-end:auto !important;
+  transform:scale(.78) !important;
+  transform-origin:top right !important;
+}
+#fuelGauge{
+  top:12px !important;
+  left:auto !important;
+  right:88px !important;
+  transform:none !important;
+  width:76px !important;
+  height:76px !important;
+  border:2px solid rgba(157,239,255,.9) !important;
+  background:linear-gradient(145deg,rgba(6,24,43,.96),rgba(12,67,86,.94)) !important;
+  box-shadow:0 0 0 3px rgba(91,220,255,.15),0 5px 18px rgba(0,0,0,.42),inset 0 2px 0 rgba(255,255,255,.2) !important;
+}
+#fuelGauge .fuel-track{stroke:rgba(255,255,255,.28) !important;stroke-width:5.5 !important}
+#fuelGauge .fuel-arc{stroke-width:6 !important;filter:drop-shadow(0 0 3px rgba(112,240,176,.75))}
+.fuel-readout{gap:3px !important}
+.fuel-readout strong{font-size:19px !important;font-weight:900 !important;text-shadow:0 2px 5px #000,0 0 8px rgba(112,240,176,.28) !important}
+.fuel-readout small{font-size:9px !important;font-weight:800 !important;white-space:nowrap;color:#e5fbff !important;text-shadow:0 1px 4px #000 !important}
+#fuelGauge.low{border-color:#ffd36e !important;box-shadow:0 0 0 3px rgba(255,211,110,.18),0 0 18px rgba(255,166,57,.35) !important}
+#fuelGauge.empty{border-color:#ff6677 !important;box-shadow:0 0 0 3px rgba(255,102,119,.2),0 0 20px rgba(255,60,80,.45) !important}
+#pauseBtn{
+  top:27px !important;
+  left:50% !important;
+  right:auto !important;
+  transform:translateX(-50%) !important;
+}
+#pauseBtn:active{transform:translateX(-50%) scale(.94) !important}
+@media(max-width:380px){
+  #runCoins{top:10px !important;right:8px !important;transform:scale(.68) !important}
+  #fuelGauge{top:10px !important;right:74px !important;width:56px !important;height:56px !important}
+  .fuel-readout strong{font-size:15px !important}
+  .fuel-readout small{font-size:7px !important}
+  #pauseBtn{top:21px !important;width:38px !important;height:38px !important}
+}
+@media(max-height:560px){
+  #runCoins{top:8px !important}
+  #fuelGauge{top:8px !important;right:72px !important;width:54px !important;height:54px !important}
+  .fuel-readout strong{font-size:15px !important}
+  .fuel-readout small{font-size:7px !important}
+  #pauseBtn{top:16px !important;width:38px !important;height:38px !important}
+}

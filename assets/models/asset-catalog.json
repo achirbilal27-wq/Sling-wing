@@ -1,0 +1,281 @@
+{
+  "schemaVersion": 1,
+  "root": "src/assets/models",
+  "runtimeNote": "The catalog records intended gameplay roles. A GLB asset does not become an active gameplay object until runtime spawning, weapon behavior, collisions, and biome gating are implemented and tested.",
+  "categories": {
+    "environment": {
+      "title": "البيئات والمناطق الجديدة",
+      "folder": "src/assets/models/environment/",
+      "formats": [
+        ".glb"
+      ],
+      "runtimeIntegration": "runtime-integrated",
+      "purpose": "البيئات والعناصر البصرية المرتبطة بالمراحل وساحات الزعماء. تُحمّل النماذج محليًا عند توفرها، مع مجسمات إجرائية بديلة عند تعذر التحميل.",
+      "models": {
+        "desert_outpost.glb": {
+          "role": "desert_outpost_landmark",
+          "biomes": [
+            "desert"
+          ],
+          "behavior": "stage_landmark",
+          "fallback": "procedural_outpost"
+        },
+        "ice_island.glb": {
+          "role": "ice_island_landmark",
+          "biomes": [
+            "snow"
+          ],
+          "behavior": "stage_landmark",
+          "fallback": "procedural_ice_island"
+        },
+        "The_castle_of_boss.glb": {
+          "role": "final_boss_castle",
+          "biomes": [
+            "final_boss_arena"
+          ],
+          "behavior": "final_boss_landmark",
+          "fallback": "procedural_castle"
+        },
+        "castle_bar_resaux.glb": {
+          "role": "lighthouse_landmark",
+          "biomes": [
+            "ocean_boss_arena"
+          ],
+          "behavior": "boss_arena_landmark",
+          "fallback": "procedural_lighthouse"
+        },
+        "eagle_tower_boss1.glb": {
+          "role": "eagle_tower_landmark",
+          "biomes": [
+            "boss_arenas"
+          ],
+          "behavior": "boss_arena_landmark",
+          "runtimeUrl": "eagle_tower_boss1.glb",
+          "fallback": "procedural_tower"
+        },
+        "environment_of_fighter.glb": {
+          "role": "fighter_defense_landmark",
+          "biomes": [
+            "green_plains",
+            "ocean"
+          ],
+          "behavior": "stage_landmark",
+          "fallback": "procedural_fighter_defense"
+        },
+        "ocean_water_animated.glb": {
+          "role": "ocean_arena_water",
+          "biomes": [
+            "ocean_boss_arena"
+          ],
+          "behavior": "animated_water_surface",
+          "fallback": "procedural_water"
+        },
+        "searchlight_place.glb": {
+          "role": "searchlight_landmark",
+          "biomes": [
+            "final_boss_arena"
+          ],
+          "behavior": "stage_landmark",
+          "fallback": "procedural_searchlight"
+        }
+      }
+    },
+    "assault-defender": {
+      "title": "المدافع والقواعد الاعتراضية",
+      "folder": "src/assets/models/assault-defender/",
+      "formats": [
+        ".glb"
+      ],
+      "runtimeIntegration": "runtime-integrated",
+      "purpose": "نماذج الدفاع المتوفرة مرتبطة بظهور داخل المراحل، إطلاق مقذوفات، تصادم وضرر، ويمكن تدميرها. عند غياب نموذج مخصص للصحراء أو ساحة الزعيم، تستخدم اللعبة نموذج دفاع متاحًا أو مجسمًا إجرائيًا بديلًا.",
+      "models": {
+        "big_ice_turret.glb": {
+          "role": "ice_anti_air_turret",
+          "biomes": [
+            "snow"
+          ],
+          "attack": "ice_projectiles",
+          "damage": true
+        },
+        "fire-turet.glb": {
+          "role": "red_flame_chaser",
+          "biomes": [
+            "general"
+          ],
+          "attack": "flame_chase",
+          "damage": true
+        },
+        "interceptor_base.glb": {
+          "role": "guided_laser_interceptor",
+          "biomes": [
+            "general"
+          ],
+          "attack": "tracking_laser",
+          "damage": true
+        },
+        "iron_wild_turret_-_free.glb": {
+          "role": "precision_missile_turret",
+          "biomes": [
+            "general"
+          ],
+          "attack": "one_side_limited_homing_missiles",
+          "damage": true
+        },
+        "lazer_turret.glb": {
+          "role": "alternate_laser_turret",
+          "biomes": [
+            "general"
+          ],
+          "attack": "distinct_color_laser",
+          "damage": true
+        },
+        "sand_slugthrow_trt.glb": {
+          "role": "sandstorm_cannon",
+          "biomes": [
+            "desert"
+          ],
+          "attack": "sandstorm_projectile",
+          "damage": true
+        },
+        "raval_turet_animated.glb": {
+          "role": "animated_defense_turret",
+          "biomes": [
+            "general"
+          ],
+          "attack": "animated_turret_fire",
+          "damage": true
+        },
+        "rocket_launcher_turret.glb": {
+          "role": "rocket_launcher_turret",
+          "biomes": [
+            "general"
+          ],
+          "attack": "rocket_projectile",
+          "damage": true
+        }
+      }
+    },
+    "bonus": {
+      "title": "طائرات مكافآت العملات",
+      "folder": "src/assets/models/bonus/",
+      "formats": [
+        ".glb"
+      ],
+      "runtimeIntegration": "runtime-integrated",
+      "purpose": "نموذج طائرة مكافأة يُستخدم في مرور احتفالي بعد هزيمة الزعيم. المكافآت نفسها تُدار بمنطق اللعبة؛ هذا النموذج ليس عنصر جمع مستقلًا.",
+      "models": {
+        "low_poly_ww2_fighter_planes.glb": {
+          "role": "boss_reward_flyby",
+          "behavior": "post_boss_reward_flyby",
+          "fallback": "procedural_aircraft"
+        }
+      }
+    },
+    "planes-dead": {
+      "title": "الطائرات الانتحارية",
+      "folder": "src/assets/models/planes-dead/",
+      "formats": [
+        ".glb"
+      ],
+      "runtimeIntegration": "runtime-integrated",
+      "purpose": "نماذج الطائرات المعادية الخاصة بمراحل البداية؛ تُحمّل وتُربط بسلوك الطيران والتصادم الموجود، مع مجسمات إجرائية بديلة عند تعذر التحميل.",
+      "models": {
+        "kamikaze_scout.glb": {
+          "role": "kamikaze_scout",
+          "biomes": [
+            "green_plains"
+          ],
+          "behavior": "kamikaze_chase",
+          "damage": true,
+          "fallback": "procedural_enemy"
+        },
+        "dive_attacker.glb": {
+          "role": "dive_attacker",
+          "biomes": [
+            "desert"
+          ],
+          "behavior": "dive_volley",
+          "damage": true,
+          "fallback": "procedural_enemy"
+        }
+      }
+    },
+    "rocket-attack": {
+      "title": "الصواريخ الجوية المهاجمة",
+      "folder": "src/assets/models/rocket-attack/",
+      "formats": [
+        ".glb"
+      ],
+      "runtimeIntegration": "runtime-integrated",
+      "purpose": "صاروخ اعتراض جوي منخفض المضلعات من تصميم المشروع؛ يُستخدم في المقذوفات الصاروخية المعادية وصواريخ اللاعب الموجهة، مع توجيه وتصادم برمجي وبديل إجرائي عند تعذر التحميل.",
+      "models": {
+        "air_interceptor_missile.glb": {
+          "role": "guided_air_interceptor",
+          "biomes": [
+            "general",
+            "desert",
+            "snow",
+            "boss_arenas"
+          ],
+          "behavior": "guided_projectile",
+          "authoredFor": "Sling-wing",
+          "forwardAxis": "+X",
+          "fallback": "procedural_rocket"
+        }
+      }
+    },
+    "wildlife": {
+      "title": "الماء والبحر والطبيعة أسفل الطائرة",
+      "folder": "src/assets/models/wildlife/",
+      "formats": [
+        ".glb"
+      ],
+      "runtimeIntegration": "runtime-integrated",
+      "purpose": "نماذج البحر والحياة البحرية المرتبطة باللعب. نموذج MechaFish يظهر في ساحة زعيم Current-serpent، يخرج من سطح البحر عموديًا من نقاط متفرقة، بألوان متعددة، ثم يندفع نحو الطائرة ويطبق ضرر العض. يستخدم مجسمًا إجرائيًا بديلًا إذا تعذر تحميل GLB.",
+      "models": {
+        "MechaFish.glb": {
+          "role": "vertical_surface_ambusher",
+          "biomes": [
+            "ocean_boss_arena"
+          ],
+          "behavior": "vertical_breach_then_bite",
+          "colorVariants": [
+            "cyan",
+            "orange",
+            "gold",
+            "violet",
+            "green",
+            "pink"
+          ],
+          "damage": true,
+          "fallback": "procedural_fish"
+        }
+      }
+    },
+    "bosses": {
+      "title": "نماذج الزعماء",
+      "folder": "src/assets/models/bosses/",
+      "formats": [
+        ".glb"
+      ],
+      "runtimeIntegration": "runtime-integrated",
+      "purpose": "نماذج الزعماء الرئيسية التي تُحمّل أثناء القتال، مع بدائل إجرائية عند فشل التحميل.",
+      "models": {
+        "iron_eagle.glb": {
+          "role": "iron_eagle_boss",
+          "biomes": [
+            "green_plains"
+          ],
+          "behavior": "boss_air_combat",
+          "fallback": "procedural_boss"
+        }
+      }
+    }
+  },
+  "modelConventions": {
+    "format": "glTF Binary (.glb)",
+    "texturePolicy": "Prefer embedded textures",
+    "fileNaming": "lowercase-kebab-case or lowercase_snake_case; no spaces",
+    "licensing": "Record author, source URL, and license for each third-party model"
+  }
+}
