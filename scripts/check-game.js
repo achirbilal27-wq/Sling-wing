@@ -90,7 +90,10 @@ check(prep.includes('threeCdnPattern') && prep.includes("'js/three.min.js'"), 'p
 check(html.includes('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js'), 'GLTFLoader script is missing from src/index.html.');
 check(prep.includes('GLTFLoader.js') && prep.includes("'js/GLTFLoader.js'"), 'prepare.js does not bundle GLTFLoader for offline Android use.');
 check(js.includes("assets/models/glb/plane_pc.glb") && js.includes('loadEnemyPlaneModel'), 'Enemy GLB loading is not configured.');
-check(js.includes('if(enemy.boss||!enemy.mesh||!enemy.mesh.parent) return;'), 'Enemy GLB loading must preserve active boss meshes.');
+check(js.includes('if(enemy.boss||enemy.enemyKind||!enemy.mesh||!enemy.mesh.parent) return;'), 'Default enemy GLB loading must preserve bosses and stage-specific aircraft.');
+check(js.includes('function spawnRocketAmbush()') && js.includes('if(run.bosses===2)spawnRocketAmbush();'), 'Rocket ambush must trigger once after defeating the second boss.');
+check(js.includes("e.enemyKind==='rocketAmbush'") && js.includes('homing:rocket'), 'Rocket ambush attackers must fire guided rocket projectiles.');
+check(js.includes('three-round burst') && js.includes('fireStageEnemyShot(e,false)'), 'Stage-two dive attackers must fire repeated three-round volleys.');
 check(js.includes("phantom:{name:'الشبح النفاث',short:'الشبح',unlock:8149"), 'Phantom must unlock at 8149 m.');
 check(js.includes("guardian:{name:'الحارس المدرع',short:'الحارس',unlock:9462"), 'Guardian must unlock at 9462 m.');
 check(js.includes("Object.entries(AIRCRAFT).sort(([,a],[,b])=>a.unlock-b.unlock).forEach(([key,a])=>{"), 'Hangar aircraft must be sorted by unlock distance.');
