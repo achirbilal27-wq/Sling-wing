@@ -1046,7 +1046,7 @@ function resetRun(){
   const cannonLevel=Number(save.lv.cannon)||0;
   run={coins:0,picked:0,maxAlt:0,gateCombo:0,bestCombo:0,gates:0,bosses:0,bossBattle:false,missiles:3,stationCount:0,stormHits:0,firePower:1,stationShield:0,aimMode:'smart',
     tri:false,rate:1,cool:1+0.12*cannonLevel,damage:1+0.25*cannonLevel,perks:[],reserveTank:false,reserveTankUsed:false,heat:0,overheat:false,fireCd:0,fireSfxTimer:0};
-  objs={coins:[],rings:[],birds:[],enemies:[],enemyShots:[],fuels:[],drafts:[],storms:[],stations:[],landmarks:[],next:600,nextEnemy:550/M_PER_PX,nextDefense:900/M_PER_PX,nextBoss:bossDistanceMeters(0)/M_PER_PX,nextStorm:600/M_PER_PX,nextStation:(bossDistanceMeters(0)-1100)/M_PER_PX,nextStationStage:0,nextLandmark:450/M_PER_PX,approachBossX:null};
+  objs={coins:[],rings:[],birds:[],enemies:[],enemyShots:[],fuels:[],drafts:[],storms:[],stations:[],landmarks:[],next:600,nextEnemy:550/M_PER_PX,nextDefense:900/M_PER_PX,nextBoss:bossDistanceMeters(0)/M_PER_PX,nextStorm:600/M_PER_PX,nextStation:(bossDistanceMeters(0)-1100)/M_PER_PX,nextStationStage:0,nextLandmark:450/M_PER_PX,approachBossX:null,rocketAmbushTriggered:false};
   shieldT=0;shieldCooldown=0;shieldMesh.visible=false;
   clearObjs();
   parts.forEach(p=>{p.mesh.visible=false;});parts.length=0;
@@ -1630,6 +1630,35 @@ function triggerBossDestruction(e){
   shake=Math.max(shake,finalBoss?0.92:0.48);
   addFloat(e.x,e.alt+(finalBoss?150:95),finalBoss?'انهيار عرش العاصفة!':'انفجار الزعيم!','#ffe27a',e.z);
 }
+function spawnRocketAmbush(){
+  if(!objs||!Array.isArray(objs.enemies)||objs.rocketAmbushTriggered||!P)return;
+  objs.rocketAmbushTriggered=true;
+  const lanes=[-150,0,150];
+  lanes.forEach((lane,i)=>{
+    const x=P.x+1750+i*260,alt=clamp(P.alt+(i-1)*95+80,90,560),z=zc(P.z+lane);
+    const mesh=makeEnemyPlane('dive');
+    mesh.scale.multiplyScalar(0.92);
+    mesh.position.set(x*S,Y(alt),z*S);
+    mesh.rotation.z=(i-1)*0.08;
+    objGroup.add(mesh);
+    objs.enemies.push({x,alt,z,phase:i*1.8,fireT:0.45+i*0.28,hit:false,enemyKind:'rocketAmbush',contactHit:false,rocketAmbush:true,attackSide:i===1?0:(i===0?-1:1)});
+  });
+  addFloat(P.x+1800,P.alt+150,'كمين صاروخي! ثلاثة مهاجمين أمامك','#ff765f',P.z);
+  toast('كمين صاروخي مفاجئ — تفادَ الرشقات!');
+  playSfx('boss-warning',0.8);
+}
+function fireStageEnemyShot(e,rocket){
+  const dx=P.x-e.x,dy=P.alt-e.alt,dz=P.z-e.z,L=Math.hypot(dx,dy,dz)||1;
+  const speed=rocket?690:820;
+  const mesh=new THREE.Mesh(
+    rocket?new THREE.SphereGeometry(6.2,8,6):new THREE.SphereGeometry(3.8,8,6),
+    new THREE.MeshBasicMaterial({color:rocket?0xff623f:0xffd36a,transparent:true,opacity:0.98})
+  );
+  mesh.position.set(e.x*S,Y(e.alt+8),e.z*S);scene.add(mesh);
+  const vx=dx/L*speed,vy=dy/L*speed,vz=dz/L*speed;
+  objs.enemyShots.push({x:e.x,alt:e.alt+8,z:e.z,vx,vy,vz,life:rocket?4.2:3.2,mesh,turretShot:true,defenseAttack:rocket?'rocket':'burst',damage:rocket?10:6,homing:rocket,seekerSpeed:speed,attackSide:e.attackSide||((Math.random()-.5)*0.22)});
+  if(rocket)for(let n=0;n<5;n++)addPart(e.x,e.alt+8,(Math.random()-.5)*24,(Math.random()-.5)*18,0.22,0xff765f,1.8,e.z);
+}
 function defeatBoss(e,source){
   if(!e||e.hit)return;
   e.hit=true;e.mesh.visible=false;run.bossBattle=false;run.bosses++;
@@ -1650,6 +1679,7 @@ function defeatBoss(e,source){
   ];
   const chapter=Math.min(4,Math.max(0,run.bosses-1));
   playSlides([[discoveries[chapter][0],discoveries[chapter][1],discoveries[chapter][2]]],0,()=>{
+    if(run.bosses===2)spawnRocketAmbush();
     if(run.bosses>=5&&!save.campaignEndingSeen){
       playSlides(FINAL_REVEAL,0,()=>{save.campaignEndingSeen=true;persist();endRun();});
     }
@@ -1902,7 +1932,18 @@ function updateFlight(dt){
       continue;
     }
     if(e.enemyKind){
-      if(e.enemyKind==='kamikaze'){
+      if(e.enemyKind==='rocketAmbush'){
+        e.x-=Math.min(145,72+Math.max(0,P.s)*0.035)*dt;
+        e.alt=clamp(e.alt+(P.alt+45-e.alt)*Math.min(1,dt*0.28)+Math.sin(e.phase*1.4)*dt*16,55,590);
+        e.z=zc(e.z+(P.z+e.attackSide*95-e.z)*Math.min(1,dt*0.22));
+        e.mesh.rotation.y=Math.atan2(P.z-e.z,P.x-e.x);
+        e.mesh.rotation.z=clamp((P.z-e.z)*0.0015,-0.25,0.25);
+        e.fireT-=dt;
+        if(e.fireT<=0&&e.x>P.x+260&&e.x<P.x+2600&&state==='flight'&&!paused&&!run.dead){
+          fireStageEnemyShot(e,true);
+          e.fireT=0.82+Math.random()*0.3;
+        }
+      }else if(e.enemyKind==='kamikaze'){
         e.x-=Math.min(210,95+Math.max(0,P.s)*0.06)*dt;
         e.alt=clamp(e.alt+(P.alt-e.alt)*Math.min(1,dt*0.32),35,500);
         e.z=zc(e.z+(P.z-e.z)*Math.min(1,dt*0.38));
@@ -1920,12 +1961,19 @@ function updateFlight(dt){
         }
         e.mesh.rotation.y=Math.atan2(P.z-e.z,P.x-e.x);
         e.mesh.rotation.z=clamp((P.z-e.z)*0.0018,-0.32,0.32);
+        e.fireT-=dt;
+        if(e.fireT<=0&&e.x>P.x+240&&e.x<P.x+1700&&state==='flight'&&!paused&&!run.dead){
+          // The stage-two dive attacker fires a short three-round burst.
+          fireStageEnemyShot(e,false);
+          const originalSide=e.attackSide;e.attackSide=-1;fireStageEnemyShot(e,false);e.attackSide=1;fireStageEnemyShot(e,false);e.attackSide=originalSide;
+          e.fireT=0.62+Math.random()*0.22;
+        }
       }
       const dx=e.x-P.x,dy=e.alt-P.alt,dz=e.z-P.z;
       if(!e.contactHit&&dx*dx+dy*dy+dz*dz<44*44){
         e.contactHit=true;
         if(shieldT>0||shieldCooldown<=0)activateShield(e.x,e.alt,e.z);
-        else damagePlayer(e.enemyKind==='dive'?13:10,e.x,e.alt,e.z,'enemy-plane');
+        else damagePlayer(e.enemyKind==='dive'||e.enemyKind==='rocketAmbush'?13:10,e.x,e.alt,e.z,'enemy-plane');
         e.hit=true;e.mesh.visible=false;
         for(let n=0;n<10;n++)addPart(e.x,e.alt,(Math.random()-.5)*170,(Math.random()-.5)*140,0.35,0xffa46b,2.5,e.z);
       }
