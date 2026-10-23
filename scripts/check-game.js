@@ -64,9 +64,17 @@ for (const url of [...new Set(assetRefs)]) {
   check(exists(localPath), 'Missing local JavaScript asset: src/' + localPath);
 }
 check(
-  js.includes('eagle_tower%231boss.glb') && exists('assets/models/environment/eagle_tower#1boss.glb'),
-  'Encoded eagle tower URL must map to the local filename containing "#".'
+  js.includes('assets/models/environment/eagle_tower_boss1.glb') && exists('assets/models/environment/eagle_tower_boss1.glb'),
+  'First-boss tower runtime URL must point to the renamed local GLB.'
 );
+check(!js.includes('eagle_tower%231boss.glb') && !js.includes('eagle_tower#1boss.glb'),
+  'Legacy eagle tower filename must not remain in runtime code.');
+check(js.includes("if(stage===0)spawnWorldLandmark('eagleTower',x-600,0,stage);"),
+  'Eagle tower must spawn only before the first boss arena.');
+check(js.includes("new THREE.CylinderGeometry(0.65,1.1,1,8)") && js.includes('laserBeam:true'),
+  'Laser defenses must render a beam mesh rather than only a spherical projectile.');
+check(js.includes("bossRewardPlanes.push({mesh,life:5.5") && js.includes('مكافأة الزعيم: طائرة إضافية!'),
+  'Boss reward flyby must remain visible long enough and show a reward notification.');
 const glbModels = [
   { path: 'assets/models/aircraft/stylized_ww1_plane.glb', label: 'Falcon player aircraft' },
   { path: 'assets/models/glb/plane_pc.glb', label: 'Enemy aircraft' },
@@ -145,7 +153,7 @@ const expectedEnvironmentModels = {
   'ice_island.glb': 'iceIsland',
   'The_castle_of_boss.glb': 'finalCastle',
   'castle_bar_resaux.glb': 'lighthouse',
-  'eagle_tower#1boss.glb': 'eagleTower',
+  'eagle_tower_boss1.glb': 'eagleTower',
   'environment_of_fighter.glb': 'fighterDefense',
   'ocean_water_animated.glb': 'serpentWater',
   'searchlight_place.glb': 'searchlight',

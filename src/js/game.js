@@ -1077,7 +1077,7 @@ const WORLD_MODEL_DEFS={
   iceIsland:{file:'assets/models/environment/ice_island.glb',size:150},
   finalCastle:{file:'assets/models/environment/The_castle_of_boss.glb',size:130},
   lighthouse:{file:'assets/models/environment/castle_bar_resaux.glb',size:30},
-  eagleTower:{file:'assets/models/environment/eagle_tower%231boss.glb',size:38},
+  eagleTower:{file:'assets/models/environment/eagle_tower_boss1.glb',size:38},
   fighterDefense:{file:'assets/models/environment/environment_of_fighter.glb',size:34},
   serpentWater:{file:'assets/models/environment/ocean_water_animated.glb',size:190},
   searchlight:{file:'assets/models/environment/searchlight_place.glb',size:28}
