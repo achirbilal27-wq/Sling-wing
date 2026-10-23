@@ -849,7 +849,9 @@ function spawnBossRewardPlane(boss){
   mesh.position.set(boss.x*S,Y(boss.alt+115),boss.z*S);
   mesh.rotation.z=-0.12;
   objGroup.add(mesh);
-  bossRewardPlanes.push({mesh,life:2.8,age:0,originX:boss.x,originAlt:boss.alt+115,originZ:boss.z});
+  addFloat(boss.x,boss.alt+155,'مكافأة الزعيم: طائرة إضافية!','#8cf5ff',boss.z);
+  toast('مكافأة الزعيم: طائرة إضافية!');
+  bossRewardPlanes.push({mesh,life:5.5,age:0,originX:boss.x,originAlt:boss.alt+115,originZ:boss.z});
 }
 function prepareAircraftModel(root){
   // Keep the imported GLB hierarchy intact and normalize it through a wrapper.
@@ -1248,7 +1250,7 @@ function spawn(until){
     objs.enemies.forEach(other=>{if(!other.boss&&!other.hit){other.hit=true;objGroup.remove(other.mesh);}});
     objs.enemies=objs.enemies.filter(other=>other.boss&&!other.hit);
     if(Array.isArray(objs.landmarks)){objs.landmarks.forEach(item=>{if(item.mesh)objGroup.remove(item.mesh);});objs.landmarks.length=0;}
-    spawnWorldLandmark('eagleTower',x-900,-220,stage);spawnWorldLandmark('eagleTower',x-900,220,stage);
+    if(stage===0)spawnWorldLandmark('eagleTower',x-600,0,stage);
     if(biomeIndex===2){spawnWorldLandmark('serpentWater',x-1100,0,stage);spawnWorldLandmark('lighthouse',x-700,0,stage);spawnSeaFishSchool(x-1850,stage);spawnSeaFishSchool(x-450,stage);}
     if(biomeIndex===4)spawnWorldLandmark('finalCastle',x-100,0,stage);
     objs.enemyShots.forEach(b=>scene.remove(b.mesh));objs.enemyShots.length=0;
@@ -1959,12 +1961,25 @@ function updateFlight(dt){
       e.fireT-=dt;
       if(e.defenseAttack!=='chase'&&e.fireT<=0&&e.x>P.x+120&&e.x<P.x+4200){
         const dx=P.x-e.x,dy=P.alt-e.alt,dz=P.z-e.z,L=Math.hypot(dx,dy,dz)||1,color=e.defenseColor||0xff7048;
-        const geo=new THREE.SphereGeometry(e.defenseAttack==='laser'||e.defenseAttack==='laser2'?3.8:5.4,8,6);
-        const mesh=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.96}));
-        mesh.position.set(e.x*S,Y(e.alt+12),e.z*S);scene.add(mesh);
-        const speed=e.defenseAttack==='missile'||e.defenseAttack==='rocket'?620:e.defenseAttack==='sand'?560:e.defenseAttack==='rail'?1320:e.defenseAttack==='ice'?760:e.defenseAttack==='laser'||e.defenseAttack==='laser2'?1500:850;
-        const homing=e.defenseAttack==='missile'||e.defenseAttack==='rocket';
-        objs.enemyShots.push({x:e.x,alt:e.alt+12,z:e.z,vx:dx/L*speed,vy:dy/L*speed,vz:dz/L*speed,life:3.7,mesh,bossShot:false,turretShot:true,defenseRole:e.defenseRole,defenseAttack:e.defenseAttack,damage:e.defenseAttack==='rail'?16:e.defenseAttack==='sand'?12:e.defenseAttack==='ice'?10:8,homing,seekerSpeed:speed,attackSide:e.attackSide});
+        const isLaser=e.defenseAttack==='laser'||e.defenseAttack==='laser2';
+        if(isLaser){
+          const origin=new THREE.Vector3(e.x*S,Y(e.alt+12),e.z*S);
+          const target=new THREE.Vector3(P.x*S,Y(P.alt),P.z*S);
+          const direction=target.clone().sub(origin),length=direction.length();
+          const beamMaterial=new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.98,depthWrite:false});
+          const mesh=new THREE.Mesh(new THREE.CylinderGeometry(0.65,1.1,1,8),beamMaterial);
+          mesh.position.copy(origin).add(target).multiplyScalar(0.5);
+          mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),direction.normalize());
+          mesh.scale.y=length;
+          scene.add(mesh);
+          objs.enemyShots.push({x:P.x,alt:P.alt,z:P.z,vx:0,vy:0,vz:0,life:0.18,mesh,laserBeam:true,hitApplied:false,turretShot:true,defenseRole:e.defenseRole,defenseAttack:e.defenseAttack,damage:8});
+        }else{
+          const mesh=new THREE.Mesh(new THREE.SphereGeometry(5.4,8,6),new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.96}));
+          mesh.position.set(e.x*S,Y(e.alt+12),e.z*S);scene.add(mesh);
+          const speed=e.defenseAttack==='missile'||e.defenseAttack==='rocket'?620:e.defenseAttack==='sand'?560:e.defenseAttack==='rail'?1320:e.defenseAttack==='ice'?760:850;
+          const homing=e.defenseAttack==='missile'||e.defenseAttack==='rocket';
+          objs.enemyShots.push({x:e.x,alt:e.alt+12,z:e.z,vx:dx/L*speed,vy:dy/L*speed,vz:dz/L*speed,life:3.7,mesh,bossShot:false,turretShot:true,defenseRole:e.defenseRole,defenseAttack:e.defenseAttack,damage:e.defenseAttack==='rail'?16:e.defenseAttack==='sand'?12:e.defenseAttack==='ice'?10:8,homing,seekerSpeed:speed,attackSide:e.attackSide});
+        }
         e.fireT=e.defenseAttack==='burst'?1.15:e.defenseAttack==='rail'?2.7:e.defenseAttack==='laser'||e.defenseAttack==='laser2'?1.45:2.05;
         if(e.defenseAttack==='sand')addFloat(e.x,e.alt+40,'عاصفة رملية قادمة!','#d8b16b',e.z);
         else if(e.defenseAttack==='ice')addFloat(e.x,e.alt+40,'مقذوف جليدي!','#8beaff',e.z);
@@ -2135,6 +2150,21 @@ function updateFlight(dt){
   }
   for(let i=objs.enemyShots.length-1;i>=0;i--){
     const b=objs.enemyShots[i];
+    if(b.laserBeam){
+      b.life-=dt;
+      if(!b.hitApplied){
+        b.hitApplied=true;
+        if(shieldT>0||shieldCooldown<=0)activateShield(b.x,b.alt,b.z);
+        else damagePlayer(b.damage||8,b.x,b.alt,b.z,'turret');
+      }
+      if(b.life<=0){
+        scene.remove(b.mesh);
+        if(b.mesh.geometry)b.mesh.geometry.dispose();
+        if(b.mesh.material)b.mesh.material.dispose();
+        objs.enemyShots.splice(i,1);
+      }
+      continue;
+    }
     if(b.ironEagleSeeker||b.homing){const tx=P.x-b.x,ty=P.alt-b.alt,tz=P.z-b.z,L=Math.hypot(tx,ty,tz)||1,k=Math.min(1,dt*(b.ironEagleSeeker?0.72:0.48)),speed=b.seekerSpeed||900;b.vx=lerp(b.vx,tx/L*speed,k);b.vy=lerp(b.vy,ty/L*speed,k);b.vz=lerp(b.vz,(tz/L*speed)+(b.homing?b.attackSide*75:0),k);}
     b.x+=b.vx*dt;b.alt+=(b.vy||0)*dt;b.z+=(b.vz||0)*dt;b.life-=dt;b.mesh.position.set(b.x*S,Y(b.alt),b.z*S);
     if(Math.abs(b.x-P.x)<34&&Math.abs(b.alt-P.alt)<32&&Math.abs(b.z-P.z)<40){
