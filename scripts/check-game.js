@@ -63,6 +63,7 @@ const glbModels = [
   { path: 'assets/models/aircraft/stylized_ww1_plane.glb', label: 'Falcon player aircraft' },
   { path: 'assets/models/glb/plane_pc.glb', label: 'Enemy aircraft' },
   { path: 'assets/models/bosses/iron_eagle.glb', label: 'Iron Eagle boss' },
+  { path: 'assets/models/wildlife/MechaFish.glb', label: 'MechaFish ocean ambusher' },
 ];
 for (const model of glbModels) {
   check(exists(model.path), model.label + ' GLB model is missing: src/' + model.path);
@@ -124,8 +125,15 @@ if (fs.existsSync(preparedHtmlPath)) {
 }
 check(fs.existsSync(path.join(root, 'package.json')), 'package.json is missing.');
 
+check(js.includes("assets/models/wildlife/MechaFish.glb") && js.includes("function spawnSeaFishSchool") && js.includes("function updateSeaFish"), 'MechaFish must load and use runtime ocean ambush behavior.');
+check(js.includes("spawnSeaFishSchool(x-1850,stage)") && js.includes("spawnSeaFishSchool(x-450,stage)"), 'MechaFish schools must spawn at separated locations in the Current-serpent ocean arena.');
+check(js.includes("SEA_FISH_COLORS") && js.includes("damagePlayer(8,f.x,f.alt,f.z,'wildlife')"), 'MechaFish must use varied colors and bite damage.');
+
 const defenseCatalogPath = path.join(src, 'assets', 'models', 'asset-catalog.json');
 const defenseCatalog = JSON.parse(fs.readFileSync(defenseCatalogPath, 'utf8'));
+const wildlife = defenseCatalog.categories.wildlife;
+check(wildlife.runtimeIntegration === 'runtime-integrated', 'Wildlife catalog must mark the MechaFish runtime integration complete.');
+check(wildlife.models && wildlife.models['MechaFish.glb'] && wildlife.models['MechaFish.glb'].behavior === 'vertical_breach_then_bite', 'Wildlife catalog must describe MechaFish vertical breach and bite behavior.');
 const defenseModels = defenseCatalog.categories['assault-defender'].models;
 const expectedDefenseModels = {
   'big_ice_turret.glb': ['ice_anti_air_turret', 'snow', 'ice_projectiles'],

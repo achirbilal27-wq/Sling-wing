@@ -1046,7 +1046,7 @@ function resetRun(){
   const cannonLevel=Number(save.lv.cannon)||0;
   run={coins:0,picked:0,maxAlt:0,gateCombo:0,bestCombo:0,gates:0,bosses:0,bossBattle:false,missiles:3,stationCount:0,stormHits:0,firePower:1,stationShield:0,aimMode:'smart',
     tri:false,rate:1,cool:1+0.12*cannonLevel,damage:1+0.25*cannonLevel,perks:[],reserveTank:false,reserveTankUsed:false,heat:0,overheat:false,fireCd:0,fireSfxTimer:0};
-  objs={coins:[],rings:[],birds:[],enemies:[],enemyShots:[],fuels:[],drafts:[],storms:[],stations:[],landmarks:[],next:600,nextEnemy:550/M_PER_PX,nextDefense:900/M_PER_PX,nextBoss:bossDistanceMeters(0)/M_PER_PX,nextStorm:600/M_PER_PX,nextStation:(bossDistanceMeters(0)-1100)/M_PER_PX,nextStationStage:0,nextLandmark:450/M_PER_PX,approachBossX:null,rocketAmbushTriggered:false};
+  objs={coins:[],rings:[],birds:[],enemies:[],enemyShots:[],fuels:[],drafts:[],storms:[],stations:[],landmarks:[],seaFish:[],next:600,nextEnemy:550/M_PER_PX,nextDefense:900/M_PER_PX,nextBoss:bossDistanceMeters(0)/M_PER_PX,nextStorm:600/M_PER_PX,nextStation:(bossDistanceMeters(0)-1100)/M_PER_PX,nextStationStage:0,nextLandmark:450/M_PER_PX,approachBossX:null,rocketAmbushTriggered:false};
   shieldT=0;shieldCooldown=0;shieldMesh.visible=false;
   clearObjs();
   parts.forEach(p=>{p.mesh.visible=false;});parts.length=0;
@@ -1080,6 +1080,39 @@ const WORLD_MODEL_DEFS={
   searchlight:{file:'assets/models/environment/searchlight_place.glb',size:28}
 };
 const worldLandmarkTemplates=Object.create(null),worldLandmarkClips=Object.create(null),worldLandmarkLoadStarted=Object.create(null);
+const SEA_FISH_COLORS=[0x28c7d9,0xff7043,0xffca45,0x8c7bff,0x62d66e,0xff5ca8];
+let seaFishTemplate=null,seaFishLoadStarted=false;
+function makeSeaFishFallback(color){
+ const group=new THREE.Group();
+ const body=new THREE.Mesh(new THREE.SphereGeometry(7,12,9),matS(color,.55,{metalness:.25,roughness:.38}));body.scale.set(.72,1.55,.62);group.add(body);
+ const fin=new THREE.Mesh(new THREE.ConeGeometry(3.5,7,5),matS(color,.5,{metalness:.2,roughness:.4}));fin.rotation.x=Math.PI/2;fin.position.set(0,7,0);group.add(fin);
+ const eyeMat=new THREE.MeshBasicMaterial({color:0xffffff});[-2.1,2.1].forEach(z=>{const eye=new THREE.Mesh(new THREE.SphereGeometry(.75,6,6),eyeMat);eye.position.set(2.7,2.2,z);group.add(eye);});return group;
+}
+function tintSeaFish(model,color){model.traverse(node=>{if(!node.isMesh||!node.material)return;const wasArray=Array.isArray(node.material),mats=wasArray?node.material:[node.material];const tinted=mats.map(material=>{const m=material.clone();if(m.color)m.color.setHex(color);if(m.emissive){m.emissive.setHex(color);m.emissiveIntensity=.12;}m.needsUpdate=true;return m;});node.material=wasArray?tinted:tinted[0];});return model;}
+function makeSeaFishMesh(color){const mesh=seaFishTemplate?seaFishTemplate.clone(true):makeSeaFishFallback(color);tintSeaFish(mesh,color);if(seaFishTemplate)mesh.rotation.z=Math.PI/2;return mesh;}
+function loadSeaFishModel(){
+ if(seaFishLoadStarted||typeof THREE.GLTFLoader!=='function')return;seaFishLoadStarted=true;
+ new THREE.GLTFLoader().load('assets/models/wildlife/MechaFish.glb',gltf=>{
+  const model=prepareWorldModel(gltf.scene,22);if(!model){console.warn('Invalid MechaFish GLB; procedural fish fallback retained.');return;}seaFishTemplate=model;
+  if(typeof objs!=='undefined'&&objs&&Array.isArray(objs.seaFish))objs.seaFish.forEach(f=>{if(!f.mesh||!f.mesh.parent)return;const old=f.mesh,replacement=makeSeaFishMesh(f.color);replacement.position.copy(old.position);replacement.rotation.copy(old.rotation);old.parent.add(replacement);old.parent.remove(old);f.mesh=replacement;});
+  console.info('MechaFish GLB loaded for ocean ambushes.');
+ },undefined,error=>console.warn('MechaFish GLB unavailable; procedural fish fallback retained:',error));
+}
+loadSeaFishModel();
+function spawnSeaFishSchool(centerX,stage){
+ if(!objs||!Array.isArray(objs.seaFish))return;
+ for(let i=0;i<3;i++){const color=SEA_FISH_COLORS[(Math.floor(Math.random()*SEA_FISH_COLORS.length)+i)%SEA_FISH_COLORS.length];const x=centerX+(i-1)*1750+(Math.random()-.5)*520;const z=clamp((Math.random()-.5)*620,-300,300);const mesh=makeSeaFishMesh(color);const fish={x,alt:-18,z,stage,color,age:0,delay:i*.42+Math.random()*.25,life:7.2,bitten:false,riseSpeed:145+Math.random()*48,mesh};mesh.position.set(x*S,Y(fish.alt),z*S);objGroup.add(mesh);objs.seaFish.push(fish);}
+}
+function updateSeaFish(dt){
+ if(!objs||!Array.isArray(objs.seaFish))return;
+ for(let i=objs.seaFish.length-1;i>=0;i--){const f=objs.seaFish[i];f.age+=dt;if(f.age<f.delay){f.mesh.position.set(f.x*S,Y(f.alt),f.z*S);continue;}f.life-=dt;
+  if(f.life<=0||f.bitten){if(f.mesh.parent)f.mesh.parent.remove(f.mesh);objs.seaFish.splice(i,1);continue;}
+  const targetAlt=clamp(P.alt+8,95,440);
+  if(f.alt<targetAlt){f.alt=Math.min(targetAlt,f.alt+f.riseSpeed*dt);f.x+=Math.sin(f.age*3.2)*32*dt;}else{f.x+=clamp(P.x-f.x,-950,950)*Math.min(1,dt*1.8);f.z+=clamp(P.z-f.z,-320,320)*Math.min(1,dt*1.6);}
+  f.mesh.position.set(f.x*S,Y(f.alt),f.z*S);f.mesh.rotation.z=f.alt<targetAlt?Math.PI/2:Math.atan2(P.alt-f.alt,P.x-f.x);f.mesh.rotation.y=Math.sin(f.age*5)*.16;
+  if(f.alt>=targetAlt-12&&Math.abs(f.x-P.x)<115&&Math.abs(f.z-P.z)<78){f.bitten=true;damagePlayer(8,f.x,f.alt,f.z,'wildlife');addFloat(f.x,f.alt+24,'هجوم سمكة بحرية!','#'+f.color.toString(16).padStart(6,'0'),f.z);for(let n=0;n<7;n++)addPart(f.x,f.alt,(Math.random()-.5)*80,Math.random()*65,.25,f.color,2.5,f.z);beep(190,.12,'sawtooth',.035);}
+ }
+}
 function prepareWorldModel(root,targetSize){
   const model=new THREE.Group();model.add(root);model.updateMatrixWorld(true);
   let box=new THREE.Box3().setFromObject(model);if(box.isEmpty())return null;
@@ -1215,7 +1248,7 @@ function spawn(until){
     objs.enemies=objs.enemies.filter(other=>other.boss&&!other.hit);
     if(Array.isArray(objs.landmarks)){objs.landmarks.forEach(item=>{if(item.mesh)objGroup.remove(item.mesh);});objs.landmarks.length=0;}
     spawnWorldLandmark('eagleTower',x-900,-220,stage);spawnWorldLandmark('eagleTower',x-900,220,stage);
-    if(biomeIndex===2){spawnWorldLandmark('serpentWater',x-1100,0,stage);spawnWorldLandmark('lighthouse',x-700,0,stage);}
+    if(biomeIndex===2){spawnWorldLandmark('serpentWater',x-1100,0,stage);spawnWorldLandmark('lighthouse',x-700,0,stage);spawnSeaFishSchool(x-1850,stage);spawnSeaFishSchool(x-450,stage);}
     if(biomeIndex===4)spawnWorldLandmark('finalCastle',x-100,0,stage);
     objs.enemyShots.forEach(b=>scene.remove(b.mesh));objs.enemyShots.length=0;
     ['coins','rings','birds','fuels','drafts','storms','stations'].forEach(key=>{objs[key].forEach(o=>{if(o.mesh)objGroup.remove(o.mesh);});objs[key]=[];});
@@ -1769,6 +1802,7 @@ function launch(){
 
 /* ---------- update ---------- */
 function updateFlight(dt){
+  updateSeaFish(dt);
   run.fireCd=Math.max(0,run.fireCd-dt);
   run.fireSfxTimer-=dt;
   P.hitCooldown=Math.max(0,(P.hitCooldown||0)-dt);P.damageFlash=Math.max(0,(P.damageFlash||0)-dt);
