@@ -120,6 +120,7 @@ const SFX_URLS={
   launch:'assets/audio/sfx/\u200claunch.ogg',
   'engine-loop':'assets/audio/sfx/\u200cengine-loop.ogg',
   'weapon-fire':'assets/audio/sfx/\u200c\u200cweapon-fire.ogg',
+  'missile-launch':'assets/audio/sfx/missile-launch.ogg',
   'missile-impact':'assets/audio/sfx/\u200cmissile-impact.ogg',
   'boss-warning':'assets/audio/sfx/\u200cboss-warning.ogg',
   'boss-hit':'assets/audio/sfx/\u200cboss-hit.ogg',
@@ -132,7 +133,7 @@ const SFX_URLS={
   laser:'assets/audio/music/laser.ogg'
 };
 const sfxPools=Object.create(null),sfxCursor=Object.create(null),sfxLastPlayed=Object.create(null);
-const SFX_THROTTLE={'weapon-fire':0.065,'boss-hit':0.12,laser:0.08,coin:0.045};
+const SFX_THROTTLE={'weapon-fire':0.065,'boss-hit':0.12,'missile-launch':0.12,laser:0.08,coin:0.045};
 let audioUnlocked=false,currentMusicKey='',musicAudio=null,engineAudio=null;
 try{
   if(typeof Audio!=='undefined'){
@@ -1680,14 +1681,24 @@ function spawnRocketAmbush(){
   toast('كمين صاروخي مفاجئ — تفادَ الرشقات!');
   playSfx('boss-warning',0.8);
 }
+let rocketAttackTemplate=null,rocketAttackLoadStarted=false;
+function loadRocketAttackModel(){
+ if(rocketAttackLoadStarted||typeof THREE.GLTFLoader!=='function')return;
+ rocketAttackLoadStarted=true;
+ new THREE.GLTFLoader().load('assets/models/rocket-attack/air_interceptor_missile.glb',gltf=>{rocketAttackTemplate=gltf.scene;rocketAttackTemplate.traverse(node=>{if(node.isMesh){node.castShadow=true;node.frustumCulled=true;}});},undefined,error=>console.warn('Rocket GLB unavailable; using the procedural rocket fallback.',error));
+}
+loadRocketAttackModel();
+function makeRocketAttackMesh(){
+ if(rocketAttackTemplate){const mesh=rocketAttackTemplate.clone(true);mesh.scale.setScalar(5.6);return mesh;}
+ const fallback=new THREE.Mesh(new THREE.ConeGeometry(3.2,13,8),matS(0xe84c38,.34,{emissive:0x54150c,metalness:.3}));fallback.geometry.rotateZ(-Math.PI/2);return fallback;
+}
 function fireStageEnemyShot(e,rocket){
   const dx=P.x-e.x,dy=P.alt-e.alt,dz=P.z-e.z,L=Math.hypot(dx,dy,dz)||1;
   const speed=rocket?690:820;
-  const mesh=new THREE.Mesh(
-    rocket?new THREE.SphereGeometry(6.2,8,6):new THREE.SphereGeometry(3.8,8,6),
-    new THREE.MeshBasicMaterial({color:rocket?0xff623f:0xffd36a,transparent:true,opacity:0.98})
-  );
-  mesh.position.set(e.x*S,Y(e.alt+8),e.z*S);scene.add(mesh);
+  const mesh=rocket?makeRocketAttackMesh():new THREE.Mesh(new THREE.SphereGeometry(3.8,8,6),new THREE.MeshBasicMaterial({color:0xffd36a,transparent:true,opacity:0.98}));
+  mesh.position.set(e.x*S,Y(e.alt+8),e.z*S);
+  if(rocket)mesh.quaternion.setFromUnitVectors(new THREE.Vector3(1,0,0),new THREE.Vector3(dx/L,dy/L,dz/L).normalize());
+  scene.add(mesh);
   const spread=rocket?(e.attackSide||0)*0.06:(e.attackSide||0)*0.12;
   const vx=dx/L*speed,vy=dy/L*speed,vz=dz/L*speed+spread*speed;
   objs.enemyShots.push({x:e.x,alt:e.alt+8,z:e.z,vx,vy,vz,life:rocket?4.2:3.2,mesh,turretShot:true,defenseAttack:rocket?'rocket':'burst',damage:rocket?10:6,homing:rocket,seekerSpeed:speed,attackSide:e.attackSide||((Math.random()-.5)*0.22)});
@@ -1725,8 +1736,8 @@ function doMissile(){
   if(run.missiles<=0){toast('نفدت الصواريخ؛ ابحث عن محطة تطوير');beep(160,.1,'square');return;}
   const target=missileTarget();
   if(!target){toast('لا يوجد هدف أمامك الآن');return;}
-  const mesh=new THREE.Mesh(missileGeo,missileMat);mesh.position.set((P.x+24)*S,Y(P.alt),P.z*S);scene.add(mesh);
-  missiles.push({x:P.x+24,alt:P.alt,z:P.z,vx:Math.max(850,P.s+650),vy:0,vz:0,life:4.2,smoke:0,target,mesh});
+  const mesh=makeRocketAttackMesh();mesh.position.set((P.x+24)*S,Y(P.alt),P.z*S);scene.add(mesh);
+  missiles.push({x:P.x+24,alt:P.alt,z:P.z,vx:Math.max(850,P.s+650),vy:0,vz:0,life:4.2,smoke:0,target,mesh,rocketModel:true});
   run.missiles--;missileCooldown=0.7;playSfx('missile-launch');toast('صاروخ موجّه!');
 }
 function updateFuelGauge(){

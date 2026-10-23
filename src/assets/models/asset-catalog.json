@@ -206,8 +206,23 @@
       "formats": [
         ".glb"
       ],
-      "runtimeIntegration": "pending",
-      "purpose": "ضع هنا نماذج الصواريخ التي تطارد طائرة اللاعب أو تعترض مسارها. أسماء مقترحة: air_interceptor_missile.glb و heat_seeker.glb. النموذج بصري فقط؛ التوجيه والسرعة والتصادم والانفجار وموازنة الصعوبة تحتاج تكاملًا برمجيًا."
+      "runtimeIntegration": "runtime-integrated",
+      "purpose": "صاروخ اعتراض جوي منخفض المضلعات من تصميم المشروع؛ يُستخدم في المقذوفات الصاروخية المعادية وصواريخ اللاعب الموجهة، مع توجيه وتصادم برمجي وبديل إجرائي عند تعذر التحميل.",
+      "models": {
+        "air_interceptor_missile.glb": {
+          "role": "guided_air_interceptor",
+          "biomes": [
+            "general",
+            "desert",
+            "snow",
+            "boss_arenas"
+          ],
+          "behavior": "guided_projectile",
+          "authoredFor": "Sling-wing",
+          "forwardAxis": "+X",
+          "fallback": "procedural_rocket"
+        }
+      }
     },
     "wildlife": {
       "title": "الماء والبحر والطبيعة أسفل الطائرة",
@@ -234,6 +249,25 @@
           ],
           "damage": true,
           "fallback": "procedural_fish"
+        }
+      }
+    },
+    "bosses": {
+      "title": "نماذج الزعماء",
+      "folder": "src/assets/models/bosses/",
+      "formats": [
+        ".glb"
+      ],
+      "runtimeIntegration": "runtime-integrated",
+      "purpose": "نماذج الزعماء الرئيسية التي تُحمّل أثناء القتال، مع بدائل إجرائية عند فشل التحميل.",
+      "models": {
+        "iron_eagle.glb": {
+          "role": "iron_eagle_boss",
+          "biomes": [
+            "green_plains"
+          ],
+          "behavior": "boss_air_combat",
+          "fallback": "procedural_boss"
         }
       }
     }

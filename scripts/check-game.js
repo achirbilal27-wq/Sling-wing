@@ -209,6 +209,14 @@ check(js.includes("assets/models/assault-defender/'+def.file") && js.includes('m
 check(js.includes("e.defenseAttack==='chase'") && js.includes('turretShot:true') && js.includes('else if(e.turret)'), 'Defense turrets must have active movement, attacks, and damage handling.');
 check(js.includes("function currentDefenseBiome(stage){const n=((stage%5)+5)%5;return n===1?'desert':n===3?'snow':n===4?'boss_arena':'general';}") && js.includes("groundTex('#3faea9','#78d4c6'),\n  groundTex('#eaf3fb','#ffffff'),") && js.includes("trees.forEach(t=>{t.visible=index!==1;});") && js.includes("cacti.forEach(c=>{c.visible=index===1;});") && js.includes("biome==='snow'?(DEFENSE_MODELS.find(d=>d.role==='ice')||general[0])") && js.includes("biome==='desert'?(DEFENSE_MODELS.find(d=>d.role==='sand')||general[0])") && js.includes("biome==='boss_arena'?(DEFENSE_MODELS.find(d=>d.role==='final')||DEFENSE_MODELS.find(d=>d.role==='laser2')||general[0])"), 'Defense selection and ground textures must match the visible desert, water, snow, and boss-arena stages, including missing-model fallbacks.');
 
+const rocketCatalog = defenseCatalog.categories['rocket-attack'];
+check(rocketCatalog && rocketCatalog.runtimeIntegration === 'runtime-integrated', 'Rocket attack catalog must match the active runtime loader.');
+check(!!rocketCatalog?.models?.['air_interceptor_missile.glb'], 'Custom air-interceptor rocket must be catalogued.');
+check(exists('assets/models/rocket-attack/air_interceptor_missile.glb'), 'Custom air-interceptor rocket GLB is missing.');
+check(js.includes('function loadRocketAttackModel()') && js.includes('assets/models/rocket-attack/air_interceptor_missile.glb') && js.includes('rocketAttackTemplate.clone(true)'), 'Custom rocket GLB must load and be cloned into gameplay.');
+check(js.includes("'missile-launch':'assets/audio/sfx/missile-launch.ogg'"), 'Uploaded missile-launch sound must be mapped in SFX_URLS.');
+check(exists('assets/audio/sfx/missile-launch.ogg'), 'Uploaded missile-launch audio file is missing.');
+check(js.includes("playSfx('missile-launch')"), 'Player missile launch must play the mapped sound.');
 if (failures.length) {
   console.error('Game integrity checks FAILED:');
   for (const failure of failures) console.error(' - ' + failure);
