@@ -91,6 +91,15 @@ check(rewardUpdate.includes('r.mesh.scale.setScalar(0.75+0.25*Math.min(1,r.life/
 check(js.includes('function defeatBoss(e,source){') && js.includes('if(!e||e.hit)return;') &&
   js.includes('spawnBossRewardPlane(e);'),
   'Boss reward must be spawned only after the first valid boss-defeat transition.');
+check(js.includes('if(best)return best;') && js.includes('for(const reward of bossRewardPlanes)') && js.includes('bonus:true,hit:false,collected:false'),
+  'Shot target acquisition must prefer eligible enemies/bosses and then consider bonus planes.');
+check(js.includes("target.bonus?'طائرة مكافأة'") && js.includes("shot.aimMode==='smart'||shot.aimMode==='precision'"),
+  'Smart and precision shots must track bonus targets while spread mode remains untargeted.');
+check(js.includes('function collectBossRewardPlane(reward){') && js.includes('reward.hit=true;reward.collected=true;') && js.includes('bossRewardPlanes.splice(index,1);') && js.includes("playSfx('coin',0.95)") && js.includes("'مكافأة Bonus +'"),
+  'Bonus collection must be one-time, remove the aircraft immediately, award coins, and play collection feedback.');
+check(js.includes('if(!hit){for(const reward of bossRewardPlanes)') && js.includes('collectBossRewardPlane(reward);') &&
+  js.includes('r.x=r.originX+Math.sin(r.age*2.1)*90;') && js.includes('if(r.life<=0){objGroup.remove(r.mesh);bossRewardPlanes.splice(i,1);}'),
+  'Bonus planes must have independent bullet collision and retain the uncollected timeout cleanup.');
 const glbModels = [
   { path: 'assets/models/aircraft/stylized_ww1_plane.glb', label: 'Falcon player aircraft' },
   { path: 'assets/models/glb/plane_pc.glb', label: 'Enemy aircraft' },

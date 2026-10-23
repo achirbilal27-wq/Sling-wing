@@ -855,7 +855,23 @@ function spawnBossRewardPlane(boss){
   objGroup.add(mesh);
   addFloat(boss.x,boss.alt+155,'مكافأة الزعيم: طائرة إضافية!','#8cf5ff',boss.z);
   toast('مكافأة الزعيم: طائرة إضافية!');
-  bossRewardPlanes.push({mesh,life:5.5,age:0,originX:boss.x,originAlt:boss.alt+115,originZ:boss.z});
+  bossRewardPlanes.push({mesh,life:5.5,age:0,originX:boss.x,originAlt:boss.alt+115,originZ:boss.z,x:boss.x,alt:boss.alt+115,z:boss.z,bonus:true,hit:false,collected:false});
+}
+function collectBossRewardPlane(reward){
+  if(!reward||reward.hit||reward.collected)return false;
+  // Mark first, then remove from the live target list so simultaneous shots cannot pay twice.
+  reward.hit=true;reward.collected=true;
+  const index=bossRewardPlanes.indexOf(reward);
+  if(index>=0)bossRewardPlanes.splice(index,1);
+  if(reward.mesh)objGroup.remove(reward.mesh);
+  const coins=50*(1+save.lv.coin);
+  run.coins+=coins;
+  addFloat(reward.x,reward.alt+45,'مكافأة Bonus +'+coins,'#ffe27a',reward.z);
+  playSfx('coin',0.95);
+  toast('تم جمع مكافأة الطائرة +'+coins);
+  shake=Math.max(shake,0.12);
+  for(let n=0;n<18;n++)addPart(reward.x,reward.alt,(Math.random()-.5)*170,(Math.random()-.5)*170,0.42,[0xffd34e,0x8cf5ff,0xffffff][n%3],3+Math.random()*3,reward.z,(Math.random()-.5)*130);
+  return true;
 }
 function prepareAircraftModel(root){
   // Keep the imported GLB hierarchy intact and normalize it through a wrapper.
@@ -1613,8 +1629,12 @@ function doAbility(){
   updateAbilityUI();
 }
 function findShotTarget(cone,maxRange=12000){
+  // Keep hostile aircraft and bosses ahead of optional bonus rewards.
   let best=null,score=cone;
   for(const e of objs.enemies){if(e.hit)continue;const dx=e.x-P.x;if(dx<80||dx>maxRange)continue;const ey=(e.alt-P.alt)/dx,ez=(e.z-P.z)/dx,sc=ey*ey+ez*ez+(dx/maxRange)*0.018;if(sc<score){score=sc;best=e;}}
+  if(best)return best;
+  // Only acquire a bonus plane when no enemy/boss qualifies for this aiming cone.
+  for(const reward of bossRewardPlanes){if(!reward||reward.hit||reward.collected)continue;const dx=reward.x-P.x;if(dx<80||dx>maxRange)continue;const ey=(reward.alt-P.alt)/dx,ez=(reward.z-P.z)/dx,sc=ey*ey+ez*ez+(dx/maxRange)*0.018;if(sc<score){score=sc;best=reward;}}
   return best;
 }
 function doShoot(){
@@ -1647,7 +1667,7 @@ function updateTargetLock(){
   el.hidden=false;
   el.classList.toggle('boss-lock',!!target.boss);
   const label=$('targetLockLabel');
-  if(label)label.textContent=(target.boss?(target.bossName||'زعيم'):'هدف معادٍ')+' · '+(aimMode==='precision'?'تصويب دقيق':aimMode==='spread'?'نمط انتشار':'تتبع ذكي');
+  if(label)label.textContent=(target.bonus?'طائرة مكافأة':target.boss?(target.bossName||'زعيم'):'هدف معادٍ')+' · '+(aimMode==='precision'?'تصويب دقيق':aimMode==='spread'?'نمط انتشار':'تتبع ذكي');
   el.style.transform='translate('+((_v.x*0.5+0.5)*W)+'px,'+((-_v.y*0.5+0.5)*Hh)+'px) translate(-50%,-50%)';
 }
 
@@ -2220,6 +2240,13 @@ function updateFlight(dt){
         break;
       }
     }}
+    // Bonus planes have their own collision path and do not use enemy damage logic.
+    if(!hit){for(const reward of bossRewardPlanes){
+      if(reward.hit||reward.collected)continue;
+      if(Math.abs(reward.x-shot.x)<52&&Math.abs(reward.alt-shot.alt)<40&&Math.abs(reward.z-shot.z)<52){
+        hit=true;collectBossRewardPlane(reward);break;
+      }
+    }}
     if(hit||shot.life<=0){scene.remove(shot.mesh);shots.splice(i,1);}
   }
   missileCooldown=Math.max(0,missileCooldown-dt);
@@ -2257,9 +2284,10 @@ function update(dt){
   if(objs&&Array.isArray(objs.landmarks))objs.landmarks.forEach(item=>{item.age+=dt;if(item.mixer)item.mixer.update(dt);if(item.kind==='serpentWater'&&item.mesh){item.mesh.position.y=1+Math.sin(time*1.3)*0.22;item.mesh.rotation.y=Math.sin(time*.35)*.025;}});
   for(let i=bossRewardPlanes.length-1;i>=0;i--){
     const r=bossRewardPlanes[i];r.age+=dt;r.life-=dt;
-    r.mesh.position.x=(r.originX+Math.sin(r.age*2.1)*90)*S;
-    r.mesh.position.y=Y(r.originAlt+r.age*115);
-    r.mesh.position.z=(r.originZ+Math.cos(r.age*1.6)*45)*S;
+    r.x=r.originX+Math.sin(r.age*2.1)*90;
+    r.alt=r.originAlt+r.age*115;
+    r.z=r.originZ+Math.cos(r.age*1.6)*45;
+    r.mesh.position.set(r.x*S,Y(r.alt),r.z*S);
     r.mesh.rotation.y+=dt*0.8;r.mesh.rotation.z=Math.sin(r.age*2)*0.12;
     // Animate the outer wrapper only; the child aircraft keeps its fitted scale.
     r.mesh.scale.setScalar(0.75+0.25*Math.min(1,r.life/0.6));
