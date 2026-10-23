@@ -754,8 +754,10 @@ function prepareEnemyModel(root){
   });
   return normalized;
 }
-function makeEnemyPlane(){
+function makeEnemyPlane(kind){
   const g=new THREE.Group();
+  const variant=kind&&enemyVariantTemplates[kind];
+  if(variant){g.add(variant.clone(true));g.rotation.y=Math.PI;g.userData.enemyKind=kind;return g;}
   if(enemyModelTemplate){
     g.add(enemyModelTemplate.clone(true));
     g.rotation.y=Math.PI;
@@ -782,8 +784,8 @@ function loadEnemyPlaneModel(){
     enemyModelTemplate=model;
     if(typeof objs!=='undefined'&&objs&&Array.isArray(objs.enemies)){
       objs.enemies.forEach(enemy=>{
-        // Do not replace a boss mesh with a regular enemy aircraft if the GLB finishes loading mid-battle.
-        if(enemy.boss||!enemy.mesh||!enemy.mesh.parent) return;
+        // Preserve bosses and stage-specific aircraft while the default GLB loads.
+        if(enemy.boss||enemy.enemyKind||!enemy.mesh||!enemy.mesh.parent) return;
         const old=enemy.mesh;
         const replacement=makeEnemyPlane();
         replacement.position.copy(old.position);
@@ -800,6 +802,54 @@ function loadEnemyPlaneModel(){
   });
 }
 loadEnemyPlaneModel();
+const enemyVariantTemplates=Object.create(null);
+const enemyVariantLoadStarted=Object.create(null);
+const ENEMY_VARIANT_FILES={
+  kamikaze:'assets/models/planes-dead/kamikaze_scout.glb',
+  dive:'assets/models/planes-dead/dive_attacker.glb'
+};
+function loadEnemyVariantModels(){
+  if(typeof THREE.GLTFLoader!=='function')return;
+  Object.entries(ENEMY_VARIANT_FILES).forEach(([kind,path])=>{
+    if(enemyVariantLoadStarted[kind])return;
+    enemyVariantLoadStarted[kind]=true;
+    new THREE.GLTFLoader().load(path,gltf=>{
+      const template=prepareEnemyModel(gltf.scene);
+      if(!template){console.warn('Invalid stage enemy model; fallback retained:',path);return;}
+      enemyVariantTemplates[kind]=template;
+      if(typeof objs!=='undefined'&&objs&&Array.isArray(objs.enemies)){
+        objs.enemies.forEach(enemy=>{
+          if(enemy.hit||enemy.boss||enemy.enemyKind!==kind||!enemy.mesh||!enemy.mesh.parent)return;
+          const old=enemy.mesh,replacement=makeEnemyPlane(kind);
+          replacement.position.copy(old.position);replacement.rotation.copy(old.rotation);replacement.visible=old.visible;
+          old.parent.add(replacement);old.parent.remove(old);enemy.mesh=replacement;
+        });
+      }
+      console.info('Stage enemy model loaded:',kind);
+    },undefined,error=>console.warn('Stage enemy model unavailable; safe fallback retained:',path,error));
+  });
+}
+loadEnemyVariantModels();
+let bonusPlaneTemplate=null,bonusPlaneLoadStarted=false;
+const bossRewardPlanes=[];
+function loadBossRewardPlane(){
+  if(bonusPlaneLoadStarted||typeof THREE.GLTFLoader!=='function')return;
+  bonusPlaneLoadStarted=true;
+  new THREE.GLTFLoader().load('assets/models/bonus/low_poly_ww2_fighter_planes.glb',gltf=>{
+    bonusPlaneTemplate=prepareEnemyModel(gltf.scene);
+    if(!bonusPlaneTemplate)console.warn('Boss reward aircraft model has no usable geometry.');
+  },undefined,error=>console.warn('Boss reward aircraft GLB unavailable; procedural aircraft fallback retained.',error));
+}
+loadBossRewardPlane();
+function spawnBossRewardPlane(boss){
+  if(!boss)return;
+  const mesh=bonusPlaneTemplate?bonusPlaneTemplate.clone(true):makeEnemyPlane();
+  mesh.scale.multiplyScalar(1.45);
+  mesh.position.set(boss.x*S,Y(boss.alt+115),boss.z*S);
+  mesh.rotation.z=-0.12;
+  objGroup.add(mesh);
+  bossRewardPlanes.push({mesh,life:2.8,age:0,originX:boss.x,originAlt:boss.alt+115,originZ:boss.z});
+}
 function prepareAircraftModel(root){
   // Keep the imported GLB hierarchy intact and normalize it through a wrapper.
   const normalized=new THREE.Group();
@@ -1095,9 +1145,10 @@ function spawn(until){
     objs.nextBoss=bossDistanceMeters(stage+1)/M_PER_PX;return;
   }
   while(objs.nextEnemy<until){
-    const x=objs.nextEnemy;
-    const e={x,alt:180+Math.random()*390,z:zc((Math.random()-.5)*420),phase:Math.random()*6.28,fireT:1.2+Math.random()*1.4,hit:false};
-    e.mesh=makeEnemyPlane();e.mesh.position.set(x*S,Y(e.alt),e.z*S);objGroup.add(e.mesh);objs.enemies.push(e);
+    const x=objs.nextEnemy,stage=biomeStageAtMeters(x*M_PER_PX);
+    const enemyKind=stage===0?'kamikaze':stage===1?'dive':null;
+    const e={x,alt:180+Math.random()*390,z:zc((Math.random()-.5)*420),phase:Math.random()*6.28,fireT:1.2+Math.random()*1.4,hit:false,enemyKind,contactHit:false};
+    e.mesh=makeEnemyPlane(enemyKind);e.mesh.position.set(x*S,Y(e.alt),e.z*S);objGroup.add(e.mesh);objs.enemies.push(e);
     objs.nextEnemy+=400/M_PER_PX;
   }
   while(objs.next<until){
@@ -1506,6 +1557,7 @@ function defeatBoss(e,source){
   addFloat(e.x,e.alt+95,(source==='missile'?'إسقاط صاروخي — هُزم الزعيم! +':'هُزم الزعيم! +')+reward,'#ffe27a',e.z);
   if(run.bosses>=5)playSfx('victory-stinger');else playSfx('boss-defeat');
   triggerBossDestruction(e);
+  spawnBossRewardPlane(e);
   objs.enemyShots.forEach(b=>scene.remove(b.mesh));objs.enemyShots.length=0;
   const discoveries=[
     ['سجل الوادي','السجل أقدم من العاصفة','يجد الطيار سجلًا يثبت أن أبراج السيطرة بُنيت قبل الكارثة بسنوات.'],
@@ -1767,6 +1819,36 @@ function updateFlight(dt){
       }
       continue;
     }
+    if(e.enemyKind){
+      if(e.enemyKind==='kamikaze'){
+        e.x-=Math.min(210,95+Math.max(0,P.s)*0.06)*dt;
+        e.alt=clamp(e.alt+(P.alt-e.alt)*Math.min(1,dt*0.32),35,500);
+        e.z=zc(e.z+(P.z-e.z)*Math.min(1,dt*0.38));
+        e.mesh.rotation.y=Math.atan2(P.z-e.z,P.x-e.x);
+        e.mesh.rotation.z=Math.sin(e.phase*1.7)*0.09;
+      }else if(e.enemyKind==='dive'){
+        const near=e.x<P.x+1250;
+        if(near){
+          e.x-=Math.min(390,210+Math.max(0,P.s)*0.12)*dt;
+          e.alt=clamp(e.alt+(P.alt-e.alt)*Math.min(1,dt*0.72),25,560);
+          e.z=zc(e.z+(P.z-e.z)*Math.min(1,dt*0.65));
+        }else{
+          e.alt=clamp(e.alt+Math.sin(e.phase*0.7)*dt*24,70,570);
+          e.z=zc(e.z+Math.sin(e.phase*0.45)*dt*22);
+        }
+        e.mesh.rotation.y=Math.atan2(P.z-e.z,P.x-e.x);
+        e.mesh.rotation.z=clamp((P.z-e.z)*0.0018,-0.32,0.32);
+      }
+      const dx=e.x-P.x,dy=e.alt-P.alt,dz=e.z-P.z;
+      if(!e.contactHit&&dx*dx+dy*dy+dz*dz<44*44){
+        e.contactHit=true;
+        if(shieldT>0||shieldCooldown<=0)activateShield(e.x,e.alt,e.z);
+        else damagePlayer(e.enemyKind==='dive'?13:10,e.x,e.alt,e.z,'enemy-plane');
+        e.hit=true;e.mesh.visible=false;
+        for(let n=0;n<10;n++)addPart(e.x,e.alt,(Math.random()-.5)*170,(Math.random()-.5)*140,0.35,0xffa46b,2.5,e.z);
+      }
+      continue;
+    }
     if(e.boss){
       const ratio=e.hp/e.maxHp;
       const nextPhase=ratio<=0.28?3:ratio<=0.62?2:1;
@@ -1961,6 +2043,15 @@ function update(dt){
     const p=parts[i];p.life-=dt;
     if(p.life<=0){p.mesh.visible=false;parts.splice(i,1);continue;}
     p.x+=p.vx*dt;p.alt+=p.vy*dt;p.z+=p.vz*dt;
+  }
+  for(let i=bossRewardPlanes.length-1;i>=0;i--){
+    const r=bossRewardPlanes[i];r.age+=dt;r.life-=dt;
+    r.mesh.position.x=(r.originX+Math.sin(r.age*2.1)*90)*S;
+    r.mesh.position.y=Y(r.originAlt+r.age*115);
+    r.mesh.position.z=(r.originZ+Math.cos(r.age*1.6)*45)*S;
+    r.mesh.rotation.y+=dt*0.8;r.mesh.rotation.z=Math.sin(r.age*2)*0.12;
+    const scale=1.45*(0.75+0.25*Math.min(1,r.life/0.6));r.mesh.scale.setScalar(scale);
+    if(r.life<=0){objGroup.remove(r.mesh);bossRewardPlanes.splice(i,1);}
   }
   for(let i=bossBlastRings.length-1;i>=0;i--){
     const b=bossBlastRings[i];b.life-=dt;
