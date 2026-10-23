@@ -798,7 +798,7 @@ function loadEnemyPlaneModel(){
     }
     console.info('Enemy aircraft GLB loaded successfully.');
   },undefined,error=>{
-    console.warn('Enemy GLB unavailable; using procedural aircraft until assets/models/glb/plane_pc.glb is added.',error);
+    console.warn('Enemy GLB unavailable; keeping the procedural aircraft fallback.',error);
   });
 }
 loadEnemyPlaneModel();

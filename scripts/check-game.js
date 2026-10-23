@@ -134,6 +134,33 @@ if (fs.existsSync(preparedHtmlPath)) {
 check(fs.existsSync(path.join(root, 'package.json')), 'package.json is missing.');
 
 check(js.includes("assets/models/wildlife/MechaFish.glb") && js.includes("function spawnSeaFishSchool") && js.includes("function updateSeaFish"), 'MechaFish must load and use runtime ocean ambush behavior.');
+
+const expectedEnvironmentModels = {
+  'desert_outpost.glb': 'desertOutpost',
+  'ice_island.glb': 'iceIsland',
+  'The_castle_of_boss.glb': 'finalCastle',
+  'castle_bar_resaux.glb': 'lighthouse',
+  'eagle_tower#1boss.glb': 'eagleTower',
+  'environment_of_fighter.glb': 'fighterDefense',
+  'ocean_water_animated.glb': 'serpentWater',
+  'searchlight_place.glb': 'searchlight',
+};
+const environmentCatalog = defenseCatalog.categories.environment;
+check(environmentCatalog.runtimeIntegration === 'runtime-integrated', 'Environment catalog must match active landmark loading.');
+for (const [filename, kind] of Object.entries(expectedEnvironmentModels)) {
+  check(!!environmentCatalog.models?.[filename], 'Environment catalog is missing model mapping: ' + filename);
+  check(js.includes(kind), 'Environment model has no runtime landmark integration: ' + kind);
+  check(exists('assets/models/environment/' + filename), 'Environment GLB is missing: ' + filename);
+}
+check(defenseCatalog.categories.bonus.runtimeIntegration === 'runtime-integrated', 'Boss reward aircraft catalog must match runtime loading.');
+check(!!defenseCatalog.categories.bonus.models?.['low_poly_ww2_fighter_planes.glb'] && js.includes('function loadBossRewardPlane()') && js.includes('function spawnBossRewardPlane('), 'Boss reward aircraft must be catalogued and connected to the reward flyby.');
+check(defenseCatalog.categories['planes-dead'].runtimeIntegration === 'runtime-integrated', 'Stage enemy aircraft catalog must match runtime loading.');
+for (const filename of ['kamikaze_scout.glb', 'dive_attacker.glb']) {
+  check(!!defenseCatalog.categories['planes-dead'].models?.[filename], 'Stage enemy catalog is missing model mapping: ' + filename);
+  check(exists('assets/models/planes-dead/' + filename), 'Stage enemy GLB is missing: ' + filename);
+  check(js.includes(filename), 'Stage enemy GLB is not referenced by runtime code: ' + filename);
+}
+check(!js.includes('using procedural aircraft until assets/models/glb/plane_pc.glb is added'), 'Enemy GLB failure warning must not claim an existing asset is missing.');
 check(js.includes("spawnSeaFishSchool(x-1850,stage)") && js.includes("spawnSeaFishSchool(x-450,stage)"), 'MechaFish schools must spawn at separated locations in the Current-serpent ocean arena.');
 check(js.includes("SEA_FISH_COLORS") && js.includes("damagePlayer(8,f.x,f.alt,f.z,'wildlife')"), 'MechaFish must use varied colors and bite damage.');
 
@@ -185,4 +212,4 @@ if (failures.length) {
   for (const failure of failures) console.error(' - ' + failure);
   process.exit(1);
 }
-console.log('Game integrity checks passed: JavaScript syntax, DOM IDs, local assets, CSS structure, aircraft/boss models, defense integration, and local Android preparation.');
+console.log('Game integrity checks passed: JavaScript syntax, DOM IDs, local assets, CSS structure, aircraft/boss models, environment/reward/stage-enemy integration, defense integration, and local Android preparation.');

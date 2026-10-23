@@ -9,8 +9,76 @@
       "formats": [
         ".glb"
       ],
-      "runtimeIntegration": "pending",
-      "purpose": "ضع هنا ملفات GLB الخاصة بالبيئات: جزر، جبال، مدن، قواعد، كهوف أو عناصر تضيف هوية بصرية لكل منطقة. استخدم أسماء واضحة مثل desert_outpost.glb و ice_island.glb. يفضّل أن تكون البيئة مقسمة إلى أجزاء قابلة لإعادة الاستخدام، مع خامات مضمنة داخل GLB."
+      "runtimeIntegration": "runtime-integrated",
+      "purpose": "البيئات والعناصر البصرية المرتبطة بالمراحل وساحات الزعماء. تُحمّل النماذج محليًا عند توفرها، مع مجسمات إجرائية بديلة عند تعذر التحميل.",
+      "models": {
+        "desert_outpost.glb": {
+          "role": "desert_outpost_landmark",
+          "biomes": [
+            "desert"
+          ],
+          "behavior": "stage_landmark",
+          "fallback": "procedural_outpost"
+        },
+        "ice_island.glb": {
+          "role": "ice_island_landmark",
+          "biomes": [
+            "snow"
+          ],
+          "behavior": "stage_landmark",
+          "fallback": "procedural_ice_island"
+        },
+        "The_castle_of_boss.glb": {
+          "role": "final_boss_castle",
+          "biomes": [
+            "final_boss_arena"
+          ],
+          "behavior": "final_boss_landmark",
+          "fallback": "procedural_castle"
+        },
+        "castle_bar_resaux.glb": {
+          "role": "lighthouse_landmark",
+          "biomes": [
+            "ocean_boss_arena"
+          ],
+          "behavior": "boss_arena_landmark",
+          "fallback": "procedural_lighthouse"
+        },
+        "eagle_tower#1boss.glb": {
+          "role": "eagle_tower_landmark",
+          "biomes": [
+            "boss_arenas"
+          ],
+          "behavior": "boss_arena_landmark",
+          "runtimeUrl": "eagle_tower%231boss.glb",
+          "fallback": "procedural_tower"
+        },
+        "environment_of_fighter.glb": {
+          "role": "fighter_defense_landmark",
+          "biomes": [
+            "green_plains",
+            "ocean"
+          ],
+          "behavior": "stage_landmark",
+          "fallback": "procedural_fighter_defense"
+        },
+        "ocean_water_animated.glb": {
+          "role": "ocean_arena_water",
+          "biomes": [
+            "ocean_boss_arena"
+          ],
+          "behavior": "animated_water_surface",
+          "fallback": "procedural_water"
+        },
+        "searchlight_place.glb": {
+          "role": "searchlight_landmark",
+          "biomes": [
+            "final_boss_arena"
+          ],
+          "behavior": "stage_landmark",
+          "fallback": "procedural_searchlight"
+        }
+      }
     },
     "assault-defender": {
       "title": "المدافع والقواعد الاعتراضية",
@@ -93,8 +161,15 @@
       "formats": [
         ".glb"
       ],
-      "runtimeIntegration": "pending",
-      "purpose": "ضع هنا طائرات المكافآت التي تظهر كأهداف/عناصر خاصة وتمنح اللاعب عملات عند جمع المكافأة. أسماء مقترحة: coin_carrier.glb و golden_wing.glb. ملفات GLB وحدها لا تمنح العملات تلقائيًا؛ يلزم ربط كل طائرة بمنطق ظهور والتقاط ومكافأة داخل اللعبة."
+      "runtimeIntegration": "runtime-integrated",
+      "purpose": "نموذج طائرة مكافأة يُستخدم في مرور احتفالي بعد هزيمة الزعيم. المكافآت نفسها تُدار بمنطق اللعبة؛ هذا النموذج ليس عنصر جمع مستقلًا.",
+      "models": {
+        "low_poly_ww2_fighter_planes.glb": {
+          "role": "boss_reward_flyby",
+          "behavior": "post_boss_reward_flyby",
+          "fallback": "procedural_aircraft"
+        }
+      }
     },
     "planes-dead": {
       "title": "الطائرات الانتحارية",
@@ -102,8 +177,28 @@
       "formats": [
         ".glb"
       ],
-      "runtimeIntegration": "pending",
-      "purpose": "ضع هنا نماذج الطائرات المعادية التي تندفع نحو طائرة اللاعب لزيادة الإيقاع والأكشن. أسماء مقترحة: kamikaze_scout.glb و dive_attacker.glb. ينبغي ضبط الحركة والتصادم والانفجار والضرر برمجيًا بعد إضافة النموذج."
+      "runtimeIntegration": "runtime-integrated",
+      "purpose": "نماذج الطائرات المعادية الخاصة بمراحل البداية؛ تُحمّل وتُربط بسلوك الطيران والتصادم الموجود، مع مجسمات إجرائية بديلة عند تعذر التحميل.",
+      "models": {
+        "kamikaze_scout.glb": {
+          "role": "kamikaze_scout",
+          "biomes": [
+            "green_plains"
+          ],
+          "behavior": "kamikaze_chase",
+          "damage": true,
+          "fallback": "procedural_enemy"
+        },
+        "dive_attacker.glb": {
+          "role": "dive_attacker",
+          "biomes": [
+            "desert"
+          ],
+          "behavior": "dive_volley",
+          "damage": true,
+          "fallback": "procedural_enemy"
+        }
+      }
     },
     "rocket-attack": {
       "title": "الصواريخ الجوية المهاجمة",
