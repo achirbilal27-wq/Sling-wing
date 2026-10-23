@@ -1655,7 +1655,8 @@ function fireStageEnemyShot(e,rocket){
     new THREE.MeshBasicMaterial({color:rocket?0xff623f:0xffd36a,transparent:true,opacity:0.98})
   );
   mesh.position.set(e.x*S,Y(e.alt+8),e.z*S);scene.add(mesh);
-  const vx=dx/L*speed,vy=dy/L*speed,vz=dz/L*speed;
+  const spread=rocket?(e.attackSide||0)*0.06:(e.attackSide||0)*0.12;
+  const vx=dx/L*speed,vy=dy/L*speed,vz=dz/L*speed+spread*speed;
   objs.enemyShots.push({x:e.x,alt:e.alt+8,z:e.z,vx,vy,vz,life:rocket?4.2:3.2,mesh,turretShot:true,defenseAttack:rocket?'rocket':'burst',damage:rocket?10:6,homing:rocket,seekerSpeed:speed,attackSide:e.attackSide||((Math.random()-.5)*0.22)});
   if(rocket)for(let n=0;n<5;n++)addPart(e.x,e.alt+8,(Math.random()-.5)*24,(Math.random()-.5)*18,0.22,0xff765f,1.8,e.z);
 }
