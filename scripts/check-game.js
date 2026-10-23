@@ -75,6 +75,22 @@ check(js.includes("new THREE.CylinderGeometry(0.65,1.1,1,8)") && js.includes('la
   'Laser defenses must render a beam mesh rather than only a spherical projectile.');
 check(js.includes("bossRewardPlanes.push({mesh,life:5.5") && js.includes('مكافأة الزعيم: طائرة إضافية!'),
   'Boss reward flyby must remain visible long enough and show a reward notification.');
+const rewardSpawnStart = js.indexOf('function spawnBossRewardPlane(boss){');
+const rewardSpawnEnd = js.indexOf('\nfunction prepareAircraftModel(root){', rewardSpawnStart);
+const rewardSpawn = rewardSpawnStart >= 0 && rewardSpawnEnd > rewardSpawnStart ? js.slice(rewardSpawnStart, rewardSpawnEnd) : '';
+const rewardUpdateStart = js.indexOf('for(let i=bossRewardPlanes.length-1;i>=0;i--){');
+const rewardUpdateEnd = js.indexOf('for(let i=bossBlastRings.length-1;', rewardUpdateStart);
+const rewardUpdate = rewardUpdateStart >= 0 && rewardUpdateEnd > rewardUpdateStart ? js.slice(rewardUpdateStart, rewardUpdateEnd) : '';
+check(rewardSpawn.includes('const aircraft=bonusPlaneTemplate?bonusPlaneTemplate.clone(true):makeEnemyPlane();') &&
+  rewardSpawn.includes('aircraft.scale.multiplyScalar(1.45);') &&
+  rewardSpawn.includes('const mesh=new THREE.Group();') && rewardSpawn.includes('mesh.add(aircraft);'),
+  'Boss reward aircraft must keep its fitted scale inside a separate animated wrapper.');
+check(rewardUpdate.includes('r.mesh.scale.setScalar(0.75+0.25*Math.min(1,r.life/0.6));') &&
+  !rewardUpdate.includes('r.mesh.scale.setScalar(scale)'),
+  'Boss reward animation must scale only the wrapper without overwriting aircraft normalization.');
+check(js.includes('function defeatBoss(e,source){') && js.includes('if(!e||e.hit)return;') &&
+  js.includes('spawnBossRewardPlane(e);'),
+  'Boss reward must be spawned only after the first valid boss-defeat transition.');
 const glbModels = [
   { path: 'assets/models/aircraft/stylized_ww1_plane.glb', label: 'Falcon player aircraft' },
   { path: 'assets/models/glb/plane_pc.glb', label: 'Enemy aircraft' },

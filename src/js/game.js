@@ -844,8 +844,12 @@ function loadBossRewardPlane(){
 loadBossRewardPlane();
 function spawnBossRewardPlane(boss){
   if(!boss)return;
-  const mesh=bonusPlaneTemplate?bonusPlaneTemplate.clone(true):makeEnemyPlane();
-  mesh.scale.multiplyScalar(1.45);
+  // Keep aircraft normalization/size on the child; animate only the wrapper.
+  // This prevents update() from overwriting the GLB's fitted scale every frame.
+  const aircraft=bonusPlaneTemplate?bonusPlaneTemplate.clone(true):makeEnemyPlane();
+  aircraft.scale.multiplyScalar(1.45);
+  const mesh=new THREE.Group();
+  mesh.add(aircraft);
   mesh.position.set(boss.x*S,Y(boss.alt+115),boss.z*S);
   mesh.rotation.z=-0.12;
   objGroup.add(mesh);
@@ -2257,7 +2261,8 @@ function update(dt){
     r.mesh.position.y=Y(r.originAlt+r.age*115);
     r.mesh.position.z=(r.originZ+Math.cos(r.age*1.6)*45)*S;
     r.mesh.rotation.y+=dt*0.8;r.mesh.rotation.z=Math.sin(r.age*2)*0.12;
-    const scale=1.45*(0.75+0.25*Math.min(1,r.life/0.6));r.mesh.scale.setScalar(scale);
+    // Animate the outer wrapper only; the child aircraft keeps its fitted scale.
+    r.mesh.scale.setScalar(0.75+0.25*Math.min(1,r.life/0.6));
     if(r.life<=0){objGroup.remove(r.mesh);bossRewardPlanes.splice(i,1);}
   }
   for(let i=bossBlastRings.length-1;i>=0;i--){
