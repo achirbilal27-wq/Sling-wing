@@ -135,6 +135,11 @@ check(fs.existsSync(path.join(root, 'package.json')), 'package.json is missing.'
 
 check(js.includes("assets/models/wildlife/MechaFish.glb") && js.includes("function spawnSeaFishSchool") && js.includes("function updateSeaFish"), 'MechaFish must load and use runtime ocean ambush behavior.');
 
+check(js.includes("spawnSeaFishSchool(x-1850,stage)") && js.includes("spawnSeaFishSchool(x-450,stage)"), 'MechaFish schools must spawn at separated locations in the Current-serpent ocean arena.');
+check(js.includes("SEA_FISH_COLORS") && js.includes("damagePlayer(8,f.x,f.alt,f.z,'wildlife')"), 'MechaFish must use varied colors and bite damage.');
+
+const defenseCatalogPath = path.join(src, 'assets', 'models', 'asset-catalog.json');
+const defenseCatalog = JSON.parse(fs.readFileSync(defenseCatalogPath, 'utf8'));
 const expectedEnvironmentModels = {
   'desert_outpost.glb': 'desertOutpost',
   'ice_island.glb': 'iceIsland',
@@ -161,11 +166,8 @@ for (const filename of ['kamikaze_scout.glb', 'dive_attacker.glb']) {
   check(js.includes(filename), 'Stage enemy GLB is not referenced by runtime code: ' + filename);
 }
 check(!js.includes('using procedural aircraft until assets/models/glb/plane_pc.glb is added'), 'Enemy GLB failure warning must not claim an existing asset is missing.');
-check(js.includes("spawnSeaFishSchool(x-1850,stage)") && js.includes("spawnSeaFishSchool(x-450,stage)"), 'MechaFish schools must spawn at separated locations in the Current-serpent ocean arena.');
-check(js.includes("SEA_FISH_COLORS") && js.includes("damagePlayer(8,f.x,f.alt,f.z,'wildlife')"), 'MechaFish must use varied colors and bite damage.');
 
-const defenseCatalogPath = path.join(src, 'assets', 'models', 'asset-catalog.json');
-const defenseCatalog = JSON.parse(fs.readFileSync(defenseCatalogPath, 'utf8'));
+
 const wildlife = defenseCatalog.categories.wildlife;
 check(wildlife.runtimeIntegration === 'runtime-integrated', 'Wildlife catalog must mark the MechaFish runtime integration complete.');
 check(wildlife.models && wildlife.models['MechaFish.glb'] && wildlife.models['MechaFish.glb'].behavior === 'vertical_breach_then_bite', 'Wildlife catalog must describe MechaFish vertical breach and bite behavior.');
