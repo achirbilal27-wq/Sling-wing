@@ -271,6 +271,15 @@
           ],
           "behavior": "boss_air_combat",
           "fallback": "procedural_boss"
+        },
+        "current_serpent_boss.glb": {
+          "role": "current_serpent_boss",
+          "biomes": [
+            "ocean_boss_arena"
+          ],
+          "behavior": "custom_glb_boss_with_procedural_fallback",
+          "runtimeUrl": "current_serpent_boss.glb",
+          "fallback": "procedural_boss"
         }
       }
     }

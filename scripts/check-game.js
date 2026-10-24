@@ -57,6 +57,7 @@ const expectedModels = [
   'assets/models/planes-dead/kamikaze_scout.glb',
   'assets/models/planes-dead/dive_attacker.glb',
   'assets/models/bosses/iron_eagle.glb',
+  'assets/models/bosses/current_serpent_boss.glb',
   'assets/models/environment/desert_outpost.glb',
   'assets/models/environment/ice_island.glb',
   'assets/models/environment/The_castle_of_boss.glb',
@@ -98,6 +99,8 @@ check(js.includes('if(best)return best;') && js.includes('for(const reward of bo
 check(js.includes('function disposeSeaFishMaterials(mesh)') && js.includes('disposeSeaFishMaterials(f.mesh);objs.seaFish.splice(i,1);') && js.includes('objs.seaFish.forEach(f=>disposeSeaFishMaterials(f.mesh))'), 'Sea-fish material clones must be disposed when fish expire and when a run resets.');
 check(js.includes('group.userData.seaFishFallback=true;') && js.includes('const ownsFallbackGeometry=!!mesh.userData?.seaFishFallback;') && js.includes('if(ownsFallbackGeometry&&node.geometry)node.geometry.dispose();'), 'Procedural sea-fish geometry must be disposed without disposing shared GLB template geometry.');
 if (catalog) {
+  const serpent = catalog.categories?.bosses?.models?.['current_serpent_boss.glb'];
+  check(serpent?.role === 'current_serpent_boss' && serpent?.biomes?.includes('ocean_boss_arena'), 'Asset catalog must include the Current Serpent GLB boss and its ocean arena.');
   const fire = catalog.categories?.['assault-defender']?.models?.['fire-turet.glb'];
   check(fire?.role === 'ground_missile_turret' && fire?.attack === 'homing_rocket', 'Asset catalog must describe fire-turet.glb as a ground missile turret.');
   const searchlight = catalog.categories?.environment?.models?.['searchlight_place.glb'];
