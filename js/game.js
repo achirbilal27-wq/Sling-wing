@@ -1085,6 +1085,7 @@ function spawnDefenseTurret(x){
 function clearObjs(){while(objGroup.children.length)objGroup.remove(objGroup.children[0]);}
 function resetRun(){
   if(objs&&objs.enemyShots)objs.enemyShots.forEach(b=>scene.remove(b.mesh));
+  if(objs&&Array.isArray(objs.landmarks))objs.landmarks.forEach(item=>{if(item.mixer){item.mixer.stopAllAction();if(item.mesh)item.mixer.uncacheRoot(item.mesh);item.mixer=null;}});
   bossRewardPlanes.forEach(r=>{if(r.mesh&&r.mesh.parent)r.mesh.parent.remove(r.mesh);});bossRewardPlanes.length=0;
   P={x:0,alt:85,z:0,vz:0,s:0,a:0.62,roll:0,yaw:0,boostT:0,spin:0,sliding:false,bounces:0,fuel:100,hp:100,maxHp:100,hitCooldown:0,damageFlash:0,launchT:0,engineOut:false,fuelWarned:false,abilityCooldown:0,magnetT:0,guardianOverdriveT:0};
   routeTargetMeters=500;
