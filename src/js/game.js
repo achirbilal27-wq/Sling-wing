@@ -1487,11 +1487,11 @@ function openCodex(){
   const pageNames=['الأولى','الثانية','الثالثة','الرابعة','الخامسة','السادسة'];
   const teasers=[
     'اهزم النسر الحديدي لفتح أسرار الختم الأول.',
-    'اهزم قاذفة العاصفة لكشف حقيقة الرياح.',
+    'اهزم قاذفة العاصفة لكشف حقيقة.',
     'اهزم أفعى التيارات لكشف سرّ الختم الثالث.',
-    'اهزم حارس السحاب لمعرفة ما وراء التحذير.',
-    'اهزم الحاكم الرمادي لكشف الحقيقة كاملة.',
-    'تُفتح هذه الصفحة بعد هزيمة الحاكم الرمادي.'
+    'اهزمارس السحاب لمعرفة من وراء.',
+    'اهزم الحاكم الرمادي لكشف الحقيقة الكاملة.',
+    'تُفتح هذه الصفحة عند هزيمة الحاكم الرمادي.'
   ];
   const add=(title,body,unlocked,label,teaser)=>{
     const page=document.createElement('div');page.className='page'+(unlocked?'':' lock');
@@ -2392,7 +2392,7 @@ function openStation(station){
     {id:'repair',icon:'🛠️',title:'إصلاح شامل',desc:'استعادة الوقود والحماية المؤقتة',tags:['guardian','lowhp'],weight:3,apply:()=>{P.fuel=100;P.engineOut=false;P.fuelWarned=false;shieldT=Math.max(shieldT,3.2);updateFuelGauge();}},
     {id:'missiles',icon:'🚀',title:'صواريخ إضافية',desc:'إضافة 3 صواريخ وإعادة شحن المخزن',tags:['phantom','lowammo'],weight:3,apply:()=>{run.missiles=Math.min(9,run.missiles+3);}},
     {id:'rapid',icon:'⚡',title:'مدفع سريع',desc:'زيادة سرعة إطلاق النار 35٪',tags:['interceptor','cannon'],weight:3,apply:()=>{run.firePower=Math.min(2.2,(run.firePower||1)+0.35);run.perks.push('rapid');}},
-    {id:'triple',icon:'🔫',title:'مدفع ثلاثي',desc:'إطلاق ثلاث رصاصات في كل دفعة',tags:['interceptor','cannon'],weight:2,valid:()=>!run.tri,apply:()=>{run.tri=true;run.perks.push('triple');}},
+    {id:'triple',icon:'🔭',title:'مدفع ثلاثي',desc:'إطلاق ثلاث رصاصات في كل دفعة',tags:['interceptor','cannon'],weight:2,valid:()=>!run.tri,apply:()=>{run.tri=true;run.perks.push('triple');}},
     {id:'cool',icon:'❄️',title:'مبرد المدفع',desc:'تبريد أسرع وتقليل السخونة',tags:['interceptor','cannon'],weight:2,apply:()=>{run.cool=Math.min(2.5,run.cool*1.5);run.perks.push('cool');}},
     {id:'explosive',icon:'💥',title:'رؤوس متفجرة',desc:'زيادة الضرر 40٪',tags:['guardian','heavy'],weight:2,apply:()=>{run.damage=Math.min(2.8,run.damage*1.4);run.perks.push('explosive');}},
     {id:'armor',icon:'🛡️',title:'درع متقدم',desc:'درع مؤقت وإعادة تجهيز الدرع التلقائي',tags:['guardian','lowhp'],weight:3,apply:()=>{shieldT=Math.max(shieldT,5);shieldCooldown=0;run.stationShield=5;run.perks.push('armor');}},
