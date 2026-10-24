@@ -1522,17 +1522,20 @@ function openCodex(){
     'اعتراف الحاكم الرمادي لا يُقرأ قبل هزيمته.',
     'السر الأخير لا يُكشف إلا بعد هزيمة الزعيم الخامس.'
   ];
-  const add=(pageNumber,title,body,unlocked)=>{
+  const add=(pageNumber,title,body,unlocked,teaser)=>{
     const page=document.createElement('div');page.className='page'+(unlocked?'':' lock');
     const h=document.createElement('h4'),p=document.createElement('p');
-    h.textContent='الصفحة '+ordinals[pageNumber-1]+' · '+(unlocked?title:'مغلقة · ؟؟؟');
-    p.textContent=unlocked?body:teasers[pageNumber-1];
+    // Keep the associated boss visible even while the page's story remains locked.
+    h.textContent='الصفحة '+ordinals[pageNumber-1]+' · '+title+(unlocked?'':' · مقفلة');
+    p.textContent=unlocked?body:(teaser||teasers[pageNumber-1]);
+    page.setAttribute('data-boss-page',String(pageNumber));
+    page.setAttribute('data-locked',unlocked?'false':'true');
     page.append(h,p);box.appendChild(page);
   };
-  // Each boss unlocks exactly one numbered page; the sixth page unlocks after boss five.
+  // Every page names its boss; the story text still unlocks only after that boss is defeated.
   const progress=Math.max(0,Math.min(5,Math.max(Number(save.codexProgress)||0,Number(run&&state==='flight'?run.bosses:0)||0)));
-  CODEX_BOSSES.forEach((b,i)=>add(i+1,b[0],b[1],progress>i));
-  add(6,'ما بعد الأختام',ENDING.join(' '),progress>=5);
+  CODEX_BOSSES.forEach((b,i)=>add(i+1,b[0],b[1],progress>i,teasers[i]));
+  add(6,'الحاكم الرمادي · ما بعد الأختام',ENDING.join(' '),progress>=5,teasers[5]);
   $('codex').classList.add('on');paused=true;
 }
 $('storyBtn').addEventListener('click',openCodex);
