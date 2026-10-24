@@ -1150,7 +1150,8 @@ function attachMeteorModel(meteor){
   // prepareWorldModel already normalizes this aircraft to the same 12-unit
   // wingspan used by regular enemy aircraft; do not scale it a second time.
   // Keep original GLB geometry, hierarchy, and material colors intact.
-  // The parent group's 180-degree Y turn points its propeller/nose along -X.
+  // Reverse the aircraft's local heading relative to the hero plane; keep the parent/world rotation unchanged.
+  model.rotation.y+=Math.PI;
   model.traverse(n=>{n.userData.meteorSharedAsset=true;});
   meteor.group.add(model);meteor.modelAttached=true;
 }
