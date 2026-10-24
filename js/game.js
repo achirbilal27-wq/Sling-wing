@@ -2409,6 +2409,13 @@ function updateFlight(dt){
         if(e.x>P.x+480){e.attackState='ranged';e.attackTimer=(e.bossStage===1?4.2:5)+Math.random()*1.6;e.fireT=e.bossStage===1?1.1:1.8;e.bank=0;}
       }
       if(e.attackState!=='dive'){e.mesh.rotation.z=Math.sin(e.phase*.9)*.12;e.mesh.rotation.x=Math.sin(e.phase*.7)*.08;}
+      // Serpent-like idle posture: a controlled head/body sway layered over the existing boss flight path.
+      if(e.bossStage===3&&e.mesh.userData.currentSerpentModel){
+        const serpent=e.mesh.userData.currentSerpentModel;
+        serpent.rotation.z=Math.sin(e.phase*1.45)*0.075+(e.attackState==='warning'?0.10:0);
+        serpent.rotation.x=Math.sin(e.phase*0.82)*0.045;
+        serpent.rotation.y=Math.sin(e.phase*0.62)*0.055;
+      }
     }else{e.x-=180*dt;e.z=zc(e.z+Math.sin(e.phase)*14*dt);}
     e.fireT-=dt;
     if(e.fireT<=0&&e.x>P.x+180&&e.x<P.x+(e.boss?1900:4200)&&(!e.boss||e.attackState==='ranged')){
