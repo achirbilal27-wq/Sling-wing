@@ -1196,7 +1196,7 @@ function spawnMeteor(x){
   const meteor=makeMeteor();
   // Start ahead, near the player's altitude, offset laterally so the fly-by is readable and non-overlapping.
   const side=Math.random()<0.5?-1:1;
-  meteor.x=Math.max(x,P.x+1800);
+  meteor.x=P.x+1800+Math.random()*180;
   meteor.alt=clamp(P.alt+(Math.random()-.5)*48,105,455);
   meteor.z=zc(P.z+side*(155+Math.random()*45));
   meteor.vx=-(260+Math.random()*90);
