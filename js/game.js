@@ -1135,7 +1135,7 @@ function loadMeteorModel(){
     const oriented=new THREE.Group();
     oriented.quaternion.setFromAxisAngle(new THREE.Vector3(1,1,1).normalize(),Math.PI*2/3);
     oriented.add(gltf.scene);
-    const model=prepareWorldModel(oriented,22);
+    const model=prepareWorldModel(oriented,18);
     if(!model){console.warn('Meteor source GLB could not be normalized; using the procedural meteor core.');return;}
     meteorModelTemplate=model;
     meteorModelTemplate.traverse(n=>{
@@ -1165,20 +1165,20 @@ function attachMeteorModel(meteor){
 function makeMeteor(){
   const group=new THREE.Group();
   // A soft glow surrounds the aircraft; do not add a rock core that hides its silhouette.
-  const glow=new THREE.Mesh(new THREE.SphereGeometry(9,12,8),new THREE.MeshBasicMaterial({color:0xff5728,transparent:true,opacity:0.14,depthWrite:false}));
-  glow.scale.set(1.35,0.62,0.82);group.add(glow);
+  const glow=new THREE.Mesh(new THREE.SphereGeometry(5.8,12,8),new THREE.MeshBasicMaterial({color:0xff5728,transparent:true,opacity:0.16,depthWrite:false}));
+  glow.scale.set(1.2,0.62,0.72);group.add(glow);
   const layers=[
-    {length:72,radius:9,color:0xff3517,opacity:0.23},
-    {length:54,radius:6.5,color:0xff7b22,opacity:0.4},
-    {length:36,radius:4,color:0xffd34f,opacity:0.62},
-    {length:20,radius:2.2,color:0xfff0a0,opacity:0.78}
+    {length:72,radius:5.5,color:0xff3517,opacity:0.22},
+    {length:54,radius:4,color:0xff7b22,opacity:0.38},
+    {length:36,radius:2.6,color:0xffd34f,opacity:0.6},
+    {length:20,radius:1.45,color:0xfff0a0,opacity:0.76}
   ];
   const trail=[];
   layers.forEach((d,i)=>{
     const material=new THREE.MeshBasicMaterial({color:d.color,transparent:true,opacity:d.opacity,side:THREE.DoubleSide,depthWrite:false});
     const cone=new THREE.Mesh(new THREE.ConeGeometry(d.radius,d.length,9,1,true),material);
     // Trail extends behind the aircraft in local -X; parent rotation turns it to +X.
-    cone.rotation.z=Math.PI/2;cone.position.x=-(d.length*0.48+2+i*2.5);
+    cone.rotation.z=-Math.PI/2;cone.position.x=-(d.length*0.48+2+i*2.5);
     group.add(cone);trail.push({mesh:cone,baseOpacity:d.opacity,phase:i*1.4});
   });
   const sparks=[];
@@ -1206,7 +1206,7 @@ function spawnMeteor(x){
   meteor.group.position.set(meteor.x*S,Y(meteor.alt),meteor.z*S);
   meteor.group.rotation.z=-0.035;meteor.group.rotation.y=Math.PI;
   objs.meteors.push(meteor);
-  addFloat(x,meteor.alt+38,'شهاب مشتعل في السماء','#ffb45e',meteor.z);
+  addFloat(meteor.x,meteor.alt+38,'طائرة مشتعلة تمر بالقرب منك','#ffb45e',meteor.z);
 }
 function updateMeteors(dt){
   if(!objs||!Array.isArray(objs.meteors))return;
