@@ -1380,3 +1380,53 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
   .fuel-readout small{font-size:7px !important}
   #pauseBtn{top:16px !important;width:38px !important;height:38px !important}
 }
+
+
+/* Final HUD collision pass: reserve vertical slots and adapt them to short screens. */
+#dist{top:10px !important;font-size:clamp(44px,12vw,62px) !important;line-height:1 !important}
+#alt{top:76px !important;font-size:14px !important;line-height:1.2 !important}
+#biomeBadge{top:101px !important;max-width:min(88vw,320px) !important}
+#heat{top:130px !important}
+#bossWarning{top:153px !important;max-width:min(92vw,340px) !important}
+#comboHud{top:201px !important;max-width:92vw !important}
+#bossHud{top:247px !important;width:min(300px,78vw) !important}
+#bossHud.on{max-height:calc(100% - 260px);overflow-y:auto}
+#engineStatus{
+  position:fixed;inset-inline:12px;top:calc(12px + env(safe-area-inset-top,0px));
+  z-index:10000;margin:0 auto;width:max-content;max-width:min(92vw,480px);
+  padding:10px 14px;border:1px solid rgba(255,255,255,.35);border-radius:12px;
+  background:rgba(10,24,43,.94);color:#fff;text-align:center;
+  font:800 13px/1.5 var(--font-ui);box-shadow:0 5px 18px rgba(0,0,0,.25);
+}
+#engineStatus.warning{background:rgba(104,36,22,.96);border-color:rgba(255,190,120,.8)}
+.ft{
+  max-width:min(88vw,460px);padding:0 5px;
+  font-size:clamp(17px,4.5vw,28px);line-height:1.15;
+  white-space:normal;text-align:center;overflow-wrap:anywhere;word-break:normal;
+  text-wrap:balance;
+}
+@media(max-width:380px){
+  #dist{top:8px !important;font-size:clamp(40px,12vw,48px) !important}
+  #alt{top:61px !important;font-size:12px !important}
+  #biomeBadge{top:83px !important;font-size:10px !important;padding:4px 9px !important}
+  #heat{top:108px !important;width:min(150px,42vw) !important;height:11px !important}
+  #bossWarning{top:130px !important;padding:7px 9px !important;gap:6px !important}
+  #comboHud{top:174px !important;padding:5px 9px !important;gap:6px !important}
+  #bossHud{top:216px !important;width:min(270px,82vw) !important;padding:7px 9px !important}
+  .ft{max-width:90vw;font-size:clamp(16px,4.8vw,22px)}
+}
+@media(max-height:560px){
+  #dist{top:6px !important;font-size:clamp(36px,8vh,46px) !important}
+  #alt{top:52px !important;font-size:11px !important}
+  #biomeBadge{top:72px !important;font-size:10px !important;padding:3px 8px !important}
+  #heat{top:96px !important;height:10px !important}
+  #bossWarning{top:116px !important;padding:6px 9px !important}
+  #comboHud{top:156px !important;padding:4px 8px !important}
+  #bossHud{top:196px !important;max-height:calc(100% - 202px) !important;padding:5px 8px !important}
+  #bossHud .boss-track{height:6px !important}
+}
+@media(max-height:460px){
+  #bossWarning{top:105px !important}
+  #comboHud{top:145px !important}
+  #bossHud{top:182px !important;max-height:calc(100% - 186px) !important}
+}
