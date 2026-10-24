@@ -8,8 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;800&family=Lalezar&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+
 </head>
 <body>
 <div id="app">
@@ -151,6 +150,64 @@
   <div id="toast"></div>
 </div>
 
-<script src="js/game.js"></script>
+<div id="engineStatus" role="status" aria-live="polite">جارٍ تحميل محرك اللعبة…</div>
+<script>
+(function(){
+  'use strict';
+  var status=document.getElementById('engineStatus');
+  function loadFirst(urls){
+    return urls.reduce(function(chain,url){
+      return chain.catch(function(){return new Promise(function(resolve,reject){
+        var script=document.createElement('script');
+        script.src=url;
+        script.onload=function(){resolve(url);};
+        script.onerror=function(){script.remove();reject(new Error('Failed to load '+url));};
+        document.head.appendChild(script);
+      });});
+    },Promise.reject(new Error('Starting loader')));
+  }
+  function showStatus(message,warning){
+    if(!status)return;
+    status.textContent=message;
+    status.classList.toggle('warning',!!warning);
+    status.style.display='block';
+  }
+  function startGame(){
+    var game=document.createElement('script');
+    game.src='js/game.js';
+    game.onload=function(){
+      if(status){
+        if(window.THREE&&typeof THREE.GLTFLoader==='function'){
+          status.remove();
+        }else{
+          showStatus('تعذر تحميل بعض النماذج؛ ستُستخدم البدائل المتاحة.',true);
+          window.setTimeout(function(){if(status&&status.isConnected)status.remove();},6500);
+        }
+      }
+    };
+    game.onerror=function(){
+      showStatus('تعذر تحميل ملفات اللعبة. تحقق من اتصالك ثم أعد تحميل الصفحة.',true);
+    };
+    document.body.appendChild(game);
+  }
+  loadFirst([
+    'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
+    'https://unpkg.com/three@0.128.0/build/three.min.js',
+    'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js'
+  ]).then(function(){
+    if(!window.THREE)throw new Error('Three.js did not initialize');
+    return loadFirst([
+      'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js',
+      'https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/loaders/GLTFLoader.js'
+    ]).catch(function(error){
+      console.warn('GLTFLoader unavailable; the game will use procedural model fallbacks.',error);
+    });
+  }).then(startGame).catch(function(error){
+    console.error('Unable to initialize the 3D engine.',error);
+    showStatus('تعذر تحميل محرك اللعبة. تحقق من الاتصال بالإنترنت ثم أعد المحاولة.',true);
+  });
+})();
+</script>
 </body>
 </html>
