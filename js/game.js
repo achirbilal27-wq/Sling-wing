@@ -1202,22 +1202,26 @@ function makeMeteor(){
   const meteor={group,age:0,life:7.8,x:0,alt:0,z:0,vx:0,vy:0,vz:0,modelAttached:false};
   attachMeteorModel(meteor);meteorLive.push(meteor);objGroup.add(group);return meteor;
 }
+let meteorLaneIndex=0;
 function spawnMeteor(x){
   if(!objs||!Array.isArray(objs.meteors))return;
   const meteor=makeMeteor();
-  // Start ahead, near the player's altitude, offset laterally so the fly-by is readable and non-overlapping.
-  const side=Math.random()<0.5?-1:1;
+  // Repeat a three-lane sequence: left, right, then directly along the player's lane.
+  // The third aircraft in each sequence is deliberately centered on the player.
+  const lane=meteorLaneIndex++%3;
+  const side=lane===0?-1:lane===1?1:0;
   meteor.x=P.x+1800+Math.random()*180;
-  meteor.alt=clamp(P.alt+(Math.random()-.5)*48,105,455);
-  meteor.z=zc(P.z+side*(155+Math.random()*45));
+  meteor.alt=clamp(P.alt+(Math.random()-.5)*36,105,455);
+  meteor.z=side===0?P.z:zc(P.z+side*(155+Math.random()*35));
   meteor.vx=-(260+Math.random()*90);
-  meteor.vy=(Math.random()-.5)*9;
-  meteor.vz=-side*(12+Math.random()*8);
+  meteor.vy=(Math.random()-.5)*6;
+  meteor.vz=side===0?0:-side*(12+Math.random()*8);
+  meteor.lane=lane;
   meteor.life=7.8;meteor.age=0;
   meteor.group.position.set(meteor.x*S,Y(meteor.alt),meteor.z*S);
   meteor.group.rotation.z=-0.035;meteor.group.rotation.y=Math.PI;
   objs.meteors.push(meteor);
-  addFloat(meteor.x,meteor.alt+38,'طائرة مشتعلة تمر بالقرب منك','#ffb45e',meteor.z);
+  addFloat(meteor.x,meteor.alt+38,lane===2?'طائرة مشتعلة في مسارك!':'طائرة مشتعلة في مسار جانبي','#ffb45e',meteor.z);
 }
 function updateMeteors(dt){
   if(!objs||!Array.isArray(objs.meteors))return;
@@ -1399,12 +1403,14 @@ function spawn(until){
     return;
   }
   while(objs.nextMeteor<until){
-    // Meteors are scheduled only for the game's dark/night sky intervals.
+    // Follow the same four-part sky cycle as updateSky(). Spawn repeatedly
+    // from the beginning of dusk/night through the end of the night transition.
     const meteorMeters=objs.nextMeteor*M_PER_PX;
-    const meteorCycle=(meteorMeters/250)%4,meteorPhase=meteorCycle-Math.floor(meteorCycle);
-    const meteorNight=Math.floor(meteorCycle)===1?meteorPhase:Math.floor(meteorCycle)===2?1:Math.floor(meteorCycle)===3?1-meteorPhase:0;
-    if(meteorNight>=0.65)spawnMeteor(objs.nextMeteor);
-    objs.nextMeteor+=1350/M_PER_PX;
+    const meteorCycle=(meteorMeters/250)%4,meteorStage=Math.floor(meteorCycle),meteorPhase=meteorCycle-meteorStage;
+    const meteorNight=meteorStage===1?meteorPhase:meteorStage===2?1:meteorStage===3?1-meteorPhase:0;
+    if(meteorNight>0.05)spawnMeteor(objs.nextMeteor);
+    // A 90-metre interval keeps the fly-bys distributed throughout the night.
+    objs.nextMeteor+=90/M_PER_PX;
   }
   while(objs.nextStorm<until){
     const x=objs.nextStorm,alt=220+Math.random()*260,z=zc((Math.random()-.5)*320);
