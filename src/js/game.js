@@ -1483,14 +1483,15 @@ function playSlides(list,i,done){
 }
 function openCodex(){
   const box=$('cxList');box.replaceChildren();
+  const bossNames=['النسر الحديدي','قاذفة العاصفة','أفعى التيارات','حارس السحاب','الحاكم الرمادي'];
   const pageNames=['الأولى','الثانية','الثالثة','الرابعة','الخامسة','السادسة'];
   const teasers=[
-    'ظلّ برج قديم يخفي سجلًا عن بداية الكارثة.',
-    'العاصفة ليست كما تبدو؛ هناك من يستنزف الرياح.',
-    'تيارات متقطعة تقود إلى سرّ الختم الثالث.',
-    'تحذير أخير ينتظر من يصل إلى أعلى نقطة في السماء.',
-    'الحاكم يعرف الحقيقة، لكنه يخشى الاعتراف بها.',
-    'بعد انكسار الأختام، سيظهر السرّ الذي غيّر معنى الرحلة.'
+    'اهزم النسر الحديدي لفتح أسرار الختم الأول.',
+    'اهزم قاذفة العاصفة لكشف حقيقة الرياح.',
+    'اهزم أفعى التيارات لكشف سرّ الختم الثالث.',
+    'اهزم حارس السحاب لمعرفة ما وراء التحذير.',
+    'اهزم الحاكم الرمادي لكشف الحقيقة كاملة.',
+    'تُفتح هذه الصفحة بعد هزيمة الحاكم الرمادي.'
   ];
   const add=(title,body,unlocked,label,teaser)=>{
     const page=document.createElement('div');page.className='page'+(unlocked?'':' lock');
@@ -1506,8 +1507,8 @@ function openCodex(){
     page.append(h,p);box.appendChild(page);
   };
   add('المقدمة',INTRO.map(x=>x[2]).join(' '),true,'تمهيد القصة','');
-  CODEX_BOSSES.forEach((b,i)=>add(b[0],b[1],(Number(save.bosses)||0)>=i+1,'الصفحة '+pageNames[i],teasers[i]));
-  add('ما بعد الأختام',ENDING.join(' '),(Number(save.bosses)||0)>=5,'الصفحة '+pageNames[5],teasers[5]);
+  CODEX_BOSSES.forEach((b,i)=>add(b[0],b[1],(Number(save.bosses)||0)>=i+1,'الصفحة '+pageNames[i]+' — '+bossNames[i],teasers[i]));
+  add('ما بعد الأختام',ENDING.join(' '),(Number(save.bosses)||0)>=5,'الصفحة '+pageNames[5]+' — الحاكم الرمادي (النهاية)',teasers[5]);
   $('codex').classList.add('on');paused=true;
 }
 $('storyBtn').addEventListener('click',openCodex);
