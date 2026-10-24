@@ -447,7 +447,7 @@ function prepareCurrentSerpentModel(root){
   if(size.x<size.z)normalized.rotation.y=Math.PI/2;
   normalized.updateMatrixWorld(true);box=new THREE.Box3().setFromObject(normalized);size=box.getSize(new THREE.Vector3());
   const span=Math.max(size.x,size.z);if(!Number.isFinite(span)||span<0.001)return null;
-  normalized.scale.setScalar(54/span);normalized.updateMatrixWorld(true);box=new THREE.Box3().setFromObject(normalized);
+  normalized.scale.setScalar(18/span);normalized.updateMatrixWorld(true);box=new THREE.Box3().setFromObject(normalized);
   normalized.position.sub(box.getCenter(new THREE.Vector3()));normalized.updateMatrixWorld(true);
   normalized.traverse(node=>{if(node.isMesh){node.castShadow=true;node.receiveShadow=true;if(node.material){const ms=Array.isArray(node.material)?node.material:[node.material];ms.forEach(m=>{m.side=THREE.DoubleSide;m.needsUpdate=true;});}}});
   return normalized;
