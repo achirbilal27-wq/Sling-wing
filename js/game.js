@@ -1219,9 +1219,8 @@ function spawnMeteor(x){
   meteor.lane=lane;
   meteor.life=7.8;meteor.age=0;
   meteor.group.position.set(meteor.x*S,Y(meteor.alt),meteor.z*S);
-  // Keep the aircraft's nose aligned with its established -X flight direction.
-  // The prior -90-degree yaw made the model appear incorrectly oriented in-game.
-  meteor.group.rotation.z=-0.035;meteor.group.rotation.y=Math.PI;
+  // Match the eagle tower's exact world-Y rotation so both models share the same heading.
+  meteor.group.rotation.z=-0.035;meteor.group.rotation.y=Math.PI/2;
   objs.meteors.push(meteor);
   addFloat(meteor.x,meteor.alt+38,lane===2?'طائرة مشتعلة في مسارك!':'طائرة مشتعلة في مسار جانبي','#ffb45e',meteor.z);
 }
