@@ -1298,9 +1298,9 @@ function spawn(until){
     objs.enemies=objs.enemies.filter(other=>other.boss&&!other.hit);
     if(Array.isArray(objs.landmarks)){objs.landmarks.forEach(item=>{if(item.mesh)objGroup.remove(item.mesh);});objs.landmarks.length=0;}
     if(stage===0){
-      // Twin arena pillars flank the first boss and remain through the encounter.
-      spawnWorldLandmark('eagleTower',x-160,zc(-92),stage);
-      spawnWorldLandmark('eagleTower',x-160,zc(92),stage);
+      // Wide war-arena entrance: opposing towers leave a clear flight corridor and stay through the boss fight.
+      spawnWorldLandmark('eagleTower',x-260,zc(-235),stage);
+      spawnWorldLandmark('eagleTower',x-260,zc(235),stage);
     }
     if(biomeIndex===2){spawnWorldLandmark('serpentWater',x-1100,0,stage);spawnWorldLandmark('lighthouse',x-700,0,stage);spawnSeaFishSchool(x-1850,stage);spawnSeaFishSchool(x-450,stage);}
     if(biomeIndex===4)spawnWorldLandmark('finalCastle',x-100,0,stage);
