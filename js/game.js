@@ -1023,10 +1023,30 @@ function prepareDefenseModel(root){
  g.traverse(n=>{if(n.isMesh){n.castShadow=true;n.receiveShadow=true;if(n.material)(Array.isArray(n.material)?n.material:[n.material]).forEach(m=>{m.side=THREE.DoubleSide;m.needsUpdate=true;});}});
  return g;
 }
+function attachChaseFlame(group){
+ // Continuous layered exhaust plume built with Three.js so it works on the static web version.
+ // The plume sits behind the moving fire-chaser; exact nozzle placement depends on the supplied GLB.
+ const layers=[
+  {radius:5.2,length:38,color:0xff351f,opacity:0.46},
+  {radius:3.8,length:31,color:0xff8128,opacity:0.68},
+  {radius:2.2,length:23,color:0xffe875,opacity:0.9}
+ ];
+ group.userData.chaseFlameLayers=[];
+ layers.forEach((spec,index)=>{
+  const material=new THREE.MeshBasicMaterial({color:spec.color,transparent:true,opacity:spec.opacity,depthWrite:false,side:THREE.DoubleSide});
+  const mesh=new THREE.Mesh(new THREE.ConeGeometry(spec.radius,spec.length,9,1,true),material);
+  mesh.rotation.z=-Math.PI/2;
+  mesh.position.set(14+spec.length/2,3-index*0.12,0);
+  group.add(mesh);
+  group.userData.chaseFlameLayers.push({mesh,baseLength:spec.length,baseOpacity:spec.opacity,phase:index*1.7});
+ });
+}
 function makeDefenseTurret(def){
  const g=new THREE.Group(),template=defenseTemplates[def.file];
  if(template){g.add(template.clone(true));g.userData.usingDefenseGLB=true;}else g.add(makeDefenseFallback(def));
- g.userData.defenseRole=def.role;return g;
+ g.userData.defenseRole=def.role;
+ if(def.attack==='chase')attachChaseFlame(g);
+ return g;
 }
 function loadDefenseModels(){
  if(typeof THREE.GLTFLoader!=='function'){console.warn('GLTFLoader unavailable; defense turrets use procedural fallbacks.');return;}
@@ -1050,7 +1070,7 @@ function currentDefenseBiome(stage){const n=((stage%5)+5)%5;return n===1?'desert
 function spawnDefenseTurret(x){
  const stage=biomeStageAtMeters(x*M_PER_PX),biome=currentDefenseBiome(stage);
  const general=DEFENSE_MODELS.filter(d=>d.biome==='general');
- const def=biome==='snow'?(DEFENSE_MODELS.find(d=>d.role==='ice')||general[0]):biome==='desert'?(DEFENSE_MODELS.find(d=>d.role==='sand')||general[0]):biome==='boss_arena'?(DEFENSE_MODELS.find(d=>d.role==='final')||DEFENSE_MODELS.find(d=>d.role==='laser2')||general[0]):general[Math.floor(x/(900/M_PER_PX))%general.length];
+ const def=biome==='snow'?(DEFENSE_MODELS.find(d=>d.role==='ice')||general[0]):biome==='desert'?(DEFENSE_MODELS.find(d=>d.role==='sand')||general[0]):biome==='boss_arena'?(DEFENSE_MODELS.find(d=>d.role==='interceptor')||DEFENSE_MODELS.find(d=>d.role==='laser2')||general[0]):general[Math.floor(x/(900/M_PER_PX))%general.length];
  if(!def)return;
  const alt=def.attack==='chase'?85:0,z=zc((Math.random()<0.5?-1:1)*(150+Math.random()*130));
  const e={x,alt,z,phase:Math.random()*6.28,fireT:1.1+Math.random()*1.5,hit:false,turret:true,defenseFile:def.file,defenseRole:def.role,defenseAttack:def.attack,defenseColor:def.color,defenseBiome:biome,defenseHp:def.attack==='chase'?38:55,defenseMaxHp:def.attack==='chase'?38:55,attackSide:Math.random()<0.5?-1:1};
@@ -1979,6 +1999,11 @@ function updateFlight(dt){
         e.z=zc(e.z+(P.z-e.z)*Math.min(1,dt*0.24));
         e.alt=clamp(e.alt+(P.alt-e.alt)*Math.min(1,dt*0.18),35,310);
         e.mesh.rotation.y=Math.sin(e.phase*2)*0.18;
+        (e.mesh.userData.chaseFlameLayers||[]).forEach(layer=>{
+          const pulse=0.88+0.12*Math.sin(time*24+e.phase+layer.phase);
+          layer.mesh.scale.y=pulse;
+          layer.mesh.material.opacity=layer.baseOpacity*(0.9+0.1*Math.sin(time*19+e.phase+layer.phase));
+        });
       }else{
         const dx=P.x-e.x,dz=P.z-e.z;e.mesh.rotation.y=Math.atan2(dz,dx);e.mesh.rotation.z=Math.sin(e.phase*0.7)*0.025;
       }
