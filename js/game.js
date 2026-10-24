@@ -1515,18 +1515,26 @@ function playSlides(list,i,done){
 }
 function openCodex(){
   const box=$('cxList');box.replaceChildren();
-  const add=(title,body,unlocked,teaser)=>{
+  const ordinals=['الأولى','الثانية','الثالثة','الرابعة','الخامسة','السادسة'];
+  const teasers=[
+    'وثيقة من وادي النسر الحديدي تنتظر بعد هزيمة الزعيم الأول.',
+    'مصدر العاصفة الحقيقي لن ينكشف قبل هزيمة الزعيم الثاني.',
+    'سر الترابط بين الأختام لا يظهر إلا بعد هزيمة الزعيم الثالث.',
+    'تحذير الجد مخفي حتى هزيمة الزعيم الرابع.',
+    'اعتراف الحاكم الرمادي لا يُقرأ قبل هزيمته.',
+    'السر الأخير لا يُكشف إلا بعد هزيمة الزعيم الخامس.'
+  ];
+  const add=(pageNumber,title,body,unlocked)=>{
     const page=document.createElement('div');page.className='page'+(unlocked?'':' lock');
     const h=document.createElement('h4'),p=document.createElement('p');
-    h.textContent=unlocked?title:'الفصل مغلق · ؟؟؟';
-    p.textContent=unlocked?body:(teaser||'اهزم الزعيم المرتبط بهذا الفصل لكشف ما حدث.');
+    h.textContent='الصفحة '+ordinals[pageNumber-1]+' · '+(unlocked?title:'مغلقة · ؟؟؟');
+    p.textContent=unlocked?body:teasers[pageNumber-1];
     page.append(h,p);box.appendChild(page);
   };
-  // Never use lifetime boss totals here: only this campaign's defeated-boss count unlocks chapters.
+  // Each boss unlocks exactly one numbered page; the sixth page unlocks after boss five.
   const progress=Math.max(0,Math.min(5,Number(run&&state==='flight'?run.bosses:save.codexProgress)||0));
-  add('سجل الرحلة','تبدأ الحكاية بسجلات ناقصة، وخمسة زعماء يقفون بينك وبين الحقيقة. كل انتصار يكشف جزءًا جديدًا؛ أما السر الأخير فلن يظهر قبل سقوط الحارس الخامس.',progress>=1,'أول أثر ينتظرك خلف النسر الحديدي.');
-  CODEX_BOSSES.forEach((b,i)=>add(b[0],b[1],progress>i,['توجد وثيقة ممزقة قرب الوادي.','مصدر العاصفة ليس كما يبدو.','الأختام تخفي رابطًا لم يُكشف بعد.','رسالة قديمة تحذّر من ثمن الانتصار.','اعتراف الحاكم ينتظر من يواجهه.'][i]));
-  add('ما بعد الأختام',ENDING.join(' '),progress>=5,'السر الأخير لا يُكشف إلا بعد هزيمة الزعيم الخامس.');
+  CODEX_BOSSES.forEach((b,i)=>add(i+1,b[0],b[1],progress>i));
+  add(6,'ما بعد الأختام',ENDING.join(' '),progress>=5);
   $('codex').classList.add('on');paused=true;
 }
 $('storyBtn').addEventListener('click',openCodex);
