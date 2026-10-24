@@ -1535,7 +1535,7 @@ function openCodex(){
   // Every page names its boss; the story text still unlocks only after that boss is defeated.
   const progress=Math.max(0,Math.min(5,Math.max(Number(save.codexProgress)||0,Number(run&&state==='flight'?run.bosses:0)||0)));
   CODEX_BOSSES.forEach((b,i)=>add(i+1,b[0],b[1],progress>i,teasers[i]));
-  add(6,'الحاكم الرمادي · ما بعد الأختام',ENDING.join(' '),progress>=5,teasers[5]);
+  add(6,'الحاكم الرمادي',ENDING.join(' '),progress>=5,teasers[5]);
   $('codex').classList.add('on');paused=true;
 }
 $('storyBtn').addEventListener('click',openCodex);
