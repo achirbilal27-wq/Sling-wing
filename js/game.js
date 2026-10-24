@@ -1084,8 +1084,6 @@ function spawnDefenseTurret(x){
 
 function clearObjs(){while(objGroup.children.length)objGroup.remove(objGroup.children[0]);}
 function resetRun(){
-  // A fresh flight starts with a locked storybook; chapters unlock only as this run defeats bosses.
-  save.codexProgress=0;persist();
   if(objs&&objs.enemyShots)objs.enemyShots.forEach(b=>scene.remove(b.mesh));
   bossRewardPlanes.forEach(r=>{if(r.mesh&&r.mesh.parent)r.mesh.parent.remove(r.mesh);});bossRewardPlanes.length=0;
   P={x:0,alt:85,z:0,vz:0,s:0,a:0.62,roll:0,yaw:0,boostT:0,spin:0,sliding:false,bounces:0,fuel:100,hp:100,maxHp:100,hitCooldown:0,damageFlash:0,launchT:0,engineOut:false,fuelWarned:false,abilityCooldown:0,magnetT:0,guardianOverdriveT:0};
@@ -1532,7 +1530,7 @@ function openCodex(){
     page.append(h,p);box.appendChild(page);
   };
   // Each boss unlocks exactly one numbered page; the sixth page unlocks after boss five.
-  const progress=Math.max(0,Math.min(5,Number(run&&state==='flight'?run.bosses:save.codexProgress)||0));
+  const progress=Math.max(0,Math.min(5,Math.max(Number(save.codexProgress)||0,Number(run&&state==='flight'?run.bosses:0)||0)));
   CODEX_BOSSES.forEach((b,i)=>add(i+1,b[0],b[1],progress>i));
   add(6,'ما بعد الأختام',ENDING.join(' '),progress>=5);
   $('codex').classList.add('on');paused=true;
@@ -1779,7 +1777,7 @@ function defeatBoss(e,source){
   if(P){P.fuel=100;P.engineOut=false;P.fuelWarned=false;updateFuelGauge();addFloat(P.x,P.alt+58,'تم تجديد خزان الوقود بالكامل +100٪','#baf6ff',P.z);playSfx('fuel-pickup');}
   save.bosses=Math.max(0,Number(save.bosses)||0)+1;
   // Codex progression follows bosses defeated in this campaign, not the lifetime total.
-  save.codexProgress=Math.max(0,Math.min(5,run.bosses));
+  save.codexProgress=Math.max(Number(save.codexProgress)||0,Math.min(5,run.bosses));
   persist();
   const reward=150*(1+save.lv.coin);run.coins+=reward;
   addFloat(e.x,e.alt+95,(source==='missile'?'إسقاط صاروخي — هُزم الزعيم! +':'هُزم الزعيم! +')+reward,'#ffe27a',e.z);
