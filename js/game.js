@@ -1086,6 +1086,7 @@ function spawnDefenseTurret(x){
 
 function clearObjs(){while(objGroup.children.length)objGroup.remove(objGroup.children[0]);}
 function resetRun(){
+  if(objs&&Array.isArray(objs.seaFish))objs.seaFish.forEach(f=>disposeSeaFishMaterials(f.mesh));
   if(objs&&objs.enemyShots)objs.enemyShots.forEach(b=>scene.remove(b.mesh));
   if(objs&&Array.isArray(objs.landmarks))objs.landmarks.forEach(item=>{if(item.mixer){item.mixer.stopAllAction();if(item.mesh)item.mixer.uncacheRoot(item.mesh);item.mixer=null;}});
   bossRewardPlanes.forEach(r=>{if(r.mesh&&r.mesh.parent)r.mesh.parent.remove(r.mesh);});bossRewardPlanes.length=0;
@@ -1139,12 +1140,13 @@ function makeSeaFishFallback(color){
  const eyeMat=new THREE.MeshBasicMaterial({color:0xffffff});[-2.1,2.1].forEach(z=>{const eye=new THREE.Mesh(new THREE.SphereGeometry(.75,6,6),eyeMat);eye.position.set(2.7,2.2,z);group.add(eye);});return group;
 }
 function tintSeaFish(model,color){model.traverse(node=>{if(!node.isMesh||!node.material)return;const wasArray=Array.isArray(node.material),mats=wasArray?node.material:[node.material];const tinted=mats.map(material=>{const m=material.clone();if(m.color)m.color.setHex(color);if(m.emissive){m.emissive.setHex(color);m.emissiveIntensity=.12;}m.needsUpdate=true;return m;});node.material=wasArray?tinted:tinted[0];});return model;}
+function disposeSeaFishMaterials(mesh){if(!mesh)return;mesh.traverse(node=>{if(!node.isMesh||!node.material)return;(Array.isArray(node.material)?node.material:[node.material]).forEach(material=>material.dispose());});}
 function makeSeaFishMesh(color){const mesh=seaFishTemplate?seaFishTemplate.clone(true):makeSeaFishFallback(color);tintSeaFish(mesh,color);if(seaFishTemplate)mesh.rotation.z=Math.PI/2;return mesh;}
 function loadSeaFishModel(){
  if(seaFishLoadStarted||typeof THREE.GLTFLoader!=='function')return;seaFishLoadStarted=true;
  new THREE.GLTFLoader().load('assets/models/wildlife/MechaFish.glb',gltf=>{
   const model=prepareWorldModel(gltf.scene,22);if(!model){console.warn('Invalid MechaFish GLB; procedural fish fallback retained.');return;}seaFishTemplate=model;
-  if(typeof objs!=='undefined'&&objs&&Array.isArray(objs.seaFish))objs.seaFish.forEach(f=>{if(!f.mesh||!f.mesh.parent)return;const old=f.mesh,replacement=makeSeaFishMesh(f.color);replacement.position.copy(old.position);replacement.rotation.copy(old.rotation);old.parent.add(replacement);old.parent.remove(old);f.mesh=replacement;});
+  if(typeof objs!=='undefined'&&objs&&Array.isArray(objs.seaFish))objs.seaFish.forEach(f=>{if(!f.mesh||!f.mesh.parent)return;const old=f.mesh,replacement=makeSeaFishMesh(f.color);replacement.position.copy(old.position);replacement.rotation.copy(old.rotation);old.parent.add(replacement);old.parent.remove(old);disposeSeaFishMaterials(old);f.mesh=replacement;});
   console.info('MechaFish GLB loaded for ocean ambushes.');
  },undefined,error=>console.warn('MechaFish GLB unavailable; procedural fish fallback retained:',error));
 }
@@ -1156,7 +1158,7 @@ function spawnSeaFishSchool(centerX,stage){
 function updateSeaFish(dt){
  if(!objs||!Array.isArray(objs.seaFish))return;
  for(let i=objs.seaFish.length-1;i>=0;i--){const f=objs.seaFish[i];f.age+=dt;if(f.age<f.delay){f.mesh.position.set(f.x*S,Y(f.alt),f.z*S);continue;}f.life-=dt;
-  if(f.life<=0||f.bitten){if(f.mesh.parent)f.mesh.parent.remove(f.mesh);objs.seaFish.splice(i,1);continue;}
+  if(f.life<=0||f.bitten){if(f.mesh.parent)f.mesh.parent.remove(f.mesh);disposeSeaFishMaterials(f.mesh);objs.seaFish.splice(i,1);continue;}
   const targetAlt=clamp(P.alt+8,95,440);
   if(f.alt<targetAlt){f.alt=Math.min(targetAlt,f.alt+f.riseSpeed*dt);f.x+=Math.sin(f.age*3.2)*32*dt;}else{f.x+=clamp(P.x-f.x,-950,950)*Math.min(1,dt*1.8);f.z+=clamp(P.z-f.z,-320,320)*Math.min(1,dt*1.6);}
   f.mesh.position.set(f.x*S,Y(f.alt),f.z*S);f.mesh.rotation.z=f.alt<targetAlt?Math.PI/2:Math.atan2(P.alt-f.alt,P.x-f.x);f.mesh.rotation.y=Math.sin(f.age*5)*.16;
