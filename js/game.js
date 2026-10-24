@@ -1065,7 +1065,7 @@ function loadDefenseModels(def){
    if(!e.turret||e.hit||e.defenseFile!==def.file||!e.mesh||!e.mesh.parent)return;
    const old=e.mesh,replacement=makeDefenseTurret(def);replacement.position.copy(old.position);replacement.rotation.copy(old.rotation);replacement.visible=old.visible;
    old.parent.add(replacement);old.parent.remove(old);
-   if(old.userData&&old.userData.defenseFallback)old.traverse(node=>{if(node.geometry)node.geometry.dispose();if(node.material)(Array.isArray(node.material)?node.material:[node.material]).forEach(material=>material.dispose());});
+   old.traverse(node=>{if(node.userData&&node.userData.defenseFallback)node.traverse(fallbackNode=>{if(fallbackNode.geometry)fallbackNode.geometry.dispose();if(fallbackNode.material)(Array.isArray(fallbackNode.material)?fallbackNode.material:[fallbackNode.material]).forEach(material=>material.dispose());});});
    e.mesh=replacement;
   });
   console.info('Defense GLB loaded:',def.file);
