@@ -73,7 +73,7 @@
         "searchlight_place.glb": {
           "role": "searchlight_landmark",
           "biomes": [
-            "final_boss_arena"
+            "desert"
           ],
           "behavior": "stage_landmark",
           "fallback": "procedural_searchlight"
@@ -192,7 +192,10 @@
         "dive_attacker.glb": {
           "role": "dive_attacker",
           "biomes": [
-            "desert"
+            "desert",
+            "ocean",
+            "snow",
+            "final_boss_arena"
           ],
           "behavior": "dive_volley",
           "damage": true,

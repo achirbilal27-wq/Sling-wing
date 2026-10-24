@@ -83,7 +83,8 @@ check(html.indexOf('GLTFLoader.js') >= 0 && html.indexOf('js/game.js') > html.in
 check(js.includes('const squadronSize=3') && js.includes('const coins=10;'), 'Boss reward must spawn a three-plane squadron worth 10 coins per aircraft.');
 check(js.includes('reward.hit=true;reward.collected=true;') && js.includes('collectBossRewardPlane(reward);'), 'Bonus aircraft must use one-time collection and a dedicated collision path.');
 check(js.includes('r.x=r.originX-r.age*95'), 'Bonus aircraft must drift slowly toward the player.');
-check((js.split("spawnWorldLandmark('eagleTower',x-160,zc(").length - 1) === 2, 'First boss arena must spawn two opposing towers close to the boss.');
+const towerSpawns = [...js.matchAll(/spawnWorldLandmark\('eagleTower',x-260,zc\((-?\\d+)\),stage\)/g)].map((match) => Number(match[1]));
+check(towerSpawns.length === 2 && towerSpawns.includes(-235) && towerSpawns.includes(235), 'First boss arena must spawn two widely spaced opposing towers at the entrance.');
 check(js.includes("spawnWorldLandmark('searchlight',x,zc(-215),stage)") && js.includes('segment.visible=activeBiome!==1'), 'Desert stage must use the searchlight landmark and hide the normal road.');
 check(js.includes("if(stage===2)spawnWorldLandmark('iceIsland'"), 'Ice island must appear in the Current-serpent approach zone.');
 check(js.includes("file:'fire-turet.glb',role:'fire',biome:'general',color:0xff512d,attack:'rocket'"), 'fire-turet.glb must operate as a ground missile turret.');
@@ -93,6 +94,10 @@ check(js.includes('if(best)return best;') && js.includes('for(const reward of bo
 if (catalog) {
   const fire = catalog.categories?.['assault-defender']?.models?.['fire-turet.glb'];
   check(fire?.role === 'ground_missile_turret' && fire?.attack === 'homing_rocket', 'Asset catalog must describe fire-turet.glb as a ground missile turret.');
+  const searchlight = catalog.categories?.environment?.models?.['searchlight_place.glb'];
+  check(Array.isArray(searchlight?.biomes) && searchlight.biomes.includes('desert'), 'Searchlight landmark must be cataloged for the desert biome.');
+  const diveAttacker = catalog.categories?.['planes-dead']?.models?.['dive_attacker.glb'];
+  check(['desert', 'ocean', 'snow', 'final_boss_arena'].every((biome) => diveAttacker?.biomes?.includes(biome)), 'Dive attacker catalog must match runtime spawning in later biomes.');
 }
 if (failures.length) {
   console.error('Web game integrity checks FAILED:');
