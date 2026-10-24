@@ -1134,13 +1134,13 @@ const worldLandmarkTemplates=Object.create(null),worldLandmarkClips=Object.creat
 const SEA_FISH_COLORS=[0x28c7d9,0xff7043,0xffca45,0x8c7bff,0x62d66e,0xff5ca8];
 let seaFishTemplate=null,seaFishLoadStarted=false;
 function makeSeaFishFallback(color){
- const group=new THREE.Group();
+ const group=new THREE.Group();group.userData.seaFishFallback=true;
  const body=new THREE.Mesh(new THREE.SphereGeometry(7,12,9),matS(color,.55,{metalness:.25,roughness:.38}));body.scale.set(.72,1.55,.62);group.add(body);
  const fin=new THREE.Mesh(new THREE.ConeGeometry(3.5,7,5),matS(color,.5,{metalness:.2,roughness:.4}));fin.rotation.x=Math.PI/2;fin.position.set(0,7,0);group.add(fin);
  const eyeMat=new THREE.MeshBasicMaterial({color:0xffffff});[-2.1,2.1].forEach(z=>{const eye=new THREE.Mesh(new THREE.SphereGeometry(.75,6,6),eyeMat);eye.position.set(2.7,2.2,z);group.add(eye);});return group;
 }
 function tintSeaFish(model,color){model.traverse(node=>{if(!node.isMesh||!node.material)return;const wasArray=Array.isArray(node.material),mats=wasArray?node.material:[node.material];const tinted=mats.map(material=>{const m=material.clone();if(m.color)m.color.setHex(color);if(m.emissive){m.emissive.setHex(color);m.emissiveIntensity=.12;}m.needsUpdate=true;return m;});node.material=wasArray?tinted:tinted[0];});return model;}
-function disposeSeaFishMaterials(mesh){if(!mesh)return;mesh.traverse(node=>{if(!node.isMesh||!node.material)return;(Array.isArray(node.material)?node.material:[node.material]).forEach(material=>material.dispose());});}
+function disposeSeaFishMaterials(mesh){if(!mesh)return;const ownsFallbackGeometry=!!mesh.userData?.seaFishFallback;mesh.traverse(node=>{if(!node.isMesh)return;if(ownsFallbackGeometry&&node.geometry)node.geometry.dispose();if(node.material)(Array.isArray(node.material)?node.material:[node.material]).forEach(material=>material.dispose());});}
 function makeSeaFishMesh(color){const mesh=seaFishTemplate?seaFishTemplate.clone(true):makeSeaFishFallback(color);tintSeaFish(mesh,color);if(seaFishTemplate)mesh.rotation.z=Math.PI/2;return mesh;}
 function loadSeaFishModel(){
  if(seaFishLoadStarted||typeof THREE.GLTFLoader!=='function')return;seaFishLoadStarted=true;
