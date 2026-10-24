@@ -454,9 +454,15 @@ function prepareCurrentSerpentModel(root){
 }
 function attachCurrentSerpentModel(group){
   if(!currentSerpentModelTemplate||!group||!group.userData.currentSerpentBoss||group.userData.currentSerpentModelAttached)return;
-  const model=currentSerpentModelTemplate.clone(true);group.add(model);group.userData.currentSerpentModel=model;group.userData.currentSerpentModelAttached=true;
+  // Keep a single visible boss representation; hide both the procedural
+  // fallback and any sprite before the custom GLB becomes visible.
   if(group.userData.proceduralFallback)group.userData.proceduralFallback.visible=false;
   if(group.userData.bossSprite)group.userData.bossSprite.visible=false;
+  const model=currentSerpentModelTemplate.clone(true);
+  model.userData.currentSerpentBossVisual=true;
+  group.add(model);
+  group.userData.currentSerpentModel=model;
+  group.userData.currentSerpentModelAttached=true;
 }
 function loadCurrentSerpentBossModel(){
   if(currentSerpentModelLoadStarted||typeof THREE.GLTFLoader!=='function')return;
@@ -1406,10 +1412,17 @@ function makeWorldLandmarkMesh(kind){
   return template?template.clone(true):makeWorldFallback(kind);
 }
 function spawnWorldLandmark(kind,x,z,stage){
-  if(!objs||!Array.isArray(objs.landmarks))return;
+  if(!objs||!Array.isArray(objs.landmarks)||!WORLD_MODEL_DEFS[kind])return;
+  // Guard against duplicate scheduler calls: the same landmark must never be
+  // attached twice at the same world position in one stage.
+  const duplicate=objs.landmarks.some(item=>item.kind===kind&&item.stage===stage&&Math.abs(item.x-x)<0.5&&Math.abs(item.z-z)<0.5&&item.mesh&&item.mesh.parent);
+  if(duplicate)return;
   loadWorldLandmarkModels(kind);
   const item={kind,x,z,stage,age:0,mixer:null,mesh:makeWorldLandmarkMesh(kind)};
-  item.mesh.position.set(x*S,0,z*S);objGroup.add(item.mesh);
+  item.mesh.position.set(x*S,0,z*S);
+  item.mesh.userData.worldLandmarkKind=kind;
+  item.mesh.userData.worldLandmarkStage=stage;
+  objGroup.add(item.mesh);
   if(worldLandmarkClips[kind]&&worldLandmarkClips[kind].length&&THREE.AnimationMixer){item.mixer=new THREE.AnimationMixer(item.mesh);worldLandmarkClips[kind].forEach(clip=>item.mixer.clipAction(clip).play());}
   objs.landmarks.push(item);
 }
