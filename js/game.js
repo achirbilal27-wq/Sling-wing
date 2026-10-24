@@ -1129,7 +1129,13 @@ function loadMeteorModel(){
   if(meteorModelLoadStarted||typeof THREE.GLTFLoader!=='function')return;
   meteorModelLoadStarted=true;
   new THREE.GLTFLoader().load('assets/models/bomberplan/bomb_shark.glb',gltf=>{
-    const model=prepareWorldModel(gltf.scene,15);
+    // This GLB's longest axis is the wing span (Y), with its fuselage along Z.
+    // Rotate axes cyclically so the game uses X for flight direction, Y for height,
+    // and Z for wing span before normalizing dimensions.
+    const oriented=new THREE.Group();
+    oriented.quaternion.setFromAxisAngle(new THREE.Vector3(1,1,1).normalize(),Math.PI*2/3);
+    oriented.add(gltf.scene);
+    const model=prepareWorldModel(oriented,22);
     if(!model){console.warn('Meteor source GLB could not be normalized; using the procedural meteor core.');return;}
     meteorModelTemplate=model;
     meteorModelTemplate.traverse(n=>{
@@ -1150,18 +1156,17 @@ function loadMeteorModel(){
 function attachMeteorModel(meteor){
   if(!meteor||!meteor.group||!meteorModelTemplate||meteor.modelAttached)return;
   const model=meteorModelTemplate.clone(true);
-  model.scale.setScalar(0.72);
-  model.rotation.set(0,0,Math.PI*0.18);
+  model.scale.setScalar(0.82);
+  // The aircraft travels toward -X; the parent group's 180-degree Y turn
+  // points its nose along the flight path.
   model.traverse(n=>{n.userData.meteorSharedAsset=true;});
   meteor.group.add(model);meteor.modelAttached=true;
 }
 function makeMeteor(){
   const group=new THREE.Group();
-  const rockMat=new THREE.MeshStandardMaterial({color:0x4a302c,roughness:0.96,metalness:0.05,emissive:0x7a210e,emissiveIntensity:0.38});
-  const core=new THREE.Mesh(new THREE.DodecahedronGeometry(7.5,1),rockMat);
-  core.scale.set(1.25,0.86,0.9);group.add(core);
-  const glow=new THREE.Mesh(new THREE.SphereGeometry(8.5,12,8),new THREE.MeshBasicMaterial({color:0xff5728,transparent:true,opacity:0.2,depthWrite:false}));
-  glow.scale.set(1.4,1,1);group.add(glow);
+  // A soft glow surrounds the aircraft; do not add a rock core that hides its silhouette.
+  const glow=new THREE.Mesh(new THREE.SphereGeometry(9,12,8),new THREE.MeshBasicMaterial({color:0xff5728,transparent:true,opacity:0.14,depthWrite:false}));
+  glow.scale.set(1.35,0.62,0.82);group.add(glow);
   const layers=[
     {length:72,radius:9,color:0xff3517,opacity:0.23},
     {length:54,radius:6.5,color:0xff7b22,opacity:0.4},
@@ -1172,13 +1177,14 @@ function makeMeteor(){
   layers.forEach((d,i)=>{
     const material=new THREE.MeshBasicMaterial({color:d.color,transparent:true,opacity:d.opacity,side:THREE.DoubleSide,depthWrite:false});
     const cone=new THREE.Mesh(new THREE.ConeGeometry(d.radius,d.length,9,1,true),material);
-    cone.rotation.z=-Math.PI/2;cone.position.x=d.length*0.48+2+i*2.5;
+    // Trail extends behind the aircraft in local -X; parent rotation turns it to +X.
+    cone.rotation.z=Math.PI/2;cone.position.x=-(d.length*0.48+2+i*2.5);
     group.add(cone);trail.push({mesh:cone,baseOpacity:d.opacity,phase:i*1.4});
   });
   const sparks=[];
   for(let i=0;i<12;i++){
     const spark=new THREE.Mesh(new THREE.SphereGeometry(0.65+Math.random()*0.75,5,4),new THREE.MeshBasicMaterial({color:0xffcf68,transparent:true,opacity:0.95}));
-    spark.position.set(10+Math.random()*52,(Math.random()-.5)*13,(Math.random()-.5)*13);
+    spark.position.set(-(10+Math.random()*52),(Math.random()-.5)*8,(Math.random()-.5)*10);
     group.add(spark);sparks.push({mesh:spark,offset:(Math.random()-.5)*9,phase:Math.random()*6.28});
   }
   group.userData.meteorTrail=trail;group.userData.meteorSparks=sparks;
@@ -1188,11 +1194,17 @@ function makeMeteor(){
 function spawnMeteor(x){
   if(!objs||!Array.isArray(objs.meteors))return;
   const meteor=makeMeteor();
-  meteor.x=x;meteor.alt=470+Math.random()*220;meteor.z=zc((Math.random()-.5)*520);
-  meteor.vx=-(520+Math.random()*180);meteor.vy=-(45+Math.random()*90);meteor.vz=(Math.random()-.5)*100;
+  // Start ahead, near the player's altitude, offset laterally so the fly-by is readable and non-overlapping.
+  const side=Math.random()<0.5?-1:1;
+  meteor.x=Math.max(x,P.x+1800);
+  meteor.alt=clamp(P.alt+(Math.random()-.5)*48,105,455);
+  meteor.z=zc(P.z+side*(155+Math.random()*45));
+  meteor.vx=-(260+Math.random()*90);
+  meteor.vy=(Math.random()-.5)*9;
+  meteor.vz=-side*(12+Math.random()*8);
   meteor.life=7.8;meteor.age=0;
   meteor.group.position.set(meteor.x*S,Y(meteor.alt),meteor.z*S);
-  meteor.group.rotation.z=-0.12;meteor.group.rotation.y=Math.PI;
+  meteor.group.rotation.z=-0.035;meteor.group.rotation.y=Math.PI;
   objs.meteors.push(meteor);
   addFloat(x,meteor.alt+38,'شهاب مشتعل في السماء','#ffb45e',meteor.z);
 }
@@ -1209,7 +1221,7 @@ function updateMeteors(dt){
       layer.mesh.scale.set(1,pulse,pulse);
     });
     (m.group.userData.meteorSparks||[]).forEach(s=>{
-      s.mesh.position.x=10+((m.age*42+s.phase*7)%62);
+      s.mesh.position.x=-(10+((m.age*42+s.phase*7)%62));
       s.mesh.position.y=Math.sin(m.age*13+s.phase)*s.offset;
       s.mesh.position.z=Math.cos(m.age*11+s.phase)*Math.abs(s.offset);
     });
