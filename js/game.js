@@ -1219,7 +1219,9 @@ function spawnMeteor(x){
   meteor.lane=lane;
   meteor.life=7.8;meteor.age=0;
   meteor.group.position.set(meteor.x*S,Y(meteor.alt),meteor.z*S);
-  meteor.group.rotation.z=-0.035;meteor.group.rotation.y=Math.PI;
+  // Compass convention for this game: +Z is south. The normalized GLB nose points +X,
+  // so rotate it -90 degrees around Y to face south without changing its flight path.
+  meteor.group.rotation.z=-0.035;meteor.group.rotation.y=-Math.PI/2;
   objs.meteors.push(meteor);
   addFloat(meteor.x,meteor.alt+38,lane===2?'طائرة مشتعلة في مسارك!':'طائرة مشتعلة في مسار جانبي','#ffb45e',meteor.z);
 }
