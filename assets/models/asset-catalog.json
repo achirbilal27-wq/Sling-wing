@@ -98,11 +98,11 @@
           "damage": true
         },
         "fire-turet.glb": {
-          "role": "red_flame_chaser",
+          "role": "ground_missile_turret",
           "biomes": [
             "general"
           ],
-          "attack": "flame_chase",
+          "attack": "homing_rocket",
           "damage": true
         },
         "interceptor_base.glb": {
