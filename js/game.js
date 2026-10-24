@@ -1175,7 +1175,7 @@ function prepareWorldModel(root,targetSize){
   return model;
 }
 function makeWorldFallback(kind){
-  const g=new THREE.Group();
+  const g=new THREE.Group();g.userData.worldFallback=true;
   const stone=matS(0x777b83,0.8,{roughness:0.92}),sand=matS(0xb69a65,0.75,{roughness:1}),ice=matS(0x9edff2,0.45,{roughness:0.38,metalness:0.08}),dark=matS(0x303746,0.6,{roughness:0.72}),glow=new THREE.MeshBasicMaterial({color:0x91eaff});
   const addBox=(w,h,d,material,x,y,z)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);m.position.set(x,y,z);g.add(m);return m;};
   if(kind==='desertOutpost'){addBox(28,12,22,sand,0,6,0);addBox(9,18,9,stone,-12,9,-4);addBox(9,18,9,stone,12,9,4);}
@@ -1202,7 +1202,9 @@ function loadWorldLandmarkModels(kind){
    const old=item.mesh,replacement=makeWorldLandmarkMesh(kind);
    if(item.mixer){item.mixer.stopAllAction();item.mixer.uncacheRoot(old);item.mixer=null;}
    replacement.position.copy(old.position);replacement.rotation.copy(old.rotation);
-   old.parent.add(replacement);old.parent.remove(old);item.mesh=replacement;
+   old.parent.add(replacement);old.parent.remove(old);
+   if(old.userData&&old.userData.worldFallback)old.traverse(node=>{if(node.geometry)node.geometry.dispose();if(node.material)(Array.isArray(node.material)?node.material:[node.material]).forEach(material=>material.dispose());});
+   item.mesh=replacement;
    if(worldLandmarkClips[kind].length&&THREE.AnimationMixer){item.mixer=new THREE.AnimationMixer(replacement);worldLandmarkClips[kind].forEach(clip=>item.mixer.clipAction(clip).play());}
   });
   console.info('World landmark model loaded:',kind);
