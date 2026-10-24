@@ -1231,9 +1231,10 @@ function updateMeteors(dt){
     const m=objs.meteors[i];m.age+=dt;m.life-=dt;
     m.x+=m.vx*dt;m.alt+=m.vy*dt;m.z=zc(m.z+m.vz*dt);
     m.group.position.set(m.x*S,Y(m.alt+24),m.z*S);
-    // Face the hero in the horizontal plane using the group's +Z forward axis.
-    // The GLB's local 180-degree correction is retained; this yaw follows the hero as either plane moves.
-    m.group.rotation.y=Math.atan2(P.x-m.x,P.z-m.z);
+    // The GLB fuselage is authored along local Z; loadMeteorModel() remaps it to +X,
+    // then attachMeteorModel() reverses it to -X. Calculate yaw for that actual -X forward axis.
+    const dx=P.x-m.x,dz=P.z-m.z;
+    m.group.rotation.y=Math.atan2(dz,-dx);
     m.group.rotation.z=-0.12+Math.sin(m.age*2.1)*0.035;
     const pulse=0.86+0.14*Math.sin(time*17+m.age*4);
     (m.group.userData.meteorBodyFire||[]).forEach(fire=>{
