@@ -95,6 +95,7 @@ check(js.includes("const enemyKind=stage===0?'kamikaze':stage>=1?'dive':null;"),
 check(js.includes('if(biomeIndex===2){spawnWorldLandmark(\'serpentWater\'') && js.includes('spawnSeaFishSchool(x-1850,stage)') && js.includes('spawnSeaFishSchool(x-450,stage)'), 'MechaFish schools must be restricted to the Current-serpent boss encounter.');
 check(js.includes('if(best)return best;') && js.includes('for(const reward of bossRewardPlanes)'), 'Enemy/boss target priority must be preserved before bonus targeting.');
 check(js.includes('function disposeSeaFishMaterials(mesh)') && js.includes('disposeSeaFishMaterials(f.mesh);objs.seaFish.splice(i,1);') && js.includes('objs.seaFish.forEach(f=>disposeSeaFishMaterials(f.mesh))'), 'Sea-fish material clones must be disposed when fish expire and when a run resets.');
+check(js.includes('group.userData.seaFishFallback=true;') && js.includes('const ownsFallbackGeometry=!!mesh.userData?.seaFishFallback;') && js.includes('if(ownsFallbackGeometry&&node.geometry)node.geometry.dispose();'), 'Procedural sea-fish geometry must be disposed without disposing shared GLB template geometry.');
 if (catalog) {
   const fire = catalog.categories?.['assault-defender']?.models?.['fire-turet.glb'];
   check(fire?.role === 'ground_missile_turret' && fire?.attack === 'homing_rocket', 'Asset catalog must describe fire-turet.glb as a ground missile turret.');
