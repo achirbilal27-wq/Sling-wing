@@ -1084,6 +1084,8 @@ function spawnDefenseTurret(x){
 
 function clearObjs(){while(objGroup.children.length)objGroup.remove(objGroup.children[0]);}
 function resetRun(){
+  // A fresh flight starts with a locked storybook; chapters unlock only as this run defeats bosses.
+  save.codexProgress=0;persist();
   if(objs&&objs.enemyShots)objs.enemyShots.forEach(b=>scene.remove(b.mesh));
   bossRewardPlanes.forEach(r=>{if(r.mesh&&r.mesh.parent)r.mesh.parent.remove(r.mesh);});bossRewardPlanes.length=0;
   P={x:0,alt:85,z:0,vz:0,s:0,a:0.62,roll:0,yaw:0,boostT:0,spin:0,sliding:false,bounces:0,fuel:100,hp:100,maxHp:100,hitCooldown:0,damageFlash:0,launchT:0,engineOut:false,fuelWarned:false,abilityCooldown:0,magnetT:0,guardianOverdriveT:0};
@@ -1513,16 +1515,18 @@ function playSlides(list,i,done){
 }
 function openCodex(){
   const box=$('cxList');box.replaceChildren();
-  const add=(title,body,unlocked)=>{
+  const add=(title,body,unlocked,teaser)=>{
     const page=document.createElement('div');page.className='page'+(unlocked?'':' lock');
     const h=document.createElement('h4'),p=document.createElement('p');
-    h.textContent=unlocked?title:'صفحة مقفلة';p.textContent=unlocked?body:'اهزم الزعماء لفتح هذه الصفحة.';
+    h.textContent=unlocked?title:'الفصل مغلق · ؟؟؟';
+    p.textContent=unlocked?body:(teaser||'اهزم الزعيم المرتبط بهذا الفصل لكشف ما حدث.');
     page.append(h,p);box.appendChild(page);
   };
-  const progress=Math.max(0,Math.min(5,Number(save.codexProgress)||0));
-  add('الحكاية',INTRO.map(x=>x[2]).join(' '),true);
-  CODEX_BOSSES.forEach((b,i)=>add(b[0],b[1],progress>i));
-  add('ما بعد الأختام',ENDING.join(' '),progress>=5);
+  // Never use lifetime boss totals here: only this campaign's defeated-boss count unlocks chapters.
+  const progress=Math.max(0,Math.min(5,Number(run&&state==='flight'?run.bosses:save.codexProgress)||0));
+  add('سجل الرحلة','تبدأ الحكاية بسجلات ناقصة، وخمسة زعماء يقفون بينك وبين الحقيقة. كل انتصار يكشف جزءًا جديدًا؛ أما السر الأخير فلن يظهر قبل سقوط الحارس الخامس.',progress>=1,'أول أثر ينتظرك خلف النسر الحديدي.');
+  CODEX_BOSSES.forEach((b,i)=>add(b[0],b[1],progress>i,['توجد وثيقة ممزقة قرب الوادي.','مصدر العاصفة ليس كما يبدو.','الأختام تخفي رابطًا لم يُكشف بعد.','رسالة قديمة تحذّر من ثمن الانتصار.','اعتراف الحاكم ينتظر من يواجهه.'][i]));
+  add('ما بعد الأختام',ENDING.join(' '),progress>=5,'السر الأخير لا يُكشف إلا بعد هزيمة الزعيم الخامس.');
   $('codex').classList.add('on');paused=true;
 }
 $('storyBtn').addEventListener('click',openCodex);
@@ -1767,7 +1771,7 @@ function defeatBoss(e,source){
   if(P){P.fuel=100;P.engineOut=false;P.fuelWarned=false;updateFuelGauge();addFloat(P.x,P.alt+58,'تم تجديد خزان الوقود بالكامل +100٪','#baf6ff',P.z);playSfx('fuel-pickup');}
   save.bosses=Math.max(0,Number(save.bosses)||0)+1;
   // Codex progression follows bosses defeated in this campaign, not the lifetime total.
-  save.codexProgress=Math.max(0,Math.min(5,Number(save.codexProgress)||0),Math.min(5,run.bosses));
+  save.codexProgress=Math.max(0,Math.min(5,run.bosses));
   persist();
   const reward=150*(1+save.lv.coin);run.coins+=reward;
   addFloat(e.x,e.alt+95,(source==='missile'?'إسقاط صاروخي — هُزم الزعيم! +':'هُزم الزعيم! +')+reward,'#ffe27a',e.z);
