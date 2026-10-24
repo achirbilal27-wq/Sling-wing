@@ -277,9 +277,9 @@
           "biomes": [
             "ocean_boss_arena"
           ],
-          "behavior": "custom_glb_boss_with_procedural_fallback",
-          "runtimeUrl": "current_serpent_boss.glb",
-          "fallback": "procedural_boss"
+          "behavior": "custom_glb_boss_with_cobra_sway",
+          "fallback": "procedural_boss",
+          "authoredFor": "Sling-wing"
         }
       }
     }
