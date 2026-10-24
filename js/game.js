@@ -1480,6 +1480,50 @@ $('stBtn').addEventListener('click',()=>{
   $('story').classList.remove('on');paused=false;
   const cb=storyCb;storyCb=null;if(cb)cb();
 });
+function playFinalLandingScene(done){
+  const id='slingFinalLanding';
+  document.getElementById(id)?.remove();
+  if(!document.getElementById('slingFinalLandingStyles')){
+    const style=document.createElement('style');style.id='slingFinalLandingStyles';
+    style.textContent=`
+      #slingFinalLanding{position:fixed;inset:0;z-index:10050;display:grid;place-items:center;overflow:hidden;background:radial-gradient(ellipse at 50% 74%,#173c62 0,#09162e 42%,#020611 100%);color:#f2fbff;font-family:inherit}
+      #slingFinalLanding *{box-sizing:border-box}
+      #slingFinalLanding .fl-sky{position:absolute;inset:0;background:linear-gradient(180deg,rgba(3,7,22,.18),rgba(5,18,37,.35) 58%,rgba(2,7,15,.92));}
+      #slingFinalLanding .fl-stars{position:absolute;inset:0;opacity:.7;background-image:radial-gradient(#d8f5ff 1px,transparent 1.5px),radial-gradient(#85caff 1px,transparent 1.5px);background-size:67px 61px,113px 97px;background-position:0 0,29px 41px;animation:flStars 18s linear infinite}
+      #slingFinalLanding .fl-horizon{position:absolute;bottom:-12%;left:-10%;width:120%;height:42%;background:linear-gradient(180deg,#122a43,#050a13 80%);clip-path:polygon(0 40%,12% 31%,24% 46%,35% 28%,49% 42%,60% 19%,74% 43%,88% 29%,100% 38%,100% 100%,0 100%)}
+      #slingFinalLanding .fl-beam{position:absolute;right:17%;top:13%;width:52%;height:62%;background:linear-gradient(100deg,transparent,rgba(115,232,255,.2),rgba(206,250,255,.75),rgba(115,232,255,.15),transparent);clip-path:polygon(93% 0,100% 0,28% 100%,0 100%);transform-origin:92% 0;animation:flBeam 5s ease-in-out infinite alternate;filter:blur(4px)}
+      #slingFinalLanding .fl-tower{position:absolute;right:14%;bottom:13%;width:38px;height:122px;background:linear-gradient(90deg,#26394c,#d0e5ed 48%,#3c5263);clip-path:polygon(30% 0,70% 0,84% 18%,100% 100%,0 100%,16% 18%);filter:drop-shadow(0 0 14px #82eaff)}
+      #slingFinalLanding .fl-lamp{position:absolute;right:calc(14% + 5px);bottom:calc(13% + 112px);width:28px;height:16px;border-radius:50%;background:#e7ffff;box-shadow:0 0 12px 7px #a5f4ff,0 0 55px 25px rgba(99,220,255,.75);animation:flPulse 1.8s ease-in-out infinite}
+      #slingFinalLanding .fl-plane{position:absolute;left:-24%;top:27%;width:min(34vw,250px);min-width:130px;filter:drop-shadow(0 0 15px rgba(126,230,255,.65));animation:flLand 8s cubic-bezier(.18,.72,.25,1) forwards}
+      #slingFinalLanding .fl-plane svg{display:block;width:100%;height:auto}
+      #slingFinalLanding .fl-elder{position:absolute;right:calc(14% - 40px);bottom:calc(13% + 138px);width:120px;height:175px;opacity:0;transform:translateY(12px) scale(.8);animation:flElder 1.8s ease-out 4.7s forwards;filter:drop-shadow(0 0 16px #a7f5ff)}
+      #slingFinalLanding .fl-elder:before{content:'';position:absolute;left:38px;top:0;width:46px;height:52px;border-radius:48% 48% 42% 42%;background:radial-gradient(circle at 50% 35%,#f0ffff,#7ce8ff 50%,#298bb7);box-shadow:0 0 28px #70eaff}
+      #slingFinalLanding .fl-elder:after{content:'';position:absolute;left:14px;top:48px;width:96px;height:125px;border-radius:48% 48% 12% 12%;background:linear-gradient(90deg,rgba(80,204,255,.1),rgba(204,253,255,.9),rgba(55,163,213,.25));clip-path:polygon(30% 0,70% 0,100% 100%,0 100%);border-bottom:1px solid #eaffff}
+      #slingFinalLanding .fl-dialog{position:absolute;left:50%;bottom:5%;transform:translateX(-50%);width:min(780px,92vw);padding:clamp(16px,3vw,28px);border:1px solid rgba(166,238,255,.5);border-radius:18px;background:linear-gradient(135deg,rgba(5,18,36,.92),rgba(10,43,65,.88));box-shadow:0 0 40px rgba(68,207,255,.17);text-align:center;backdrop-filter:blur(8px)}
+      #slingFinalLanding .fl-kicker{font-size:.8rem;letter-spacing:.12em;color:#8feaff;margin-bottom:7px}
+      #slingFinalLanding h2{margin:0 0 10px;font-size:clamp(1.25rem,4vw,2rem);color:#f2fdff}
+      #slingFinalLanding p{margin:0 auto 16px;max-width:680px;line-height:1.9;font-size:clamp(.95rem,2.4vw,1.1rem)}
+      #slingFinalLanding button{border:1px solid #b9f5ff;border-radius:999px;padding:11px 26px;color:#061525;background:linear-gradient(100deg,#b8f6ff,#fff);font:inherit;font-weight:800;cursor:pointer}
+      #slingFinalLanding .fl-endline{position:absolute;top:8%;left:0;width:100%;text-align:center;color:#d8f9ff;font-size:clamp(1rem,3vw,1.5rem);letter-spacing:.08em;opacity:0;animation:flTitle 1.5s ease 6.8s forwards;text-shadow:0 0 24px #55dfff}
+      @keyframes flStars{to{background-position:67px 61px,-84px 97px}}
+      @keyframes flBeam{from{transform:rotate(-7deg);opacity:.55}to{transform:rotate(5deg);opacity:1}}
+      @keyframes flPulse{50%{opacity:.65;box-shadow:0 0 22px 12px #a5f4ff,0 0 80px 38px rgba(99,220,255,.8)}}
+      @keyframes flLand{0%{left:-24%;top:23%;transform:rotate(8deg) scale(.78);opacity:0}12%{opacity:1}48%{left:43%;top:53%;transform:rotate(15deg) scale(.88)}70%{left:64%;top:68%;transform:rotate(3deg) scale(.66)}84%{left:68%;top:73%;transform:rotate(0) scale(.6)}100%{left:68%;top:73%;transform:rotate(0) scale(.6);opacity:.25}}
+      @keyframes flElder{to{opacity:.9;transform:translateY(0) scale(1)}}
+      @keyframes flTitle{to{opacity:1}}
+      @media(max-width:600px){#slingFinalLanding .fl-tower{right:10%;transform:scale(.78);transform-origin:bottom right}#slingFinalLanding .fl-lamp{right:calc(10% + 5px)}#slingFinalLanding .fl-elder{right:calc(10% - 40px);transform:scale(.65);transform-origin:bottom right}#slingFinalLanding .fl-plane{animation-duration:7s}#slingFinalLanding .fl-dialog{bottom:3%;}}
+    `;
+    document.head.appendChild(style);
+  }
+  const layer=document.createElement('div');layer.id=id;layer.setAttribute('role','dialog');layer.setAttribute('aria-modal','true');layer.setAttribute('aria-label','المشهد الختامي');
+  layer.innerHTML=`<div class="fl-sky"></div><div class="fl-stars"></div><div class="fl-beam"></div><div class="fl-horizon"></div><div class="fl-tower"></div><div class="fl-lamp"></div><div class="fl-plane" aria-hidden="true"><svg viewBox="0 0 260 100" role="img" aria-label="طائرة جناح تهبط"><defs><linearGradient id="flMetal" x1="0" x2="1"><stop stop-color="#b9f7ff"/><stop offset=".5" stop-color="#fff"/><stop offset="1" stop-color="#54b6e8"/></linearGradient></defs><path fill="url(#flMetal)" d="M8 45 L96 37 L142 7 L164 8 L146 39 L221 43 L251 52 L220 61 L146 59 L164 84 L145 86 L96 61 L8 55 Z"/><path fill="#0b3152" d="M32 47 L100 43 L120 48 L98 54 L32 53 Z"/><path fill="#eaffff" d="M103 42 L143 14 L151 14 L132 42 Z"/></svg></div><div class="fl-elder" aria-hidden="true"></div><div class="fl-endline">انتهت الرحلة… وبقي أثر جناح</div><div class="fl-dialog"><div class="fl-kicker">المشهد الختامي · منارة آخر الرياح</div><h2>صوت الجد من قلب الضوء</h2><p>«أحسنت يا حفيدي… لم تنتصر لأنك أسقطت الحاكم، بل لأنك اخترت أن تعرف الحقيقة. أعد جناح إلى الأرض؛ لقد انتهت الحرب، وحان وقت أن تحمل الرياح قصتنا لا خوفنا.»</p><button type="button">الهبوط اكتمل · إنهاء الرحلة</button></div>`;
+  document.body.appendChild(layer);
+  paused=true;fireHeld=false;down.clear();ptr.clear();
+  const button=layer.querySelector('button');let finished=false;
+  const finish=()=>{if(finished)return;finished=true;layer.remove();if(typeof done==='function')done();};
+  button.addEventListener('click',finish,{once:true});
+}
+
 function finishCinematic(markSeen){
   const layer=$('cinematicIntro'),video=$('cinematicVideo');
   if(layer)layer.hidden=true;
@@ -1799,7 +1843,7 @@ function defeatBoss(e,source){
   playSlides([[discoveries[chapter][0],discoveries[chapter][1],discoveries[chapter][2]]],0,()=>{
     if(run.bosses===2)spawnRocketAmbush();
     if(run.bosses>=5&&!save.campaignEndingSeen){
-      playSlides(FINAL_REVEAL,0,()=>{save.campaignEndingSeen=true;persist();endRun();});
+      playSlides(FINAL_REVEAL,0,()=>{playFinalLandingScene(()=>{save.campaignEndingSeen=true;persist();endRun();});});
     }
   });
 }
