@@ -86,7 +86,7 @@ check(js.includes('r.x=r.originX-r.age*95'), 'Bonus aircraft must drift slowly t
 const towerSpawns = ["spawnWorldLandmark('eagleTower',x-260,zc(-235),stage)", "spawnWorldLandmark('eagleTower',x-260,zc(235),stage)"];
 check(towerSpawns.length === 2 && towerSpawns.some((spawn) => spawn.includes('zc(-235)')) && towerSpawns.some((spawn) => spawn.includes('zc(235)')), 'First boss arena must spawn two widely spaced opposing towers at the entrance.');
 check(js.includes("spawnWorldLandmark('searchlight',x,zc(-215),stage)") && js.includes('segment.visible=activeBiome!==1'), 'Desert stage must use the searchlight landmark and hide the normal road.');
-check(js.includes("if(stage===2)spawnWorldLandmark('iceIsland'"), 'Ice island must appear in the Current-serpent approach zone.');
+check(js.includes("if(stage===3)spawnWorldLandmark('iceIsland'"), 'Ice island must appear in the snow-stage approach zone.');
 check(js.includes("file:'fire-turet.glb',role:'fire',biome:'general',color:0xff512d,attack:'rocket'"), 'fire-turet.glb must operate as a ground missile turret.');
 check(js.includes("const enemyKind=stage===0?'kamikaze':stage>=1?'dive':null;"), 'Dive attacker must appear as the player progresses beyond the opening stage.');
 check(js.includes('if(biomeIndex===2){spawnWorldLandmark(\'serpentWater\'') && js.includes('spawnSeaFishSchool(x-1850,stage)') && js.includes('spawnSeaFishSchool(x-450,stage)'), 'MechaFish schools must be restricted to the Current-serpent boss encounter.');
