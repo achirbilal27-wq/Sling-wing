@@ -1280,7 +1280,7 @@ function spawn(until){
         spawnWorldLandmark('desertOutpost',x,zc(235),stage);
         spawnWorldLandmark('searchlight',x,zc(-215),stage);
       }
-      if(stage===2)spawnWorldLandmark('iceIsland',x,zc(-220),stage);
+      if(stage===3)spawnWorldLandmark('iceIsland',x,zc(-220),stage);
       if(stage%2===0&&stage!==4)spawnWorldLandmark('fighterDefense',x,zc((H(stage,21)<.5?-1:1)*230),stage);
     }
     objs.nextLandmark+=650/M_PER_PX;
