@@ -2400,7 +2400,7 @@ function update(dt){
     if(p.life<=0){p.mesh.visible=false;parts.splice(i,1);continue;}
     p.x+=p.vx*dt;p.alt+=p.vy*dt;p.z+=p.vz*dt;
   }
-  if(objs&&Array.isArray(objs.landmarks))objs.landmarks.forEach(item=>{item.age+=dt;if(item.mixer)item.mixer.update(dt);if(item.kind==='serpentWater'&&item.mesh){item.mesh.position.y=1+Math.sin(time*1.3)*0.22;item.mesh.rotation.y=Math.sin(time*.35)*.025;}});
+  if(objs&&Array.isArray(objs.landmarks))objs.landmarks.forEach(item=>{item.age+=dt;if(item.mixer)item.mixer.update(dt);if(item.kind==='eagleTower'&&item.mesh){item.mesh.rotation.y=Math.atan2(P.x-item.x,P.z-item.z);}if(item.kind==='serpentWater'&&item.mesh){item.mesh.position.y=1+Math.sin(time*1.3)*0.22;item.mesh.rotation.y=Math.sin(time*.35)*.025;}});
   for(let i=bossRewardPlanes.length-1;i>=0;i--){
     const r=bossRewardPlanes[i];r.age+=dt;r.life-=dt;
     // Drift slowly back toward the player with a gentle flight path.
