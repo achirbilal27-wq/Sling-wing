@@ -17,7 +17,7 @@ const H=(n,k)=>{const s=Math.sin(n*12.9898+k*78.233)*43758.5453;return s-Math.fl
 /* ---------- save ---------- */
 const KEY='sling_wing_v1';
 const LEGACY_KEY='sling_wing_epic_v1';
-const DEFAULT_SAVE={coins:200,fuel:1,best:0,model:'trainer',lv:{sling:0,cannon:0,plane:0,coin:0},bosses:0,intro:false,cinematicSeen:false,campaignEndingSeen:false,mute:false,top:[]};
+const DEFAULT_SAVE={coins:200,fuel:1,best:0,model:'trainer',lv:{sling:0,cannon:0,plane:0,coin:0},bosses:0,codexProgress:0,intro:false,cinematicSeen:false,campaignEndingSeen:false,mute:false,top:[]};
 let save=Object.assign({},DEFAULT_SAVE,{lv:Object.assign({},DEFAULT_SAVE.lv)});
 let legacyProgress=null;
 try{
@@ -1519,9 +1519,10 @@ function openCodex(){
     h.textContent=unlocked?title:'صفحة مقفلة';p.textContent=unlocked?body:'اهزم الزعماء لفتح هذه الصفحة.';
     page.append(h,p);box.appendChild(page);
   };
+  const progress=Math.max(0,Math.min(5,Number(save.codexProgress)||0));
   add('الحكاية',INTRO.map(x=>x[2]).join(' '),true);
-  CODEX_BOSSES.forEach((b,i)=>add(b[0],b[1],(save.bosses||0)>i));
-  add('ما بعد الأختام',ENDING.join(' '),(save.bosses||0)>=5);
+  CODEX_BOSSES.forEach((b,i)=>add(b[0],b[1],progress>i));
+  add('ما بعد الأختام',ENDING.join(' '),progress>=5);
   $('codex').classList.add('on');paused=true;
 }
 $('storyBtn').addEventListener('click',openCodex);
@@ -1764,7 +1765,10 @@ function defeatBoss(e,source){
   if(!e||e.hit)return;
   e.hit=true;e.mesh.visible=false;run.bossBattle=false;run.bosses++;
   if(P){P.fuel=100;P.engineOut=false;P.fuelWarned=false;updateFuelGauge();addFloat(P.x,P.alt+58,'تم تجديد خزان الوقود بالكامل +100٪','#baf6ff',P.z);playSfx('fuel-pickup');}
-  save.bosses=Math.max(0,Number(save.bosses)||0)+1;persist();
+  save.bosses=Math.max(0,Number(save.bosses)||0)+1;
+  // Codex progression follows bosses defeated in this campaign, not the lifetime total.
+  save.codexProgress=Math.max(0,Math.min(5,Number(save.codexProgress)||0),Math.min(5,run.bosses));
+  persist();
   const reward=150*(1+save.lv.coin);run.coins+=reward;
   addFloat(e.x,e.alt+95,(source==='missile'?'إسقاط صاروخي — هُزم الزعيم! +':'هُزم الزعيم! +')+reward,'#ffe27a',e.z);
   if(run.bosses>=5)playSfx('victory-stinger');else playSfx('boss-defeat');
