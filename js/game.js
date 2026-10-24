@@ -1085,11 +1085,27 @@ function spawnDefenseTurret(x){
 }
 
 function clearObjs(){while(objGroup.children.length)objGroup.remove(objGroup.children[0]);}
+function clearEnemyShots(){
+  if(!objs||!Array.isArray(objs.enemyShots))return;
+  for(const b of objs.enemyShots){
+    if(b.mesh)scene.remove(b.mesh);
+    if(b.waterColumn){
+      if(b.mesh&&b.mesh.geometry)b.mesh.geometry.dispose();
+      if(b.mesh&&b.mesh.material)b.mesh.material.dispose();
+      if(b.ring){
+        scene.remove(b.ring);
+        if(b.ring.geometry)b.ring.geometry.dispose();
+        if(b.ring.material)b.ring.material.dispose();
+      }
+    }else if(b.ring){scene.remove(b.ring);}
+  }
+  objs.enemyShots.length=0;
+}
 function resetRun(){
   if(objs&&Array.isArray(objs.seaFish))objs.seaFish.forEach(f=>disposeSeaFishMaterials(f.mesh));
   if(objs&&Array.isArray(objs.meteors))objs.meteors.forEach(m=>{if(m.group&&m.group.parent)m.group.parent.remove(m.group);});
   meteorLive.length=0;
-  if(objs&&objs.enemyShots)objs.enemyShots.forEach(b=>scene.remove(b.mesh));
+  if(objs&&objs.enemyShots)clearEnemyShots();
   if(objs&&Array.isArray(objs.landmarks))objs.landmarks.forEach(item=>{if(item.mixer){item.mixer.stopAllAction();if(item.mesh)item.mixer.uncacheRoot(item.mesh);item.mixer=null;}});
   bossRewardPlanes.forEach(r=>{if(r.mesh&&r.mesh.parent)r.mesh.parent.remove(r.mesh);});bossRewardPlanes.length=0;
   P={x:0,alt:85,z:0,vz:0,s:0,a:0.62,roll:0,yaw:0,boostT:0,spin:0,sliding:false,bounces:0,fuel:100,hp:100,maxHp:100,hitCooldown:0,damageFlash:0,launchT:0,engineOut:false,fuelWarned:false,abilityCooldown:0,magnetT:0,guardianOverdriveT:0};
@@ -1456,7 +1472,7 @@ function spawn(until){
     }
     if(biomeIndex===2){spawnWorldLandmark('serpentWater',x-1100,0,stage);spawnWorldLandmark('lighthouse',x-700,0,stage);spawnSeaFishSchool(x-1850,stage);spawnSeaFishSchool(x-450,stage);}
     if(biomeIndex===4)spawnWorldLandmark('finalCastle',x-100,0,stage);
-    objs.enemyShots.forEach(b=>scene.remove(b.mesh));objs.enemyShots.length=0;
+    clearEnemyShots();
     ['coins','rings','birds','fuels','drafts','storms','stations'].forEach(key=>{objs[key].forEach(o=>{if(o.mesh)objGroup.remove(o.mesh);});objs[key]=[];});
     const e={x,alt:250+Math.random()*260,z:zc((Math.random()-.5)*260),phase:Math.random()*6.28,fireT:2.3,hit:false,boss:true,hp:bossHp,maxHp:bossHp,contactHit:false,attackState:'ranged',attackTimer:3.2+Math.random()*1.5,diveWarning:0,diveTimer:0,weaponCycle:0,diveTargetAlt:300,diveTargetZ:0,combatPhase:1,biomeIndex,bossName:BOSS_PROFILES[biomeIndex].name,bossStage:stage+1,hitRadiusX:biomeIndex===0?92:82,hitRadiusY:biomeIndex===0?64:72,hitRadiusZ:biomeIndex===0?112:80,bank:0};
     e.finalBoss=biomeIndex===4;e.mesh=makeBossPlane(biomeIndex);e.mesh.position.set(x*S,Y(e.alt),e.z*S);objGroup.add(e.mesh);objs.enemies.push(e);
@@ -1983,7 +1999,7 @@ function defeatBoss(e,source){
   if(run.bosses>=5)playSfx('victory-stinger');else playSfx('boss-defeat');
   triggerBossDestruction(e);
   spawnBossRewardPlane(e);
-  objs.enemyShots.forEach(b=>scene.remove(b.mesh));objs.enemyShots.length=0;
+  clearEnemyShots();
   const discoveries=[
     ['سجل الوادي','الأبراج سبقت الكارثة','يجد الطيار سجلًا يثبت أن شبكة الأبراج كانت تعمل قبل العاصفة بسنوات، وأن أوامر تشغيلها صدرت من مركز القيادة.'],
     ['قلب العاصفة','مصدر الطاقة','تكشف بيانات القاذفة أنها تسحب طاقة التيارات وتعيد توجيهها إلى الشبكة؛ فهي تستغل العاصفة ولا تصنعها.'],
