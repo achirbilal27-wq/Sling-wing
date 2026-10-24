@@ -2259,6 +2259,19 @@ function updateFlight(dt){
     const v=new THREE.Vector3(m.vx,m.vy,m.vz);m.mesh.position.set(m.x*S,Y(m.alt),m.z*S);m.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(1,0,0),v.normalize());
     let hit=m.life<=0||m.alt<0,impacted=false;
     if(!hit){for(const e of objs.enemies){if(e.hit)continue;const dx=e.x-m.x,dy=e.alt-m.alt,dz=e.z-m.z;if(dx*dx+dy*dy+dz*dz<(e.boss?(e.bossStage===1?138:e.bossStage>=5?148:125):70)**2){hit=true;impacted=true;if(e.boss){e.hp=Math.max(0,e.hp-26);playSfx('boss-hit',0.78);if(e.hp<=0)defeatBoss(e,'missile');} else{e.hit=true;e.mesh.visible=false;run.coins+=18*(1+save.lv.coin);addFloat(e.x,e.alt+45,'إسقاط صاروخي +18','#ffe27a',e.z);}for(let n=0;n<24;n++)addPart(e.x,e.alt,(Math.random()-.5)*300,(Math.random()-.5)*240,0.55,0xff9b4a,4,e.z);shake=Math.max(shake,0.3);break;}}}
+    // Bonus aircraft are valid missile targets too; collect them through their own path.
+    if(!hit){for(const reward of bossRewardPlanes){
+      if(!reward||reward.hit||reward.collected)continue;
+      const dx=reward.x-m.x,dy=reward.alt-m.alt,dz=reward.z-m.z;
+      if(dx*dx+dy*dy+dz*dz<62*62){
+        hit=true;impacted=collectBossRewardPlane(reward);
+        if(impacted){
+          for(let n=0;n<24;n++)addPart(reward.x,reward.alt,(Math.random()-.5)*220,(Math.random()-.5)*180,0.48,[0xffd34e,0x8cf5ff,0xffffff][n%3],4,reward.z,(Math.random()-.5)*160);
+          shake=Math.max(shake,0.24);
+        }
+        break;
+      }
+    }}
     if(hit){if(impacted){playSfx('missile-impact');playSfx('explosion',0.72);}scene.remove(m.mesh);missiles.splice(i,1);}
   }
 }
@@ -2291,7 +2304,7 @@ function update(dt){
     r.mesh.rotation.y+=dt*0.8;r.mesh.rotation.z=Math.sin(r.age*2)*0.12;
     // Animate the outer wrapper only; the child aircraft keeps its fitted scale.
     r.mesh.scale.setScalar(0.75+0.25*Math.min(1,r.life/0.6));
-    if(r.life<=0){objGroup.remove(r.mesh);bossRewardPlanes.splice(i,1);}
+    if(r.life<=0){r.hit=true;r.expired=true;objGroup.remove(r.mesh);bossRewardPlanes.splice(i,1);}
   }
   for(let i=bossBlastRings.length-1;i>=0;i--){
     const b=bossBlastRings[i];b.life-=dt;
