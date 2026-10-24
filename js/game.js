@@ -2404,12 +2404,12 @@ function updateFlight(dt){
               const z=P.z+(k-(columnCount-1)/2)*170+(Math.random()-.5)*70;
               const alt=0;
               const ringMat=new THREE.MeshBasicMaterial({color:0x52eaff,transparent:true,opacity:0.72,depthWrite:false});
-              const ring=new THREE.Mesh(new THREE.RingGeometry(18,31,24),ringMat);
+              const ring=new THREE.Mesh(new THREE.RingGeometry(1.8,3.1,24),ringMat);
               ring.rotation.x=-Math.PI/2;
               ring.position.set((P.x+90)*S,Y(alt+2),z*S);
               scene.add(ring);
               const columnMat=new THREE.MeshBasicMaterial({color:0x42dfff,transparent:true,opacity:0.34,depthWrite:false});
-              const column=new THREE.Mesh(new THREE.CylinderGeometry(20,34,150,16,1,true),columnMat);
+              const column=new THREE.Mesh(new THREE.CylinderGeometry(2,3.4,15,16,1,true),columnMat);
               column.position.set((P.x+90)*S,Y(alt+8),z*S);
               column.scale.y=0.01;
               scene.add(column);
@@ -2531,11 +2531,10 @@ function updateFlight(dt){
       }
       const rise=warningLeft>0?0.01:Math.min(1,(b.age-b.warning)/0.18);
       b.mesh.scale.y=Math.max(0.01,rise)*Math.min(1,Math.max(0.08,(b.life+0.45)/0.45));
-      b.mesh.position.set(b.x*S,Y(8+Math.max(0,rise)*75),b.z*S);
+      b.mesh.position.set(b.x*S,Y(Math.max(0,rise)*75),b.z*S);
       if(warningLeft<=0&&b.age<(b.warning||0)+(b.active||1.15)){
         if(Math.abs(b.x-P.x)<46&&P.alt<175&&Math.abs(b.z-P.z)<42){
-          if(shieldT>0||shieldCooldown<=0)activateShield(b.x,b.alt,b.z);
-          else damagePlayer(b.damage||13,b.x,b.alt,b.z,'boss');
+          damagePlayer(b.damage||13,b.x,b.alt,b.z,'boss');
           b.age=(b.warning||0)+(b.active||1.15);
         }
         if(Math.random()<dt*16)addPart(b.x,35+Math.random()*90,(Math.random()-.5)*42,90+Math.random()*130,0.32,0x65eaff,2+Math.random()*3,b.z,(Math.random()-.5)*42);
