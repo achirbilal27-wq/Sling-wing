@@ -1135,20 +1135,11 @@ function loadMeteorModel(){
     const oriented=new THREE.Group();
     oriented.quaternion.setFromAxisAngle(new THREE.Vector3(1,1,1).normalize(),Math.PI*2/3);
     oriented.add(gltf.scene);
-    const model=prepareWorldModel(oriented,18);
+    // Match the standard enemy-aircraft wingspan (12 world units), rather than
+    // the oversized 18-unit spectacle scale. Keep the GLB's original materials.
+    const model=prepareWorldModel(oriented,12);
     if(!model){console.warn('Meteor source GLB could not be normalized; using the procedural meteor core.');return;}
     meteorModelTemplate=model;
-    meteorModelTemplate.traverse(n=>{
-      if(!n.isMesh||!n.material)return;
-      const source=Array.isArray(n.material)?n.material:[n.material];
-      const tinted=source.map(m=>{
-        const clone=m.clone();
-        if(clone.color)clone.color.setHex(0x9a4a2a);
-        if(clone.emissive){clone.emissive.setHex(0xff3b12);clone.emissiveIntensity=0.45;}
-        clone.roughness=0.9;clone.needsUpdate=true;return clone;
-      });
-      n.material=Array.isArray(n.material)?tinted:tinted[0];
-    });
     meteorLive.forEach(m=>attachMeteorModel(m));
     console.info('Meteor visual GLB loaded.');
   },undefined,error=>console.warn('Meteor GLB unavailable; keeping procedural meteor visuals.',error));
@@ -1156,9 +1147,10 @@ function loadMeteorModel(){
 function attachMeteorModel(meteor){
   if(!meteor||!meteor.group||!meteorModelTemplate||meteor.modelAttached)return;
   const model=meteorModelTemplate.clone(true);
-  model.scale.setScalar(0.82);
-  // The aircraft travels toward -X; the parent group's 180-degree Y turn
-  // points its nose along the flight path.
+  // prepareWorldModel already normalizes this aircraft to the same 12-unit
+  // wingspan used by regular enemy aircraft; do not scale it a second time.
+  // Keep original GLB geometry, hierarchy, and material colors intact.
+  // The parent group's 180-degree Y turn points its propeller/nose along -X.
   model.traverse(n=>{n.userData.meteorSharedAsset=true;});
   meteor.group.add(model);meteor.modelAttached=true;
 }
@@ -1181,6 +1173,25 @@ function makeMeteor(){
     cone.rotation.z=-Math.PI/2;cone.position.x=-(d.length*0.48+2+i*2.5);
     group.add(cone);trail.push({mesh:cone,baseOpacity:d.opacity,phase:i*1.4});
   });
+  // Low-opacity flame tongues wrap the fuselage and wing roots so the
+  // original aircraft silhouette and propeller remain visible through the fire.
+  const bodyFire=[];
+  [
+    {x:1.5,y:0.2,z:0,sx:5.8,sy:1.05,sz:1.05,color:0xff3a13,opacity:0.34},
+    {x:0.5,y:1.25,z:0,sx:4.4,sy:0.72,sz:0.82,color:0xff8a24,opacity:0.42},
+    {x:0.5,y:-1.15,z:0,sx:4.2,sy:0.7,sz:0.8,color:0xff8a24,opacity:0.4},
+    {x:0,y:0.25,z:4.3,sx:3.3,sy:0.58,sz:0.82,color:0xff541b,opacity:0.32},
+    {x:0,y:0.25,z:-4.3,sx:3.3,sy:0.58,sz:0.82,color:0xff541b,opacity:0.32}
+  ].forEach((d,i)=>{
+    const mesh=new THREE.Mesh(
+      new THREE.SphereGeometry(1,10,7),
+      new THREE.MeshBasicMaterial({color:d.color,transparent:true,opacity:d.opacity,depthWrite:false,side:THREE.DoubleSide})
+    );
+    mesh.position.set(d.x,d.y,d.z);mesh.scale.set(d.sx,d.sy,d.sz);
+    mesh.userData.baseScale=mesh.scale.clone();mesh.userData.firePhase=i*1.7;
+    group.add(mesh);bodyFire.push(mesh);
+  });
+  group.userData.meteorBodyFire=bodyFire;
   const sparks=[];
   for(let i=0;i<12;i++){
     const spark=new THREE.Mesh(new THREE.SphereGeometry(0.65+Math.random()*0.75,5,4),new THREE.MeshBasicMaterial({color:0xffcf68,transparent:true,opacity:0.95}));
@@ -1216,6 +1227,11 @@ function updateMeteors(dt){
     m.group.position.set(m.x*S,Y(m.alt),m.z*S);
     m.group.rotation.z=-0.12+Math.sin(m.age*2.1)*0.035;
     const pulse=0.86+0.14*Math.sin(time*17+m.age*4);
+    (m.group.userData.meteorBodyFire||[]).forEach(fire=>{
+      const p=0.88+0.18*Math.sin(time*19+m.age*7+fire.userData.firePhase);
+      fire.scale.set(fire.userData.baseScale.x*p,fire.userData.baseScale.y*(0.9+0.16*Math.sin(time*23+fire.userData.firePhase)),fire.userData.baseScale.z*p);
+      fire.material.opacity=(fire.userData.firePhase===0?0.34:0.38)*p;
+    });
     (m.group.userData.meteorTrail||[]).forEach(layer=>{
       layer.mesh.material.opacity=layer.baseOpacity*pulse*(m.life<1.2?Math.max(0,m.life/1.2):1);
       layer.mesh.scale.set(1,pulse,pulse);
