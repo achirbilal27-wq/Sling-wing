@@ -1371,7 +1371,11 @@ function spawn(until){
     return;
   }
   while(objs.nextMeteor<until){
-    spawnMeteor(objs.nextMeteor);
+    // Meteors are scheduled only for the game's dark/night sky intervals.
+    const meteorMeters=objs.nextMeteor*M_PER_PX;
+    const meteorCycle=(meteorMeters/250)%4,meteorPhase=meteorCycle-Math.floor(meteorCycle);
+    const meteorNight=Math.floor(meteorCycle)===1?meteorPhase:Math.floor(meteorCycle)===2?1:Math.floor(meteorCycle)===3?1-meteorPhase:0;
+    if(meteorNight>=0.65)spawnMeteor(objs.nextMeteor);
     objs.nextMeteor+=1350/M_PER_PX;
   }
   while(objs.nextStorm<until){
