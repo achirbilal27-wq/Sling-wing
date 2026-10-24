@@ -1496,7 +1496,7 @@ function openCodex(){
   const add=(title,body,unlocked,label,teaser)=>{
     const page=document.createElement('div');page.className='page'+(unlocked?'':' lock');
     const h=document.createElement('h4'),p=document.createElement('p');
-    h.textContent=label+' — '+title;
+    h.textContent=title;
     p.textContent=unlocked?body:(teaser||'اهزم الزعيم المرتبط بهذه الصفحة لكشف ما تخفيه.');
     if(!unlocked){
       page.setAttribute('aria-label',label+' مقفلة');
