@@ -437,38 +437,6 @@ function applyPlaneColors(){
 
 const bossImageLoader=new THREE.TextureLoader(),bossImageTextures=Object.create(null),bossSpriteMaterials=Object.create(null);
 let ironEagleModelTemplate=null,ironEagleModelLoadStarted=false;
-let currentSerpentModelTemplate=null,currentSerpentModelLoadStarted=false;
-function prepareCurrentSerpentModel(root){
-  const normalized=new THREE.Group();normalized.add(root);normalized.updateMatrixWorld(true);
-  let box=new THREE.Box3().setFromObject(normalized);if(box.isEmpty())return null;
-  let size=box.getSize(new THREE.Vector3());
-  // Keep the long body horizontal in the game's X/Z flight plane.
-  if(size.y>Math.max(size.x,size.z)*1.15){normalized.rotation.x=Math.PI/2;normalized.updateMatrixWorld(true);box=new THREE.Box3().setFromObject(normalized);size=box.getSize(new THREE.Vector3());}
-  if(size.x<size.z)normalized.rotation.y=Math.PI/2;
-  normalized.updateMatrixWorld(true);box=new THREE.Box3().setFromObject(normalized);size=box.getSize(new THREE.Vector3());
-  const span=Math.max(size.x,size.z);if(!Number.isFinite(span)||span<0.001)return null;
-  normalized.scale.setScalar(18/span);normalized.updateMatrixWorld(true);box=new THREE.Box3().setFromObject(normalized);
-  normalized.position.sub(box.getCenter(new THREE.Vector3()));normalized.updateMatrixWorld(true);
-  normalized.traverse(node=>{if(node.isMesh){node.castShadow=true;node.receiveShadow=true;if(node.material){const ms=Array.isArray(node.material)?node.material:[node.material];ms.forEach(m=>{m.side=THREE.DoubleSide;m.needsUpdate=true;});}}});
-  return normalized;
-}
-function attachCurrentSerpentModel(group){
-  if(!currentSerpentModelTemplate||!group||!group.userData.currentSerpentBoss||group.userData.currentSerpentModelAttached)return;
-  const model=currentSerpentModelTemplate.clone(true);group.add(model);group.userData.currentSerpentModel=model;group.userData.currentSerpentModelAttached=true;
-  if(group.userData.proceduralFallback)group.userData.proceduralFallback.visible=false;
-  if(group.userData.bossSprite)group.userData.bossSprite.visible=false;
-}
-function loadCurrentSerpentBossModel(){
-  if(currentSerpentModelLoadStarted||typeof THREE.GLTFLoader!=='function')return;
-  currentSerpentModelLoadStarted=true;
-  new THREE.GLTFLoader().load('assets/models/bosses/current_serpent_boss.glb',gltf=>{
-    const model=prepareCurrentSerpentModel(gltf.scene);if(!model){console.warn('Current Serpent GLB has no usable geometry; fallback retained.');return;}
-    currentSerpentModelTemplate=model;
-    if(typeof objs!=='undefined'&&objs&&Array.isArray(objs.enemies))objs.enemies.forEach(enemy=>{if(enemy.boss&&enemy.bossStage===3&&!enemy.hit)attachCurrentSerpentModel(enemy.mesh);});
-    console.info('Current Serpent custom GLB loaded.');
-  },undefined,error=>console.warn('Current Serpent GLB failed to load; fallback retained.',error));
-}
-loadCurrentSerpentBossModel();
 /* ---------- objects ---------- */
 const objGroup=new THREE.Group();scene.add(objGroup);
 const coinGeo=new THREE.CylinderGeometry(1.5,1.5,0.35,18);coinGeo.rotateZ(Math.PI/2);
@@ -635,20 +603,13 @@ function makeBossPlane(biomeIndex){
     else loadIronEagleBossModel();
     return g;
   }
-  if(biomeIndex===2){
-    g.userData.currentSerpentBoss=true;
-    g.userData.proceduralFallback=fallback;
-    g.userData.imageBoss=false;
-    if(currentSerpentModelTemplate)attachCurrentSerpentModel(g);else loadCurrentSerpentBossModel();
-    return g;
-  }
   const path='assets/images/bosses/'+names[biomeIndex]+'.png';
   const material=bossSpriteMaterials[path]||(bossSpriteMaterials[path]=new THREE.SpriteMaterial({transparent:true,alphaTest:0.015,depthWrite:false,depthTest:true}));
   const image=new THREE.Sprite(material);
   image.center.set(0.5,0.5);
   image.visible=false;
   g.add(image);
-  g.userData.imageBoss=true;g.userData.bossSprite=image;
+  g.userData.imageBoss=true;
   const applyBossTexture=texture=>{
     texture.encoding=THREE.sRGBEncoding;
     texture.generateMipmaps=false;
@@ -2409,13 +2370,6 @@ function updateFlight(dt){
         if(e.x>P.x+480){e.attackState='ranged';e.attackTimer=(e.bossStage===1?4.2:5)+Math.random()*1.6;e.fireT=e.bossStage===1?1.1:1.8;e.bank=0;}
       }
       if(e.attackState!=='dive'){e.mesh.rotation.z=Math.sin(e.phase*.9)*.12;e.mesh.rotation.x=Math.sin(e.phase*.7)*.08;}
-      // Serpent-like idle posture: a controlled head/body sway layered over the existing boss flight path.
-      if(e.bossStage===3&&e.mesh.userData.currentSerpentModel){
-        const serpent=e.mesh.userData.currentSerpentModel;
-        serpent.rotation.z=Math.sin(e.phase*1.45)*0.075+(e.attackState==='warning'?0.10:0);
-        serpent.rotation.x=Math.sin(e.phase*0.82)*0.045;
-        serpent.rotation.y=Math.sin(e.phase*0.62)*0.055;
-      }
     }else{e.x-=180*dt;e.z=zc(e.z+Math.sin(e.phase)*14*dt);}
     e.fireT-=dt;
     if(e.fireT<=0&&e.x>P.x+180&&e.x<P.x+(e.boss?1900:4200)&&(!e.boss||e.attackState==='ranged')){
@@ -3014,7 +2968,7 @@ function render(dt){
   for(const f of objs.fuels)if(f.on){f.mesh.rotation.y=time*1.5;f.mesh.position.y=Y(f.alt)+Math.sin(time*3)*0.4;}
   for(const r of objs.rings)if(r.on)r.mesh.rotation.x=time*0.8;
   for(const e of objs.enemies){
-    e.mesh.position.set(e.x*S,e.turret&&e.defenseAttack!=='chase'?0:Y(e.alt),e.z*S);
+    e.mesh.position.set(e.x*S,e.turret&&e.defenseAttack!=='chase'?0:Y(e.alt+(e.bossStage===3?18:0)),e.z*S);
     if(e.mesh.userData.energyRings)e.mesh.userData.energyRings.forEach((ring,i)=>{ring.rotation.z=time*(i?1.8:-1.25);});
     e.mesh.visible=!e.hit;
     e.mesh.rotation.z=e.turret?0:e.boss?(e.bossStage===1?clamp(e.bank||0,-0.36,0.36):Math.sin(e.phase*0.9)*0.13):Math.sin(e.phase)*0.06;
