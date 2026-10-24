@@ -1842,8 +1842,10 @@ function defeatBoss(e,source){
   const chapter=Math.min(4,Math.max(0,run.bosses-1));
   playSlides([[discoveries[chapter][0],discoveries[chapter][1],discoveries[chapter][2]]],0,()=>{
     if(run.bosses===2)spawnRocketAmbush();
-    if(run.bosses>=5&&!save.campaignEndingSeen){
-      playSlides(FINAL_REVEAL,0,()=>{playFinalLandingScene(()=>{save.campaignEndingSeen=true;persist();endRun();});});
+    if(run.bosses>=5){
+      if(!save.campaignEndingSeen){
+        playSlides(FINAL_REVEAL,0,()=>{playFinalLandingScene(()=>{save.campaignEndingSeen=true;persist();endRun();});});
+      }else endRun();
     }
   });
 }
