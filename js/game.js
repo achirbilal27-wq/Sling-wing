@@ -1526,7 +1526,7 @@ function openCodex(){
     const page=document.createElement('div');page.className='page'+(unlocked?'':' lock');
     const h=document.createElement('h4'),p=document.createElement('p');
     // Keep the associated boss visible even while the page's story remains locked.
-    h.textContent='الصفحة '+ordinals[pageNumber-1]+' · '+title+(unlocked?'':' · مقفلة');
+    h.textContent='الصفحة '+ordinals[pageNumber-1]+' · '+title;
     p.textContent=unlocked?body:(teaser||teasers[pageNumber-1]);
     page.setAttribute('data-boss-page',String(pageNumber));
     page.setAttribute('data-locked',unlocked?'false':'true');
