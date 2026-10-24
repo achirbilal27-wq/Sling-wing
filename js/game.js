@@ -2390,6 +2390,51 @@ function updateFlight(dt){
           }
           e.lastWeaponLabel=label;
           addFloat(e.x,e.alt+48,label,'#'+color.toString(16).padStart(6,'0'),e.z);
+        }else if(stageIndex===2){
+          // Serpent of Currents: replace the old generic firing cycle with
+          // a sweeping ring around the player's flight lane and a five-shot aimed fan.
+          const pattern=e.weaponCycle++%2;
+          const speed=1050*(phase===3?1.12:phase===2?1.05:1);
+          const originX=e.x-80;
+          const projectileMat=bossWeaponMaterials[2];
+          if(pattern===0){
+            const ringCount=phase>=3?14:10;
+            const centerAlt=P.alt+((Math.random()*240)-120);
+            const centerZ=P.z+((Math.random()*260)-130);
+            for(let k=0;k<ringCount;k++){
+              const angle=(k/ringCount)*Math.PI*2;
+              const mesh=new THREE.Mesh(bossPulseGeo,projectileMat);
+              const alt=centerAlt+Math.sin(angle)*160;
+              const z=centerZ+Math.cos(angle)*160;
+              mesh.position.set(originX*S,Y(alt),z*S);scene.add(mesh);
+              objs.enemyShots.push({
+                x:originX,alt,z,
+                vx:-460,vy:-Math.sin(angle)*60,vz:-Math.cos(angle)*60,
+                life:5,mesh,bossShot:true,bossWeapon:'حلقة الأفعى الميكانيكية',damage:11
+              });
+            }
+            e.fireT=(phase>=2?2.1:2.8)*(phase===3?0.78:phase===2?0.9:1);
+            e.lastWeaponLabel='حلقة الأفعى الميكانيكية';
+            addFloat(e.x,e.alt+58,e.lastWeaponLabel,'#ff9a32',e.z);
+            playSfx('boss-warning',0.5);
+          }else{
+            for(let k=-2;k<=2;k++){
+              const targetAlt=P.alt+k*22;
+              const targetZ=P.z+k*48;
+              const tx=P.x-originX,ty=targetAlt-e.alt,tz=targetZ-e.z;
+              const length=Math.hypot(tx,ty,tz)||1;
+              const mesh=new THREE.Mesh(bossLanceGeo,projectileMat);
+              mesh.position.set(originX*S,Y(e.alt+k*5),(e.z+k*12)*S);scene.add(mesh);
+              objs.enemyShots.push({
+                x:originX,alt:e.alt+k*5,z:e.z+k*12,
+                vx:tx/length*speed,vy:ty/length*speed,vz:tz/length*speed,
+                life:4.2,mesh,bossShot:true,bossWeapon:'مروحة لدغة الأفعى',damage:10
+              });
+            }
+            e.fireT=(phase===3?2.1:3.5)*(phase===2?0.88:1);
+            e.lastWeaponLabel='مروحة لدغة الأفعى';
+            addFloat(e.x,e.alt+58,e.lastWeaponLabel,'#ff9a32',e.z);
+          }
         }else{
           const style=styles[stageIndex]||styles[0],pattern=e.weaponCycle++%(style.cycle+(stageIndex===4&&phase===3?2:0)),finalBoss=stageIndex===4;
         const aimed=stageIndex===0?pattern===1:stageIndex===1?pattern===2:stageIndex===2?pattern===1||pattern===3:stageIndex===3?pattern===0||pattern===3:pattern===1||pattern===4;
