@@ -888,6 +888,10 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
 
 .ov{position:absolute;inset:0;z-index:30;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(10,12,32,.72);pointer-events:auto}
 .ov.on{display:flex}
+/* Boss-story recovery: keep post-boss dialogue above the 3D canvas and HUD on mobile. */
+#story{position:fixed;inset:0;z-index:10000;isolation:isolate}
+#story.on{display:flex;visibility:visible;opacity:1;pointer-events:auto}
+#story .sheet{position:relative;z-index:1;max-height:88dvh;overflow-y:auto;overscroll-behavior:contain}
 .sheet{width:min(90vw,420px);max-height:88%;overflow:auto;background:var(--paper);border:5px solid var(--wood-d);border-radius:26px;padding:20px 18px 18px;text-align:center;box-shadow:0 8px 0 var(--wood-d);touch-action:pan-y}
 .sheet.dark{background:linear-gradient(#1d2250,#2c2368);color:#fff;border-color:#8f7bff;box-shadow:0 8px 0 #3d2f8f}
 .sheet h2{margin:0 0 6px;font-family:var(--font-big);font-weight:400;font-size:34px}
