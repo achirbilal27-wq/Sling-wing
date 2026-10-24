@@ -1461,3 +1461,13 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
   #dist{top:6px !important;font-size:clamp(24px,6vh,32px) !important}
   #alt{top:36px !important;font-size:10px !important}
 }
+
+/* Boss HUD position fix: pin the existing panel to the top-center of the viewport.
+   Keep its current dimensions and styling; never let it drift over the boss model. */
+#bossHud{
+  position:fixed !important;
+  top:calc(12px + env(safe-area-inset-top,0px)) !important;
+  left:50% !important;
+  right:auto !important;
+  transform:translateX(-50%) !important;
+}
