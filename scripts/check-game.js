@@ -58,6 +58,7 @@ const expectedModels = [
   'assets/models/planes-dead/dive_attacker.glb',
   'assets/models/bosses/iron_eagle.glb',
   'assets/models/bosses/current_serpent_boss.glb',
+  'assets/models/bosses/current_serpent_boss.glb',
   'assets/models/environment/desert_outpost.glb',
   'assets/models/environment/ice_island.glb',
   'assets/models/environment/The_castle_of_boss.glb',
@@ -81,6 +82,8 @@ for (const model of expectedModels) {
 }
 
 check(html.indexOf('GLTFLoader.js') >= 0 && html.indexOf('js/game.js') > html.indexOf('GLTFLoader.js'), 'GLTFLoader must load before js/game.js.');
+check(js.includes("const bossKey=String(activeBoss.bossStage||activeBoss.bossName||'boss')") && js.includes("bossHud.classList.add('boss-intro')"), 'Boss info card must animate once when each new boss appears.');
+check(fs.readFileSync(path.join(root, 'css', 'style.css'), 'utf8').includes('bossCardEnter') && css.includes('prefers-reduced-motion:reduce'), 'Boss info card must use a clear entrance animation and respect reduced-motion preferences.');
 check(js.includes('const squadronSize=3') && js.includes('const coins=10;'), 'Boss reward must spawn a three-plane squadron worth 10 coins per aircraft.');
 check(js.includes('reward.hit=true;reward.collected=true;') && js.includes('collectBossRewardPlane(reward);'), 'Bonus aircraft must use one-time collection and a dedicated collision path.');
 check(js.includes('r.x=r.originX-r.age*95'), 'Bonus aircraft must drift slowly toward the player.');
