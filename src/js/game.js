@@ -1483,15 +1483,31 @@ function playSlides(list,i,done){
 }
 function openCodex(){
   const box=$('cxList');box.replaceChildren();
-  const add=(title,body,unlocked)=>{
+  const pageNames=['الأولى','الثانية','الثالثة','الرابعة','الخامسة','السادسة'];
+  const teasers=[
+    'ظلّ برج قديم يخفي سجلًا عن بداية الكارثة.',
+    'العاصفة ليست كما تبدو؛ هناك من يستنزف الرياح.',
+    'تيارات متقطعة تقود إلى سرّ الختم الثالث.',
+    'تحذير أخير ينتظر من يصل إلى أعلى نقطة في السماء.',
+    'الحاكم يعرف الحقيقة، لكنه يخشى الاعتراف بها.',
+    'بعد انكسار الأختام، سيظهر السرّ الذي غيّر معنى الرحلة.'
+  ];
+  const add=(title,body,unlocked,label,teaser)=>{
     const page=document.createElement('div');page.className='page'+(unlocked?'':' lock');
     const h=document.createElement('h4'),p=document.createElement('p');
-    h.textContent=unlocked?title:'صفحة مقفلة';p.textContent=unlocked?body:'اهزم الزعماء لفتح هذه الصفحة.';
+    h.textContent=unlocked?label+' — '+title:label+' — مقفلة';
+    p.textContent=unlocked?body:(teaser||'اهزم الزعيم المرتبط بهذه الصفحة لكشف ما تخفيه.');
+    if(!unlocked){
+      page.setAttribute('aria-label',label+' مقفلة');
+      page.setAttribute('data-locked','true');
+    }else{
+      page.setAttribute('data-locked','false');
+    }
     page.append(h,p);box.appendChild(page);
   };
-  add('الحكاية',INTRO.map(x=>x[2]).join(' '),true);
-  CODEX_BOSSES.forEach((b,i)=>add(b[0],b[1],(save.bosses||0)>i));
-  add('ما بعد الأختام',ENDING.join(' '),(save.bosses||0)>=5);
+  add('المقدمة',INTRO.map(x=>x[2]).join(' '),true,'تمهيد القصة','');
+  CODEX_BOSSES.forEach((b,i)=>add(b[0],b[1],(Number(save.bosses)||0)>=i+1,'الصفحة '+pageNames[i],teasers[i]));
+  add('ما بعد الأختام',ENDING.join(' '),(Number(save.bosses)||0)>=5,'الصفحة '+pageNames[5],teasers[5]);
   $('codex').classList.add('on');paused=true;
 }
 $('storyBtn').addEventListener('click',openCodex);
