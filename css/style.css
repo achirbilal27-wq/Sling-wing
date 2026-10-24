@@ -1461,3 +1461,34 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
   #dist{top:6px !important;font-size:clamp(24px,6vh,32px) !important}
   #alt{top:36px !important;font-size:10px !important}
 }
+
+/* Boss health HUD: keep the center flight lane clear so the boss stays visible. */
+#bossHud{
+  top:calc(88px + env(safe-area-inset-top,0px)) !important;
+  left:auto !important;
+  right:max(12px,env(safe-area-inset-right,0px)) !important;
+  transform:none !important;
+  width:min(248px,46vw) !important;
+  max-height:42vh !important;
+  overflow-y:auto !important;
+  gap:5px !important;
+  padding:8px 10px !important;
+  z-index:8 !important;
+  text-align:start !important;
+}
+#bossHud .boss-identity{justify-content:flex-start !important;gap:7px !important}
+#bossHud .boss-identity strong{overflow-wrap:anywhere}
+#bossHud .boss-hud-meta{flex-wrap:wrap;gap:4px 8px}
+@media(max-width:380px){
+  #bossHud{top:calc(82px + env(safe-area-inset-top,0px)) !important;width:min(190px,48vw) !important;padding:6px 7px !important;gap:4px !important}
+  #bossHud .boss-hud-kicker{font-size:8px}
+  #bossHud .boss-identity strong{font-size:11px !important}
+  #bossHud .boss-track{height:6px}
+  #bossHud .boss-hud-meta small,#bossWeaponText{font-size:8px !important}
+}
+@media(max-height:560px){
+  #bossHud{top:calc(76px + env(safe-area-inset-top,0px)) !important;max-height:36vh !important;padding:5px 7px !important}
+}
+@media(max-height:460px){
+  #bossHud{top:calc(68px + env(safe-area-inset-top,0px)) !important;max-height:34vh !important}
+}
