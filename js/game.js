@@ -1087,6 +1087,8 @@ function spawnDefenseTurret(x){
 function clearObjs(){while(objGroup.children.length)objGroup.remove(objGroup.children[0]);}
 function resetRun(){
   if(objs&&Array.isArray(objs.seaFish))objs.seaFish.forEach(f=>disposeSeaFishMaterials(f.mesh));
+  if(objs&&Array.isArray(objs.meteors))objs.meteors.forEach(m=>{if(m.group&&m.group.parent)m.group.parent.remove(m.group);});
+  meteorLive.length=0;
   if(objs&&objs.enemyShots)objs.enemyShots.forEach(b=>scene.remove(b.mesh));
   if(objs&&Array.isArray(objs.landmarks))objs.landmarks.forEach(item=>{if(item.mixer){item.mixer.stopAllAction();if(item.mesh)item.mixer.uncacheRoot(item.mesh);item.mixer=null;}});
   bossRewardPlanes.forEach(r=>{if(r.mesh&&r.mesh.parent)r.mesh.parent.remove(r.mesh);});bossRewardPlanes.length=0;
@@ -1097,7 +1099,7 @@ function resetRun(){
   const cannonLevel=Number(save.lv.cannon)||0;
   run={coins:0,picked:0,maxAlt:0,gateCombo:0,bestCombo:0,gates:0,bosses:0,bossBattle:false,missiles:3,stationCount:0,stormHits:0,firePower:1,stationShield:0,aimMode:'smart',
     tri:false,rate:1,cool:1+0.12*cannonLevel,damage:1+0.25*cannonLevel,perks:[],reserveTank:false,reserveTankUsed:false,heat:0,overheat:false,fireCd:0,fireSfxTimer:0};
-  objs={coins:[],rings:[],birds:[],enemies:[],enemyShots:[],fuels:[],drafts:[],storms:[],stations:[],landmarks:[],seaFish:[],next:600,nextEnemy:550/M_PER_PX,nextDefense:900/M_PER_PX,nextBoss:bossDistanceMeters(0)/M_PER_PX,nextStorm:600/M_PER_PX,nextStation:(bossDistanceMeters(0)-1100)/M_PER_PX,nextStationStage:0,nextLandmark:450/M_PER_PX,approachBossX:null,rocketAmbushTriggered:false};
+  objs={coins:[],rings:[],birds:[],enemies:[],enemyShots:[],fuels:[],drafts:[],storms:[],stations:[],landmarks:[],seaFish:[],next:600,nextEnemy:550/M_PER_PX,nextDefense:900/M_PER_PX,nextBoss:bossDistanceMeters(0)/M_PER_PX,nextStorm:600/M_PER_PX,nextStation:(bossDistanceMeters(0)-1100)/M_PER_PX,nextStationStage:0,nextLandmark:450/M_PER_PX,nextMeteor:650/M_PER_PX,meteors:[],approachBossX:null,rocketAmbushTriggered:false};
   shieldT=0;shieldCooldown=0;shieldMesh.visible=false;
   clearObjs();
   parts.forEach(p=>{p.mesh.visible=false;});parts.length=0;
@@ -1118,6 +1120,108 @@ function addFloat(x,alt,txt,col,z){
   const el=document.createElement('div');el.className='ft';el.textContent=txt;el.style.color=col;fx.appendChild(el);
   floats.push({x,alt,z:z===undefined?P.z:z,t:0,el});
 }
+
+
+/* ---------- distant flaming meteor spectacle ---------- */
+let meteorModelTemplate=null,meteorModelLoadStarted=false;
+const meteorLive=[];
+function loadMeteorModel(){
+  if(meteorModelLoadStarted||typeof THREE.GLTFLoader!=='function')return;
+  meteorModelLoadStarted=true;
+  new THREE.GLTFLoader().load('assets/models/bomberplan/bomb_shark.glb',gltf=>{
+    const model=prepareWorldModel(gltf.scene,15);
+    if(!model){console.warn('Meteor source GLB could not be normalized; using the procedural meteor core.');return;}
+    meteorModelTemplate=model;
+    meteorModelTemplate.traverse(n=>{
+      if(!n.isMesh||!n.material)return;
+      const source=Array.isArray(n.material)?n.material:[n.material];
+      const tinted=source.map(m=>{
+        const clone=m.clone();
+        if(clone.color)clone.color.setHex(0x9a4a2a);
+        if(clone.emissive){clone.emissive.setHex(0xff3b12);clone.emissiveIntensity=0.45;}
+        clone.roughness=0.9;clone.needsUpdate=true;return clone;
+      });
+      n.material=Array.isArray(n.material)?tinted:tinted[0];
+    });
+    meteorLive.forEach(m=>attachMeteorModel(m));
+    console.info('Meteor visual GLB loaded.');
+  },undefined,error=>console.warn('Meteor GLB unavailable; keeping procedural meteor visuals.',error));
+}
+function attachMeteorModel(meteor){
+  if(!meteor||!meteor.group||!meteorModelTemplate||meteor.modelAttached)return;
+  const model=meteorModelTemplate.clone(true);
+  model.scale.setScalar(0.72);
+  model.rotation.set(0,0,Math.PI*0.18);
+  model.traverse(n=>{n.userData.meteorSharedAsset=true;});
+  meteor.group.add(model);meteor.modelAttached=true;
+}
+function makeMeteor(){
+  const group=new THREE.Group();
+  const rockMat=new THREE.MeshStandardMaterial({color:0x4a302c,roughness:0.96,metalness:0.05,emissive:0x7a210e,emissiveIntensity:0.38});
+  const core=new THREE.Mesh(new THREE.DodecahedronGeometry(7.5,1),rockMat);
+  core.scale.set(1.25,0.86,0.9);group.add(core);
+  const glow=new THREE.Mesh(new THREE.SphereGeometry(8.5,12,8),new THREE.MeshBasicMaterial({color:0xff5728,transparent:true,opacity:0.2,depthWrite:false}));
+  glow.scale.set(1.4,1,1);group.add(glow);
+  const layers=[
+    {length:72,radius:9,color:0xff3517,opacity:0.23},
+    {length:54,radius:6.5,color:0xff7b22,opacity:0.4},
+    {length:36,radius:4,color:0xffd34f,opacity:0.62},
+    {length:20,radius:2.2,color:0xfff0a0,opacity:0.78}
+  ];
+  const trail=[];
+  layers.forEach((d,i)=>{
+    const material=new THREE.MeshBasicMaterial({color:d.color,transparent:true,opacity:d.opacity,side:THREE.DoubleSide,depthWrite:false});
+    const cone=new THREE.Mesh(new THREE.ConeGeometry(d.radius,d.length,9,1,true),material);
+    cone.rotation.z=-Math.PI/2;cone.position.x=d.length*0.48+2+i*2.5;
+    group.add(cone);trail.push({mesh:cone,baseOpacity:d.opacity,phase:i*1.4});
+  });
+  const sparks=[];
+  for(let i=0;i<12;i++){
+    const spark=new THREE.Mesh(new THREE.SphereGeometry(0.65+Math.random()*0.75,5,4),new THREE.MeshBasicMaterial({color:0xffcf68,transparent:true,opacity:0.95}));
+    spark.position.set(10+Math.random()*52,(Math.random()-.5)*13,(Math.random()-.5)*13);
+    group.add(spark);sparks.push({mesh:spark,offset:(Math.random()-.5)*9,phase:Math.random()*6.28});
+  }
+  group.userData.meteorTrail=trail;group.userData.meteorSparks=sparks;
+  const meteor={group,age:0,life:7.8,x:0,alt:0,z:0,vx:0,vy:0,vz:0,modelAttached:false};
+  attachMeteorModel(meteor);meteorLive.push(meteor);objGroup.add(group);return meteor;
+}
+function spawnMeteor(x){
+  if(!objs||!Array.isArray(objs.meteors))return;
+  const meteor=makeMeteor();
+  meteor.x=x;meteor.alt=470+Math.random()*220;meteor.z=zc((Math.random()-.5)*520);
+  meteor.vx=-(520+Math.random()*180);meteor.vy=-(45+Math.random()*90);meteor.vz=(Math.random()-.5)*100;
+  meteor.life=7.8;meteor.age=0;
+  meteor.group.position.set(meteor.x*S,Y(meteor.alt),meteor.z*S);
+  meteor.group.rotation.z=-0.12;meteor.group.rotation.y=Math.PI;
+  objs.meteors.push(meteor);
+  addFloat(x,meteor.alt+38,'شهاب مشتعل في السماء','#ffb45e',meteor.z);
+}
+function updateMeteors(dt){
+  if(!objs||!Array.isArray(objs.meteors))return;
+  for(let i=objs.meteors.length-1;i>=0;i--){
+    const m=objs.meteors[i];m.age+=dt;m.life-=dt;
+    m.x+=m.vx*dt;m.alt+=m.vy*dt;m.z=zc(m.z+m.vz*dt);
+    m.group.position.set(m.x*S,Y(m.alt),m.z*S);
+    m.group.rotation.z=-0.12+Math.sin(m.age*2.1)*0.035;
+    const pulse=0.86+0.14*Math.sin(time*17+m.age*4);
+    (m.group.userData.meteorTrail||[]).forEach(layer=>{
+      layer.mesh.material.opacity=layer.baseOpacity*pulse*(m.life<1.2?Math.max(0,m.life/1.2):1);
+      layer.mesh.scale.set(1,pulse,pulse);
+    });
+    (m.group.userData.meteorSparks||[]).forEach(s=>{
+      s.mesh.position.x=10+((m.age*42+s.phase*7)%62);
+      s.mesh.position.y=Math.sin(m.age*13+s.phase)*s.offset;
+      s.mesh.position.z=Math.cos(m.age*11+s.phase)*Math.abs(s.offset);
+    });
+    if(m.life<=0||m.x<P.x-1600){
+      if(m.group.parent)m.group.parent.remove(m.group);
+      m.group.traverse(n=>{if(n.userData&&n.userData.meteorSharedAsset)return;if(n.isMesh&&n.geometry)n.geometry.dispose();if(n.isMesh&&n.material)(Array.isArray(n.material)?n.material:[n.material]).forEach(mat=>mat.dispose());});
+      const idx=objs.meteors.indexOf(m);if(idx>=0)objs.meteors.splice(idx,1);
+      const live=meteorLive.indexOf(m);if(live>=0)meteorLive.splice(live,1);
+    }
+  }
+}
+loadMeteorModel();
 
 /* ---------- world spawn ---------- */
 const WORLD_MODEL_DEFS={
@@ -1265,6 +1369,10 @@ function spawn(until){
       });
     });
     return;
+  }
+  while(objs.nextMeteor<until){
+    spawnMeteor(objs.nextMeteor);
+    objs.nextMeteor+=1350/M_PER_PX;
   }
   while(objs.nextStorm<until){
     const x=objs.nextStorm,alt=220+Math.random()*260,z=zc((Math.random()-.5)*320);
@@ -1941,6 +2049,7 @@ function launch(){
 /* ---------- update ---------- */
 function updateFlight(dt){
   updateSeaFish(dt);
+  updateMeteors(dt);
   run.fireCd=Math.max(0,run.fireCd-dt);
   run.fireSfxTimer-=dt;
   P.hitCooldown=Math.max(0,(P.hitCooldown||0)-dt);P.damageFlash=Math.max(0,(P.damageFlash||0)-dt);
