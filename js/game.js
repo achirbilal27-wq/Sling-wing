@@ -1197,6 +1197,7 @@ function loadWorldLandmarkModels(kind){
   if(typeof objs!=='undefined'&&objs&&Array.isArray(objs.landmarks))objs.landmarks.forEach(item=>{
    if(item.kind!==kind||!item.mesh||!item.mesh.parent)return;
    const old=item.mesh,replacement=makeWorldLandmarkMesh(kind);
+   if(item.mixer){item.mixer.stopAllAction();item.mixer.uncacheRoot(old);item.mixer=null;}
    replacement.position.copy(old.position);replacement.rotation.copy(old.rotation);
    old.parent.add(replacement);old.parent.remove(old);item.mesh=replacement;
    if(worldLandmarkClips[kind].length&&THREE.AnimationMixer){item.mixer=new THREE.AnimationMixer(replacement);worldLandmarkClips[kind].forEach(clip=>item.mixer.clipAction(clip).play());}
@@ -1296,7 +1297,7 @@ function spawn(until){
     const bossHp=[250,360,490,650,900][biomeIndex]||250;
     objs.enemies.forEach(other=>{if(!other.boss&&!other.hit){other.hit=true;objGroup.remove(other.mesh);}});
     objs.enemies=objs.enemies.filter(other=>other.boss&&!other.hit);
-    if(Array.isArray(objs.landmarks)){objs.landmarks.forEach(item=>{if(item.mesh)objGroup.remove(item.mesh);});objs.landmarks.length=0;}
+    if(Array.isArray(objs.landmarks)){objs.landmarks.forEach(item=>{if(item.mixer){item.mixer.stopAllAction();if(item.mesh)item.mixer.uncacheRoot(item.mesh);item.mixer=null;}if(item.mesh)objGroup.remove(item.mesh);});objs.landmarks.length=0;}
     if(stage===0){
       // Wide war-arena entrance: opposing towers leave a clear flight corridor and stay through the boss fight.
       spawnWorldLandmark('eagleTower',x-260,zc(-235),stage);
@@ -2418,7 +2419,7 @@ function update(dt){
     const keep=o=>{if(o.x<lim&&o.mesh)objGroup.remove(o.mesh);return o.x>=lim;};
     objs.coins=objs.coins.filter(keep);objs.rings=objs.rings.filter(keep);
     objs.birds=objs.birds.filter(keep);objs.enemies=objs.enemies.filter(o=>{if(o.boss&&!o.hit)return true;if(o.x<lim){objGroup.remove(o.mesh);return false;}return true;});objs.fuels=objs.fuels.filter(keep);objs.drafts=objs.drafts.filter(keep);
-    if(Array.isArray(objs.landmarks))objs.landmarks=objs.landmarks.filter(item=>{if(item.x<lim){if(item.mesh)objGroup.remove(item.mesh);if(item.mixer)item.mixer.stopAllAction();return false;}return true;});
+    if(Array.isArray(objs.landmarks))objs.landmarks=objs.landmarks.filter(item=>{if(item.x<lim){if(item.mixer){item.mixer.stopAllAction();if(item.mesh)item.mixer.uncacheRoot(item.mesh);item.mixer=null;}if(item.mesh)objGroup.remove(item.mesh);return false;}return true;});
     objs.storms=objs.storms.filter(o=>{if(o.x<lim){objGroup.remove(o.mesh);return false;}return true;});objs.stations=objs.stations.filter(o=>{if(o.x<lim){objGroup.remove(o.mesh);return false;}return true;});
   }
   shake=Math.max(0,shake-dt);
