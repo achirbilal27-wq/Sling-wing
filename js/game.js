@@ -2547,7 +2547,7 @@ function endRun(){
 const SKY=[['#4fc3ff','#d9f4ff'],['#ff7e5f','#ffd9a8'],['#0b1245','#3b3a8c'],['#ff8fb0','#ffe3b0']];
 const BIOMES=[
   {name:'وادي النسر الحديدي',mountain:0x596a72,leaf:0x365b4a,trunk:0x5e4936,cactus:0x426c59},
-  {name:'سماء العاصفة',mountain:0x424d6c,leaf:0x3e6570,trunk:0x48465b,cactus:0x3f5b70},
+  {name:'صحراء العاصفة',mountain:0x424d6c,leaf:0x3e6570,trunk:0x48465b,cactus:0x3f5b70},
   {name:'ممر التيارات الميتة',mountain:0x625066,leaf:0x4d6558,trunk:0x51404b,cactus:0x65566d},
   {name:'قمة الصمت',mountain:0x9db7cf,leaf:0xd9e7ef,trunk:0x657b8e,cactus:0x8ca5b8},
   {name:'عرش الرياح',mountain:0x494954,leaf:0x515d68,trunk:0x3c3b46,cactus:0x5b514c}
