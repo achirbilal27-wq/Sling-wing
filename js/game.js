@@ -2412,6 +2412,9 @@ function updateFlight(dt){
                 vx:-460,vy:-Math.sin(angle)*60,vz:-Math.cos(angle)*60,
                 life:5,mesh,bossShot:true,bossWeapon:'حلقة الأفعى الميكانيكية',damage:11
               });
+              // Short cyan/orange sparks make each ring projectile readable without heavy effects.
+              addPart(originX,alt,(Math.random()-.5)*34,(Math.random()-.5)*28,0.22,0x62efff,2.2,z,(Math.random()-.5)*34);
+              if(k%2===0)addPart(originX,alt,(Math.random()-.5)*22,(Math.random()-.5)*22,0.16,0xffa12b,2.8,z,(Math.random()-.5)*22);
             }
             e.fireT=(phase>=2?2.1:2.8)*(phase===3?0.78:phase===2?0.9:1);
             e.lastWeaponLabel='حلقة الأفعى الميكانيكية';
@@ -2430,6 +2433,10 @@ function updateFlight(dt){
                 vx:tx/length*speed,vy:ty/length*speed,vz:tz/length*speed,
                 life:4.2,mesh,bossShot:true,bossWeapon:'مروحة لدغة الأفعى',damage:10
               });
+              // A brief cyan muzzle flare and orange sparks distinguish the aimed fan.
+              for(let spark=0;spark<3;spark++){
+                addPart(originX,e.alt+k*5,(Math.random()-.5)*70,(Math.random()-.5)*55,0.18,spark===0?0x7beeff:0xffa12b,2.4,e.z+k*12,(Math.random()-.5)*70);
+              }
             }
             e.fireT=(phase===3?2.1:3.5)*(phase===2?0.88:1);
             e.lastWeaponLabel='مروحة لدغة الأفعى';
