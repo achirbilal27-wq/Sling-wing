@@ -2397,7 +2397,33 @@ function updateFlight(dt){
           const speed=1050*(phase===3?1.12:phase===2?1.05:1);
           const originX=e.x-80;
           const projectileMat=bossWeaponMaterials[2];
-          if(pattern===0){
+          // Critical-health phase only: call up cylindrical sea currents from marked ocean positions.
+          if(phase===3&&pattern===0){
+            const columnCount=2+(Math.random()<0.5?1:0);
+            for(let k=0;k<columnCount;k++){
+              const z=P.z+(k-(columnCount-1)/2)*170+(Math.random()-.5)*70;
+              const alt=0;
+              const ringMat=new THREE.MeshBasicMaterial({color:0x52eaff,transparent:true,opacity:0.72,depthWrite:false});
+              const ring=new THREE.Mesh(new THREE.RingGeometry(18,31,24),ringMat);
+              ring.rotation.x=-Math.PI/2;
+              ring.position.set((P.x+90)*S,Y(alt+2),z*S);
+              scene.add(ring);
+              const columnMat=new THREE.MeshBasicMaterial({color:0x42dfff,transparent:true,opacity:0.34,depthWrite:false});
+              const column=new THREE.Mesh(new THREE.CylinderGeometry(20,34,1,16,1,true),columnMat);
+              column.position.set((P.x+90)*S,Y(alt+8),z*S);
+              column.scale.y=0.01;
+              scene.add(column);
+              objs.enemyShots.push({
+                x:P.x+90,alt:alt+8,z,vx:0,vy:0,vz:0,life:2.35,mesh:column,
+                bossShot:true,bossWeapon:'عمود تيار البحر',damage:13,waterColumn:true,
+                warning:0.72,active:1.15,age:0,ring,ringMat,baseOpacity:0.34
+              });
+            }
+            e.fireT=3.7;
+            e.lastWeaponLabel='دوامات البحر الغاضبة';
+            addFloat(e.x,e.alt+58,e.lastWeaponLabel,'#52eaff',e.z);
+            playSfx('boss-warning',0.65);
+          }else if(pattern===0){
             const ringCount=phase>=3?14:10;
             const centerAlt=P.alt+((Math.random()*240)-120);
             const centerZ=P.z+((Math.random()*260)-130);
@@ -2488,6 +2514,35 @@ function updateFlight(dt){
         scene.remove(b.mesh);
         if(b.mesh.geometry)b.mesh.geometry.dispose();
         if(b.mesh.material)b.mesh.material.dispose();
+        objs.enemyShots.splice(i,1);
+      }
+      continue;
+    }
+    if(b.waterColumn){
+      b.age=(b.age||0)+dt;
+      b.life-=dt;
+      const warningLeft=Math.max(0,(b.warning||0)-b.age);
+      if(b.ring){
+        b.ring.position.x=b.x*S;
+        b.ring.position.z=b.z*S;
+        b.ring.material.opacity=warningLeft>0?(0.38+0.34*Math.sin(b.age*24)):0.12;
+        const pulse=1+0.14*Math.sin(b.age*16);
+        b.ring.scale.set(pulse,pulse,pulse);
+      }
+      const rise=warningLeft>0?0.01:Math.min(1,(b.age-b.warning)/0.18);
+      b.mesh.scale.y=Math.max(0.01,rise)*Math.min(1,Math.max(0.08,(b.life+0.45)/0.45));
+      b.mesh.position.set(b.x*S,Y(8+Math.max(0,rise)*150),b.z*S);
+      if(warningLeft<=0&&b.age<(b.warning||0)+(b.active||1.15)){
+        if(Math.abs(b.x-P.x)<46&&P.alt<175&&Math.abs(b.z-P.z)<42){
+          if(shieldT>0||shieldCooldown<=0)activateShield(b.x,b.alt,b.z);
+          else damagePlayer(b.damage||13,b.x,b.alt,b.z,'boss');
+          b.age=(b.warning||0)+(b.active||1.15);
+        }
+        if(Math.random()<dt*16)addPart(b.x,35+Math.random()*90,(Math.random()-.5)*42,90+Math.random()*130,0.32,0x65eaff,2+Math.random()*3,b.z,(Math.random()-.5)*42);
+      }
+      if(b.life<=0){
+        scene.remove(b.mesh);if(b.mesh.geometry)b.mesh.geometry.dispose();if(b.mesh.material)b.mesh.material.dispose();
+        if(b.ring){scene.remove(b.ring);if(b.ring.geometry)b.ring.geometry.dispose();if(b.ring.material)b.ring.material.dispose();}
         objs.enemyShots.splice(i,1);
       }
       continue;
