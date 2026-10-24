@@ -864,7 +864,7 @@ function collectBossRewardPlane(reward){
   const index=bossRewardPlanes.indexOf(reward);
   if(index>=0)bossRewardPlanes.splice(index,1);
   if(reward.mesh)objGroup.remove(reward.mesh);
-  const coins=50*(1+save.lv.coin);
+  const coins=10;
   run.coins+=coins;
   addFloat(reward.x,reward.alt+45,'مكافأة Bonus +'+coins,'#ffe27a',reward.z);
   playSfx('coin',0.95);
@@ -998,7 +998,7 @@ const bossPulseGeo=new THREE.SphereGeometry(5,10,8);
 const G=560;
 const DEFENSE_MODELS=[
  {file:'big_ice_turret.glb',role:'ice',biome:'snow',color:0x8beaff,attack:'ice'},
- {file:'fire-turet.glb',role:'fire',biome:'general',color:0xff512d,attack:'chase'},
+ {file:'fire-turet.glb',role:'fire',biome:'general',color:0xff512d,attack:'rocket'},
  {file:'interceptor_base.glb',role:'interceptor',biome:'general',color:0x48eaff,attack:'laser'},
  {file:'iron_wild_turret_-_free.glb',role:'missile',biome:'general',color:0xffbf58,attack:'missile'},
  {file:'lazer_turret.glb',role:'laser2',biome:'general',color:0xe879ff,attack:'laser2'},
@@ -1270,9 +1270,11 @@ function spawn(until){
   while(objs.nextLandmark<until){
     const x=objs.nextLandmark,m=x*M_PER_PX,stage=biomeStageAtMeters(m),within=m-biomeStartMeters(stage);
     if(within<650){
-      if(stage===1)spawnWorldLandmark('desertOutpost',x,zc(235),stage);
-      if(stage===3)spawnWorldLandmark('iceIsland',x,zc(-220),stage);
-      if(stage===4)spawnWorldLandmark('searchlight',x,zc(215),stage);
+      if(stage===1){
+        spawnWorldLandmark('desertOutpost',x,zc(235),stage);
+        spawnWorldLandmark('searchlight',x,zc(-215),stage);
+      }
+      if(stage===2)spawnWorldLandmark('iceIsland',x,zc(-220),stage);
       if(stage%2===0&&stage!==4)spawnWorldLandmark('fighterDefense',x,zc((H(stage,21)<.5?-1:1)*230),stage);
     }
     objs.nextLandmark+=650/M_PER_PX;
@@ -1289,7 +1291,11 @@ function spawn(until){
     objs.enemies.forEach(other=>{if(!other.boss&&!other.hit){other.hit=true;objGroup.remove(other.mesh);}});
     objs.enemies=objs.enemies.filter(other=>other.boss&&!other.hit);
     if(Array.isArray(objs.landmarks)){objs.landmarks.forEach(item=>{if(item.mesh)objGroup.remove(item.mesh);});objs.landmarks.length=0;}
-    if(stage===0)spawnWorldLandmark('eagleTower',x-600,0,stage);
+    if(stage===0){
+      // Twin arena pillars flank the first boss and remain through the encounter.
+      spawnWorldLandmark('eagleTower',x-600,zc(-92),stage);
+      spawnWorldLandmark('eagleTower',x-600,zc(92),stage);
+    }
     if(biomeIndex===2){spawnWorldLandmark('serpentWater',x-1100,0,stage);spawnWorldLandmark('lighthouse',x-700,0,stage);spawnSeaFishSchool(x-1850,stage);spawnSeaFishSchool(x-450,stage);}
     if(biomeIndex===4)spawnWorldLandmark('finalCastle',x-100,0,stage);
     objs.enemyShots.forEach(b=>scene.remove(b.mesh));objs.enemyShots.length=0;
@@ -1303,7 +1309,7 @@ function spawn(until){
   }
   while(objs.nextEnemy<until){
     const x=objs.nextEnemy,stage=biomeStageAtMeters(x*M_PER_PX);
-    const enemyKind=stage===0?'kamikaze':stage===1?'dive':null;
+    const enemyKind=stage===0?'kamikaze':stage>=1?'dive':null;
     const e={x,alt:180+Math.random()*390,z:zc((Math.random()-.5)*420),phase:Math.random()*6.28,fireT:1.2+Math.random()*1.4,hit:false,enemyKind,contactHit:false};
     e.mesh=makeEnemyPlane(enemyKind);e.mesh.position.set(x*S,Y(e.alt),e.z*S);objGroup.add(e.mesh);objs.enemies.push(e);
     objs.nextEnemy+=400/M_PER_PX;
@@ -2054,8 +2060,8 @@ function updateFlight(dt){
         }
       }else if(e.enemyKind==='kamikaze'){
         e.x-=Math.min(210,95+Math.max(0,P.s)*0.06)*dt;
-        e.alt=clamp(e.alt+(P.alt-e.alt)*Math.min(1,dt*0.32),35,500);
-        e.z=zc(e.z+(P.z-e.z)*Math.min(1,dt*0.38));
+        e.alt=clamp(e.alt+(P.alt-e.alt)*Math.min(1,dt*0.52),35,500);
+        e.z=zc(e.z+(P.z-e.z)*Math.min(1,dt*0.62));
         e.mesh.rotation.y=Math.atan2(P.z-e.z,P.x-e.x);
         e.mesh.rotation.z=Math.sin(e.phase*1.7)*0.09;
       }else if(e.enemyKind==='dive'){
@@ -2321,9 +2327,10 @@ function update(dt){
   if(objs&&Array.isArray(objs.landmarks))objs.landmarks.forEach(item=>{item.age+=dt;if(item.mixer)item.mixer.update(dt);if(item.kind==='serpentWater'&&item.mesh){item.mesh.position.y=1+Math.sin(time*1.3)*0.22;item.mesh.rotation.y=Math.sin(time*.35)*.025;}});
   for(let i=bossRewardPlanes.length-1;i>=0;i--){
     const r=bossRewardPlanes[i];r.age+=dt;r.life-=dt;
-    r.x=r.originX+Math.sin(r.age*2.1)*90;
-    r.alt=r.originAlt+r.age*115;
-    r.z=r.originZ+Math.cos(r.age*1.6)*45;
+    // Drift slowly back toward the player with a gentle flight path.
+    r.x=r.originX-r.age*95+Math.sin(r.age*1.1)*24;
+    r.alt=r.originAlt+Math.sin(r.age*1.35)*22;
+    r.z=r.originZ+Math.cos(r.age*1.1)*38;
     r.mesh.position.set(r.x*S,Y(r.alt),r.z*S);
     r.mesh.rotation.y+=dt*0.8;r.mesh.rotation.z=Math.sin(r.age*2)*0.12;
     // Animate the outer wrapper only; the child aircraft keeps its fitted scale.
@@ -2483,6 +2490,8 @@ function applyBiome(m){
   activeBiome=index;
   const b=BIOMES[index];
   ground.material.map=groundMaps[index];ground.material.needsUpdate=true;
+  // The desert sector uses a sand-colored route instead of the ordinary asphalt.
+  roadMat.color.setHex(index===1?0xc39a5d:0x394451);
   mtMat.color.setHex(b.mountain);leafMat.color.setHex(b.leaf);trunkMat.color.setHex(b.trunk);
   cactusMat.color.setHex(b.cactus);
   trees.forEach(t=>{t.visible=index!==1;});
