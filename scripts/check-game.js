@@ -58,7 +58,6 @@ const expectedModels = [
   'assets/models/planes-dead/dive_attacker.glb',
   'assets/models/bosses/iron_eagle.glb',
   'assets/models/bosses/current_serpent_boss.glb',
-  'assets/models/bosses/current_serpent_boss.glb',
   'assets/models/environment/desert_outpost.glb',
   'assets/models/environment/ice_island.glb',
   'assets/models/environment/The_castle_of_boss.glb',
