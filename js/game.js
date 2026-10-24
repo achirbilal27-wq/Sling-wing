@@ -1732,7 +1732,7 @@ function spawnRocketAmbush(){
     mesh.position.set(x*S,Y(alt),z*S);
     mesh.rotation.z=(i-1)*0.08;
     objGroup.add(mesh);
-    objs.enemies.push({x,alt,z,phase:i*1.8,fireT:0.45+i*0.28,hit:false,enemyKind:'rocketAmbush',contactHit:false,rocketAmbush:true,attackSide:i===1?0:(i===0?-1:1)});
+    objs.enemies.push({x,alt,z,mesh,phase:i*1.8,fireT:0.45+i*0.28,hit:false,enemyKind:'rocketAmbush',contactHit:false,rocketAmbush:true,attackSide:i===1?0:(i===0?-1:1)});
   });
   addFloat(P.x+1800,P.alt+150,'كمين صاروخي! ثلاثة مهاجمين أمامك','#ff765f',P.z);
   toast('كمين صاروخي مفاجئ — تفادَ الرشقات!');
