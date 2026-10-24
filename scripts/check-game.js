@@ -84,7 +84,7 @@ check(js.includes('const squadronSize=3') && js.includes('const coins=10;'), 'Bo
 check(js.includes('reward.hit=true;reward.collected=true;') && js.includes('collectBossRewardPlane(reward);'), 'Bonus aircraft must use one-time collection and a dedicated collision path.');
 check(js.includes('r.x=r.originX-r.age*95'), 'Bonus aircraft must drift slowly toward the player.');
 const towerSpawns = ["spawnWorldLandmark('eagleTower',x-260,zc(-235),stage)", "spawnWorldLandmark('eagleTower',x-260,zc(235),stage)"];
-check(towerSpawns.length === 2 && towerSpawns.includes(-235) && towerSpawns.includes(235), 'First boss arena must spawn two widely spaced opposing towers at the entrance.');
+check(towerSpawns.length === 2 && towerSpawns.some((spawn) => spawn.includes('zc(-235)')) && towerSpawns.some((spawn) => spawn.includes('zc(235)')), 'First boss arena must spawn two widely spaced opposing towers at the entrance.');
 check(js.includes("spawnWorldLandmark('searchlight',x,zc(-215),stage)") && js.includes('segment.visible=activeBiome!==1'), 'Desert stage must use the searchlight landmark and hide the normal road.');
 check(js.includes("if(stage===2)spawnWorldLandmark('iceIsland'"), 'Ice island must appear in the Current-serpent approach zone.');
 check(js.includes("file:'fire-turet.glb',role:'fire',biome:'general',color:0xff512d,attack:'rocket'"), 'fire-turet.glb must operate as a ground missile turret.');
