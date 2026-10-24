@@ -1129,15 +1129,9 @@ function loadMeteorModel(){
   if(meteorModelLoadStarted||typeof THREE.GLTFLoader!=='function')return;
   meteorModelLoadStarted=true;
   new THREE.GLTFLoader().load('assets/models/bomberplan/bomb_shark.glb',gltf=>{
-    // This GLB's longest axis is the wing span (Y), with its fuselage along Z.
-    // Rotate axes cyclically so the game uses X for flight direction, Y for height,
-    // and Z for wing span before normalizing dimensions.
-    const oriented=new THREE.Group();
-    oriented.quaternion.setFromAxisAngle(new THREE.Vector3(1,1,1).normalize(),Math.PI*2/3);
-    oriented.add(gltf.scene);
-    // Match the standard enemy-aircraft wingspan (12 world units), rather than
-    // the oversized 18-unit spectacle scale. Keep the GLB's original materials.
-    const model=prepareWorldModel(oriented,12);
+    // Use exactly the same aircraft-axis normalization as regular enemy planes.
+    // This keeps the meteor GLB's nose, wingspan, and vertical axis consistent with enemy aircraft.
+    const model=prepareEnemyModel(gltf.scene);
     if(!model){console.warn('Meteor source GLB could not be normalized; using the procedural meteor core.');return;}
     meteorModelTemplate=model;
     meteorLive.forEach(m=>attachMeteorModel(m));
@@ -1146,14 +1140,14 @@ function loadMeteorModel(){
 }
 function attachMeteorModel(meteor){
   if(!meteor||!meteor.group||!meteorModelTemplate||meteor.modelAttached)return;
-  const model=meteorModelTemplate.clone(true);
-  // prepareWorldModel already normalizes this aircraft to the same 12-unit
-  // wingspan used by regular enemy aircraft; do not scale it a second time.
-  // Keep original GLB geometry, hierarchy, and material colors intact.
-  // Reverse the aircraft's local heading relative to the hero plane; keep the parent/world rotation unchanged.
-  model.rotation.y+=Math.PI;
-  model.traverse(n=>{n.userData.meteorSharedAsset=true;});
-  meteor.group.add(model);meteor.modelAttached=true;
+  // Match makeEnemyPlane(): the normalized aircraft sits inside a wrapper
+  // rotated by PI around Y. The parent meteor group then uses the same tracking
+  // yaw formula as enemy aircraft, rather than a separate guessed forward axis.
+  const aircraft=new THREE.Group();
+  aircraft.add(meteorModelTemplate.clone(true));
+  aircraft.rotation.y=Math.PI;
+  aircraft.traverse(n=>{n.userData.meteorSharedAsset=true;});
+  meteor.group.add(aircraft);meteor.modelAttached=true;
 }
 function makeMeteor(){
   const group=new THREE.Group();
@@ -1231,10 +1225,8 @@ function updateMeteors(dt){
     const m=objs.meteors[i];m.age+=dt;m.life-=dt;
     m.x+=m.vx*dt;m.alt+=m.vy*dt;m.z=zc(m.z+m.vz*dt);
     m.group.position.set(m.x*S,Y(m.alt+24),m.z*S);
-    // The GLB fuselage is authored along local Z; loadMeteorModel() remaps it to +X,
-    // then attachMeteorModel() reverses it to -X. Calculate yaw for that actual -X forward axis.
-    const dx=P.x-m.x,dz=P.z-m.z;
-    m.group.rotation.y=Math.atan2(dz,-dx);
+    // Use the same target-facing yaw as the regular enemy aircraft.
+    m.group.rotation.y=Math.atan2(P.z-m.z,P.x-m.x);
     m.group.rotation.z=-0.12+Math.sin(m.age*2.1)*0.035;
     const pulse=0.86+0.14*Math.sin(time*17+m.age*4);
     (m.group.userData.meteorBodyFire||[]).forEach(fire=>{
