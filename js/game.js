@@ -2752,7 +2752,9 @@ function update(dt){
     const comboHud=$('comboHud');if(comboHud){comboHud.classList.toggle('on',run.gateCombo>0);comboHud.classList.toggle('hot',run.gateCombo>=5);comboHud.classList.toggle('ultra',run.gateCombo>=10);$('comboValue').textContent='×'+run.gateCombo;const label=$('comboLabel');if(label)label.textContent=run.gateCombo>=10?'أسطوري · LEGENDARY':run.gateCombo>=5?'سلسلة نارية · ON FIRE':'سلسلة البوابات';}
     const activeBoss=objs.enemies.find(e=>e.boss&&!e.hit);
     const bossHud=$('bossHud');if(bossHud){bossHud.classList.toggle('on',!!activeBoss);if(activeBoss){
-      $('bossHp').style.width=(activeBoss.hp/activeBoss.maxHp*100)+'%';
+      const bossKey=String(activeBoss.bossStage||activeBoss.bossName||'boss');
+      if(bossHud.dataset.bossKey!==bossKey){bossHud.dataset.bossKey=bossKey;bossHud.classList.remove('boss-intro');void bossHud.offsetWidth;bossHud.classList.add('boss-intro');}
+      $('bossHp').style.width=(clamp(activeBoss.hp/Math.max(1,activeBoss.maxHp)*100,0,100))+'%';
       $('bossHealthText').textContent=Math.ceil(activeBoss.hp)+' / '+activeBoss.maxHp;
       const bossTitle=$('bossTitle');if(bossTitle)bossTitle.textContent=activeBoss.bossName||'زعيم السماء';
       const phaseText=$('bossPhaseText'),weaponText=$('bossWeaponText');
