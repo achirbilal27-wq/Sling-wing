@@ -1218,7 +1218,7 @@ function spawnMeteor(x){
   meteor.vz=side===0?0:-side*(12+Math.random()*8);
   meteor.lane=lane;
   meteor.life=7.8;meteor.age=0;
-  meteor.group.position.set(meteor.x*S,Y(meteor.alt),meteor.z*S);
+  meteor.group.position.set(meteor.x*S,Y(meteor.alt+24),meteor.z*S);
   // Match the eagle tower's exact world-Y rotation so both models share the same heading.
   meteor.group.rotation.z=-0.035;meteor.group.rotation.y=Math.PI/2;
   objs.meteors.push(meteor);
@@ -1229,7 +1229,7 @@ function updateMeteors(dt){
   for(let i=objs.meteors.length-1;i>=0;i--){
     const m=objs.meteors[i];m.age+=dt;m.life-=dt;
     m.x+=m.vx*dt;m.alt+=m.vy*dt;m.z=zc(m.z+m.vz*dt);
-    m.group.position.set(m.x*S,Y(m.alt),m.z*S);
+    m.group.position.set(m.x*S,Y(m.alt+24),m.z*S);
     m.group.rotation.z=-0.12+Math.sin(m.age*2.1)*0.035;
     const pulse=0.86+0.14*Math.sin(time*17+m.age*4);
     (m.group.userData.meteorBodyFire||[]).forEach(fire=>{
