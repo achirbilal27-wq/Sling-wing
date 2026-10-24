@@ -437,6 +437,38 @@ function applyPlaneColors(){
 
 const bossImageLoader=new THREE.TextureLoader(),bossImageTextures=Object.create(null),bossSpriteMaterials=Object.create(null);
 let ironEagleModelTemplate=null,ironEagleModelLoadStarted=false;
+let currentSerpentModelTemplate=null,currentSerpentModelLoadStarted=false;
+function prepareCurrentSerpentModel(root){
+  const normalized=new THREE.Group();normalized.add(root);normalized.updateMatrixWorld(true);
+  let box=new THREE.Box3().setFromObject(normalized);if(box.isEmpty())return null;
+  let size=box.getSize(new THREE.Vector3());
+  // Keep the long body horizontal in the game's X/Z flight plane.
+  if(size.y>Math.max(size.x,size.z)*1.15){normalized.rotation.x=Math.PI/2;normalized.updateMatrixWorld(true);box=new THREE.Box3().setFromObject(normalized);size=box.getSize(new THREE.Vector3());}
+  if(size.x<size.z)normalized.rotation.y=Math.PI/2;
+  normalized.updateMatrixWorld(true);box=new THREE.Box3().setFromObject(normalized);size=box.getSize(new THREE.Vector3());
+  const span=Math.max(size.x,size.z);if(!Number.isFinite(span)||span<0.001)return null;
+  normalized.scale.setScalar(54/span);normalized.updateMatrixWorld(true);box=new THREE.Box3().setFromObject(normalized);
+  normalized.position.sub(box.getCenter(new THREE.Vector3()));normalized.updateMatrixWorld(true);
+  normalized.traverse(node=>{if(node.isMesh){node.castShadow=true;node.receiveShadow=true;if(node.material){const ms=Array.isArray(node.material)?node.material:[node.material];ms.forEach(m=>{m.side=THREE.DoubleSide;m.needsUpdate=true;});}}});
+  return normalized;
+}
+function attachCurrentSerpentModel(group){
+  if(!currentSerpentModelTemplate||!group||!group.userData.currentSerpentBoss||group.userData.currentSerpentModelAttached)return;
+  const model=currentSerpentModelTemplate.clone(true);group.add(model);group.userData.currentSerpentModel=model;group.userData.currentSerpentModelAttached=true;
+  if(group.userData.proceduralFallback)group.userData.proceduralFallback.visible=false;
+  if(group.userData.bossSprite)group.userData.bossSprite.visible=false;
+}
+function loadCurrentSerpentBossModel(){
+  if(currentSerpentModelLoadStarted||typeof THREE.GLTFLoader!=='function')return;
+  currentSerpentModelLoadStarted=true;
+  new THREE.GLTFLoader().load('assets/models/bosses/current_serpent_boss.glb',gltf=>{
+    const model=prepareCurrentSerpentModel(gltf.scene);if(!model){console.warn('Current Serpent GLB has no usable geometry; fallback retained.');return;}
+    currentSerpentModelTemplate=model;
+    if(typeof objs!=='undefined'&&objs&&Array.isArray(objs.enemies))objs.enemies.forEach(enemy=>{if(enemy.boss&&enemy.bossStage===3&&!enemy.hit)attachCurrentSerpentModel(enemy.mesh);});
+    console.info('Current Serpent custom GLB loaded.');
+  },undefined,error=>console.warn('Current Serpent GLB failed to load; fallback retained.',error));
+}
+loadCurrentSerpentBossModel();
 /* ---------- objects ---------- */
 const objGroup=new THREE.Group();scene.add(objGroup);
 const coinGeo=new THREE.CylinderGeometry(1.5,1.5,0.35,18);coinGeo.rotateZ(Math.PI/2);
@@ -603,13 +635,20 @@ function makeBossPlane(biomeIndex){
     else loadIronEagleBossModel();
     return g;
   }
+  if(biomeIndex===2){
+    g.userData.currentSerpentBoss=true;
+    g.userData.proceduralFallback=fallback;
+    g.userData.imageBoss=false;
+    if(currentSerpentModelTemplate)attachCurrentSerpentModel(g);else loadCurrentSerpentBossModel();
+    return g;
+  }
   const path='assets/images/bosses/'+names[biomeIndex]+'.png';
   const material=bossSpriteMaterials[path]||(bossSpriteMaterials[path]=new THREE.SpriteMaterial({transparent:true,alphaTest:0.015,depthWrite:false,depthTest:true}));
   const image=new THREE.Sprite(material);
   image.center.set(0.5,0.5);
   image.visible=false;
   g.add(image);
-  g.userData.imageBoss=true;
+  g.userData.imageBoss=true;g.userData.bossSprite=image;
   const applyBossTexture=texture=>{
     texture.encoding=THREE.sRGBEncoding;
     texture.generateMipmaps=false;
