@@ -1430,3 +1430,34 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
   #comboHud{top:145px !important}
   #bossHud{top:182px !important;max-height:calc(100% - 186px) !important}
 }
+
+
+/* Keep the distance readout clear of the centered pause button. */
+#dist{
+  top:10px !important;
+  left:12px !important;
+  right:auto !important;
+  width:max-content !important;
+  max-width:calc(100vw - 220px) !important;
+  text-align:left !important;
+  font-size:clamp(30px,8vw,42px) !important;
+  line-height:1 !important;
+}
+#dist small{font-size:.42em !important}
+#alt{
+  top:54px !important;
+  left:12px !important;
+  right:auto !important;
+  width:max-content !important;
+  max-width:calc(100vw - 220px) !important;
+  text-align:left !important;
+  font-size:12px !important;
+}
+@media(max-width:380px){
+  #dist{top:8px !important;font-size:clamp(26px,7.5vw,32px) !important;max-width:calc(100vw - 190px) !important}
+  #alt{top:39px !important;font-size:10px !important;max-width:calc(100vw - 190px) !important}
+}
+@media(max-height:560px){
+  #dist{top:6px !important;font-size:clamp(24px,6vh,32px) !important}
+  #alt{top:36px !important;font-size:10px !important}
+}
