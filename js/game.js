@@ -844,18 +844,24 @@ function loadBossRewardPlane(){
 loadBossRewardPlane();
 function spawnBossRewardPlane(boss){
   if(!boss)return;
-  // Keep aircraft normalization/size on the child; animate only the wrapper.
-  // This prevents update() from overwriting the GLB's fitted scale every frame.
-  const aircraft=bonusPlaneTemplate?bonusPlaneTemplate.clone(true):makeEnemyPlane();
-  aircraft.scale.multiplyScalar(1.45);
-  const mesh=new THREE.Group();
-  mesh.add(aircraft);
-  mesh.position.set(boss.x*S,Y(boss.alt+115),boss.z*S);
-  mesh.rotation.z=-0.12;
-  objGroup.add(mesh);
-  addFloat(boss.x,boss.alt+155,'مكافأة الزعيم: طائرة إضافية!','#8cf5ff',boss.z);
-  toast('مكافأة الزعيم: طائرة إضافية!');
-  bossRewardPlanes.push({mesh,life:5.5,age:0,originX:boss.x,originAlt:boss.alt+115,originZ:boss.z,x:boss.x,alt:boss.alt+115,z:boss.z,bonus:true,hit:false,collected:false});
+  // A small squadron arrives after the boss explosion; each aircraft is collected separately.
+  const squadronSize=3;
+  for(let i=0;i<squadronSize;i++){
+    // Keep aircraft normalization/size on the child; animate only the wrapper.
+    const aircraft=bonusPlaneTemplate?bonusPlaneTemplate.clone(true):makeEnemyPlane();
+    aircraft.scale.multiplyScalar(1.45);
+    const mesh=new THREE.Group();
+    mesh.add(aircraft);
+    const originX=boss.x+110+i*72;
+    const originAlt=boss.alt+105+(i%2)*22;
+    const originZ=clamp(boss.z+(i-1)*82,-300,300);
+    mesh.position.set(originX*S,Y(originAlt),originZ*S);
+    mesh.rotation.z=-0.12;
+    objGroup.add(mesh);
+    bossRewardPlanes.push({mesh,life:8.5,age:0,originX,originAlt,originZ,x:originX,alt:originAlt,z:originZ,bonus:true,hit:false,collected:false});
+  }
+  addFloat(boss.x,boss.alt+155,'سرب مكافآت: 10 عملات لكل طائرة','#8cf5ff',boss.z);
+  toast('سرب مكافآت: أطلق النار لجمع 10 عملات لكل طائرة!');
 }
 function collectBossRewardPlane(reward){
   if(!reward||reward.hit||reward.collected)return false;
