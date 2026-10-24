@@ -449,6 +449,14 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
   border-color:rgba(255,130,130,.7)
 }
 #bossHud.on{display:flex;animation:bossIn .28s ease-out}
+#bossHud.boss-intro{animation:bossCardEnter .62s cubic-bezier(.2,.8,.2,1) both}
+@keyframes bossCardEnter{
+  0%{opacity:0;transform:translateX(-50%) translateY(-14px) scale(.94);filter:brightness(1.5)}
+  68%{opacity:1;transform:translateX(-50%) translateY(2px) scale(1.015);filter:brightness(1.12)}
+  100%{opacity:1;transform:translateX(-50%) translateY(0) scale(1);filter:brightness(1)}
+}
+@media(prefers-reduced-motion:reduce){#bossHud.boss-intro{animation:none}}
+
 #bossHud strong{font-size:12px;letter-spacing:.3px;color:#ffd6d3}
 .boss-track{height:7px;border-radius:999px;overflow:hidden;background:rgba(0,0,0,.45);box-shadow:inset 0 1px 2px rgba(0,0,0,.4)}
 .boss-track span{display:block;width:100%;height:100%;border-radius:inherit;background:linear-gradient(90deg,#ff4e57,#ffb05e);box-shadow:0 0 8px rgba(255,88,88,.45);transition:width .15s}
