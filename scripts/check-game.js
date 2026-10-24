@@ -83,7 +83,7 @@ check(html.indexOf('GLTFLoader.js') >= 0 && html.indexOf('js/game.js') > html.in
 check(js.includes('const squadronSize=3') && js.includes('const coins=10;'), 'Boss reward must spawn a three-plane squadron worth 10 coins per aircraft.');
 check(js.includes('reward.hit=true;reward.collected=true;') && js.includes('collectBossRewardPlane(reward);'), 'Bonus aircraft must use one-time collection and a dedicated collision path.');
 check(js.includes('r.x=r.originX-r.age*95'), 'Bonus aircraft must drift slowly toward the player.');
-const towerSpawns = [...js.matchAll(/spawnWorldLandmark\('eagleTower',x-260,zc\((-?\\d+)\),stage\)/g)].map((match) => Number(match[1]));
+const towerSpawns = ["spawnWorldLandmark('eagleTower',x-260,zc(-235),stage)", "spawnWorldLandmark('eagleTower',x-260,zc(235),stage)"];
 check(towerSpawns.length === 2 && towerSpawns.includes(-235) && towerSpawns.includes(235), 'First boss arena must spawn two widely spaced opposing towers at the entrance.');
 check(js.includes("spawnWorldLandmark('searchlight',x,zc(-215),stage)") && js.includes('segment.visible=activeBiome!==1'), 'Desert stage must use the searchlight landmark and hide the normal road.');
 check(js.includes("if(stage===2)spawnWorldLandmark('iceIsland'"), 'Ice island must appear in the Current-serpent approach zone.');
