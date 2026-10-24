@@ -1492,3 +1492,13 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
 @media(max-height:460px){
   #bossHud{top:calc(68px + env(safe-area-inset-top,0px)) !important;max-height:34vh !important}
 }
+
+/* Keep the boss information panel fixed at the top-center of the viewport.
+   Preserve the existing panel size and visual styling. */
+#bossHud{
+  position:fixed !important;
+  top:calc(12px + env(safe-area-inset-top,0px)) !important;
+  left:50% !important;
+  right:auto !important;
+  transform:translateX(-50%) !important;
+}
