@@ -1299,8 +1299,8 @@ function spawn(until){
     if(Array.isArray(objs.landmarks)){objs.landmarks.forEach(item=>{if(item.mesh)objGroup.remove(item.mesh);});objs.landmarks.length=0;}
     if(stage===0){
       // Twin arena pillars flank the first boss and remain through the encounter.
-      spawnWorldLandmark('eagleTower',x-600,zc(-92),stage);
-      spawnWorldLandmark('eagleTower',x-600,zc(92),stage);
+      spawnWorldLandmark('eagleTower',x-160,zc(-92),stage);
+      spawnWorldLandmark('eagleTower',x-160,zc(92),stage);
     }
     if(biomeIndex===2){spawnWorldLandmark('serpentWater',x-1100,0,stage);spawnWorldLandmark('lighthouse',x-700,0,stage);spawnSeaFishSchool(x-1850,stage);spawnSeaFishSchool(x-450,stage);}
     if(biomeIndex===4)spawnWorldLandmark('finalCastle',x-100,0,stage);
@@ -2574,6 +2574,7 @@ function updateRoute(m){
   const px=P.x*S;
   for(let i=0;i<routeSegments.length;i++){
     const x=px+35+i*52,segment=routeSegments[i];
+    segment.visible=activeBiome!==1;
     segment.position.set(x,0,routeCurve(x));
   }
   const targetX=routeTargetMeters*4;
