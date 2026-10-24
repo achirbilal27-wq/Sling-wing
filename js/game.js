@@ -1048,30 +1048,28 @@ function makeDefenseTurret(def){
  if(def.attack==='chase')attachChaseFlame(g);
  return g;
 }
-function loadDefenseModels(){
- if(typeof THREE.GLTFLoader!=='function'){console.warn('GLTFLoader unavailable; defense turrets use procedural fallbacks.');return;}
- DEFENSE_MODELS.forEach(def=>{
-  if(defenseLoadStarted[def.file])return;defenseLoadStarted[def.file]=true;
-  new THREE.GLTFLoader().load('assets/models/assault-defender/'+def.file,gltf=>{
-   const template=prepareDefenseModel(gltf.scene);
-   if(!template){console.warn('Invalid defense model; fallback retained:',def.file);return;}
-   defenseTemplates[def.file]=template;
-   if(typeof objs!=='undefined'&&objs&&Array.isArray(objs.enemies))objs.enemies.forEach(e=>{
-    if(!e.turret||e.hit||e.defenseFile!==def.file||!e.mesh||!e.mesh.parent)return;
-    const old=e.mesh,replacement=makeDefenseTurret(def);replacement.position.copy(old.position);replacement.rotation.copy(old.rotation);replacement.visible=old.visible;
-    old.parent.add(replacement);old.parent.remove(old);e.mesh=replacement;
-   });
-   console.info('Defense GLB loaded:',def.file);
-  },undefined,error=>console.warn('Defense GLB unavailable; procedural fallback retained:',def.file,error));
- });
+function loadDefenseModels(def){
+ if(!def||typeof THREE.GLTFLoader!=='function')return;
+ if(defenseLoadStarted[def.file])return;defenseLoadStarted[def.file]=true;
+ new THREE.GLTFLoader().load('assets/models/assault-defender/'+def.file,gltf=>{
+  const template=prepareDefenseModel(gltf.scene);
+  if(!template){console.warn('Invalid defense model; fallback retained:',def.file);return;}
+  defenseTemplates[def.file]=template;
+  if(typeof objs!=='undefined'&&objs&&Array.isArray(objs.enemies))objs.enemies.forEach(e=>{
+   if(!e.turret||e.hit||e.defenseFile!==def.file||!e.mesh||!e.mesh.parent)return;
+   const old=e.mesh,replacement=makeDefenseTurret(def);replacement.position.copy(old.position);replacement.rotation.copy(old.rotation);replacement.visible=old.visible;
+   old.parent.add(replacement);old.parent.remove(old);e.mesh=replacement;
+  });
+  console.info('Defense GLB loaded:',def.file);
+ },undefined,error=>console.warn('Defense GLB unavailable; procedural fallback retained:',def.file,error));
 }
-loadDefenseModels();
 function currentDefenseBiome(stage){const n=((stage%5)+5)%5;return n===1?'desert':n===3?'snow':n===4?'boss_arena':'general';}
 function spawnDefenseTurret(x){
  const stage=biomeStageAtMeters(x*M_PER_PX),biome=currentDefenseBiome(stage);
  const general=DEFENSE_MODELS.filter(d=>d.biome==='general');
  const def=biome==='snow'?(DEFENSE_MODELS.find(d=>d.role==='ice')||general[0]):biome==='desert'?(DEFENSE_MODELS.find(d=>d.role==='sand')||general[0]):biome==='boss_arena'?(DEFENSE_MODELS.find(d=>d.role==='interceptor')||DEFENSE_MODELS.find(d=>d.role==='laser2')||general[0]):general[Math.floor(x/(900/M_PER_PX))%general.length];
  if(!def)return;
+ loadDefenseModels(def);
  const alt=def.attack==='chase'?85:0,z=zc((Math.random()<0.5?-1:1)*(150+Math.random()*130));
  const e={x,alt,z,phase:Math.random()*6.28,fireT:1.1+Math.random()*1.5,hit:false,turret:true,defenseFile:def.file,defenseRole:def.role,defenseAttack:def.attack,defenseColor:def.color,defenseBiome:biome,defenseHp:def.attack==='chase'?38:55,defenseMaxHp:def.attack==='chase'?38:55,attackSide:Math.random()<0.5?-1:1};
  e.mesh=makeDefenseTurret(def);e.mesh.position.set(x*S,def.attack==='chase'?Y(alt):0,z*S);objGroup.add(e.mesh);objs.enemies.push(e);
@@ -1181,24 +1179,24 @@ function makeWorldFallback(kind){
   else if(kind==='searchlight'){const base=new THREE.Mesh(new THREE.CylinderGeometry(4,7,8,8),dark);base.position.y=4;g.add(base);const beam=new THREE.Mesh(new THREE.ConeGeometry(15,52,12,1,true),new THREE.MeshBasicMaterial({color:0x9cecff,transparent:true,opacity:.18,depthWrite:false,side:THREE.DoubleSide}));beam.rotation.z=Math.PI/2;beam.position.set(20,24,0);g.add(beam);}
   return g;
 }
-function loadWorldLandmarkModels(){
-  if(typeof THREE.GLTFLoader!=='function')return;
-  Object.entries(WORLD_MODEL_DEFS).forEach(([kind,def])=>{
-    if(worldLandmarkLoadStarted[kind])return;worldLandmarkLoadStarted[kind]=true;
-    new THREE.GLTFLoader().load(def.file,gltf=>{
-      const template=prepareWorldModel(gltf.scene,def.size);
-      if(!template){console.warn('Invalid world model; procedural landmark retained:',def.file);return;}
-      worldLandmarkTemplates[kind]=template;worldLandmarkClips[kind]=gltf.animations||[];
-      if(typeof objs!=='undefined'&&objs&&Array.isArray(objs.landmarks))objs.landmarks.forEach(item=>{
-        if(item.kind!==kind||!item.mesh||!item.mesh.parent)return;
-        const old=item.mesh,replacement=makeWorldLandmarkMesh(kind);
-        replacement.position.copy(old.position);replacement.rotation.copy(old.rotation);
-        old.parent.add(replacement);old.parent.remove(old);item.mesh=replacement;
-        if(worldLandmarkClips[kind].length&&THREE.AnimationMixer){item.mixer=new THREE.AnimationMixer(replacement);worldLandmarkClips[kind].forEach(clip=>item.mixer.clipAction(clip).play());}
-      });
-      console.info('World landmark model loaded:',kind);
-    },undefined,error=>console.warn('World model unavailable; procedural fallback retained:',def.file,error));
+function loadWorldLandmarkModels(kind){
+ if(!kind||typeof THREE.GLTFLoader!=='function')return;
+ const def=WORLD_MODEL_DEFS[kind];
+ if(!def||worldLandmarkLoadStarted[kind])return;
+ worldLandmarkLoadStarted[kind]=true;
+ new THREE.GLTFLoader().load(def.file,gltf=>{
+  const template=prepareWorldModel(gltf.scene,def.size);
+  if(!template){console.warn('Invalid world model; procedural landmark retained:',def.file);return;}
+  worldLandmarkTemplates[kind]=template;worldLandmarkClips[kind]=gltf.animations||[];
+  if(typeof objs!=='undefined'&&objs&&Array.isArray(objs.landmarks))objs.landmarks.forEach(item=>{
+   if(item.kind!==kind||!item.mesh||!item.mesh.parent)return;
+   const old=item.mesh,replacement=makeWorldLandmarkMesh(kind);
+   replacement.position.copy(old.position);replacement.rotation.copy(old.rotation);
+   old.parent.add(replacement);old.parent.remove(old);item.mesh=replacement;
+   if(worldLandmarkClips[kind].length&&THREE.AnimationMixer){item.mixer=new THREE.AnimationMixer(replacement);worldLandmarkClips[kind].forEach(clip=>item.mixer.clipAction(clip).play());}
   });
+  console.info('World landmark model loaded:',kind);
+ },undefined,error=>console.warn('World model unavailable; procedural fallback retained:',def.file,error));
 }
 function makeWorldLandmarkMesh(kind){
   const template=worldLandmarkTemplates[kind];
@@ -1206,12 +1204,13 @@ function makeWorldLandmarkMesh(kind){
 }
 function spawnWorldLandmark(kind,x,z,stage){
   if(!objs||!Array.isArray(objs.landmarks))return;
+  loadWorldLandmarkModels(kind);
   const item={kind,x,z,stage,age:0,mixer:null,mesh:makeWorldLandmarkMesh(kind)};
   item.mesh.position.set(x*S,0,z*S);objGroup.add(item.mesh);
   if(worldLandmarkClips[kind]&&worldLandmarkClips[kind].length&&THREE.AnimationMixer){item.mixer=new THREE.AnimationMixer(item.mesh);worldLandmarkClips[kind].forEach(clip=>item.mixer.clipAction(clip).play());}
   objs.landmarks.push(item);
 }
-loadWorldLandmarkModels();
+// World GLBs load on demand when their landmark first enters a stage.
 function addCoin(x,alt,z){
   const m=new THREE.Mesh(coinGeo,coinMat);m.position.set(x*S,Y(alt),z*S);objGroup.add(m);
   objs.coins.push({x,alt,z,on:true,mesh:m});
