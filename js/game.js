@@ -2409,7 +2409,7 @@ function updateFlight(dt){
               ring.position.set((P.x+90)*S,Y(alt+2),z*S);
               scene.add(ring);
               const columnMat=new THREE.MeshBasicMaterial({color:0x42dfff,transparent:true,opacity:0.34,depthWrite:false});
-              const column=new THREE.Mesh(new THREE.CylinderGeometry(20,34,1,16,1,true),columnMat);
+              const column=new THREE.Mesh(new THREE.CylinderGeometry(20,34,150,16,1,true),columnMat);
               column.position.set((P.x+90)*S,Y(alt+8),z*S);
               column.scale.y=0.01;
               scene.add(column);
@@ -2531,7 +2531,7 @@ function updateFlight(dt){
       }
       const rise=warningLeft>0?0.01:Math.min(1,(b.age-b.warning)/0.18);
       b.mesh.scale.y=Math.max(0.01,rise)*Math.min(1,Math.max(0.08,(b.life+0.45)/0.45));
-      b.mesh.position.set(b.x*S,Y(8+Math.max(0,rise)*150),b.z*S);
+      b.mesh.position.set(b.x*S,Y(8+Math.max(0,rise)*75),b.z*S);
       if(warningLeft<=0&&b.age<(b.warning||0)+(b.active||1.15)){
         if(Math.abs(b.x-P.x)<46&&P.alt<175&&Math.abs(b.z-P.z)<42){
           if(shieldT>0||shieldCooldown<=0)activateShield(b.x,b.alt,b.z);
