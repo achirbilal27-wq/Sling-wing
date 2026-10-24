@@ -1461,3 +1461,24 @@ button:focus-visible{outline:4px solid #fff;outline-offset:2px}
   #dist{top:6px !important;font-size:clamp(24px,6vh,32px) !important}
   #alt{top:36px !important;font-size:10px !important}
 }
+
+/* Match the original Game1 boss information card position and dimensions only. */
+#bossHud{
+  top:calc(84px + env(safe-area-inset-top,0px)) !important;
+  width:min(310px,74vw) !important;
+}
+@media(max-width:380px){
+  #bossHud{
+    top:calc(78px + env(safe-area-inset-top,0px)) !important;
+    width:min(278px,76vw) !important;
+    padding:8px 10px !important;
+  }
+}
+@media(max-height:560px){
+  #bossHud{
+    top:calc(68px + env(safe-area-inset-top,0px)) !important;
+    gap:4px !important;
+    padding:6px 9px !important;
+  }
+  #bossHud .boss-track{height:7px !important}
+}
