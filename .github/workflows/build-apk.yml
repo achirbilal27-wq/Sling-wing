@@ -57,6 +57,57 @@ jobs:
       - name: Generate Android project
         run: npx cap add android
 
+      - name: Generate launcher icons from SVG artwork
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y librsvg2-bin imagemagick
+
+          RES="android/app/src/main/res"
+          mkdir -p "$RES/drawable-nodpi" "$RES/values" "$RES/mipmap-anydpi-v26"
+          rsvg-convert --width 1024 --height 768 src/assets/icone.svg > /tmp/sling-wing-icon-landscape.png
+          convert /tmp/sling-wing-icon-landscape.png -background '#699AD3' -gravity center -extent 1024x1024 /tmp/sling-wing-icon.png
+
+          for spec in "mdpi:48" "hdpi:72" "xhdpi:96" "xxhdpi:144" "xxxhdpi:192"; do
+            density="${spec%%:*}"
+            size="${spec##*:}"
+            mkdir -p "$RES/mipmap-$density"
+            convert /tmp/sling-wing-icon.png -filter Lanczos -resize "${size}x${size}" "$RES/mipmap-$density/ic_launcher.png"
+            fg_size=$((size * 9 / 4))
+            convert /tmp/sling-wing-icon.png -filter Lanczos -resize "${fg_size}x${fg_size}" "$RES/mipmap-$density/ic_launcher_foreground.png"
+          done
+
+          cp /tmp/sling-wing-icon.png "$RES/drawable-nodpi/ic_launcher_source.png"
+          cat > "$RES/values/ic_launcher_background.xml" <<'XML'
+          <resources>
+              <color name="ic_launcher_background">#699AD3</color>
+          </resources>
+          XML
+          cat > "$RES/mipmap-anydpi-v26/ic_launcher.xml" <<'XML'
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+              <background android:drawable="@color/ic_launcher_background" />
+              <foreground android:drawable="@mipmap/ic_launcher_foreground" />
+          </adaptive-icon>
+          XML
+
+          python3 - android/app/src/main/AndroidManifest.xml <<'PY'
+          import pathlib, re, sys
+          path = pathlib.Path(sys.argv[1])
+          content = path.read_text(encoding="utf-8")
+          match = re.search(r"<application\b[^>]*>", content)
+          if not match:
+              raise SystemExit("AndroidManifest.xml has no <application> element")
+          tag = match.group(0)
+          tag = re.sub(r'\s+android:icon="[^"]*"', "", tag)
+          tag = re.sub(r'\s+android:roundIcon="[^"]*"', "", tag)
+          tag = tag[:-1] + ' android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher">'
+          path.write_text(content[:match.start()] + tag + content[match.end():], encoding="utf-8")
+          PY
+
+          test -s "$RES/mipmap-xxxhdpi/ic_launcher.png"
+          test -s "$RES/mipmap-xxxhdpi/ic_launcher_foreground.png"
+
       - name: Sync Capacitor
         run: npm run sync
 
