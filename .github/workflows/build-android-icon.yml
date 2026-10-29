@@ -1,0 +1,120 @@
+name: Build Android App Icon from Public SVG
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - ga-me2
+    paths:
+      - "Public/icone.svg"
+      - ".github/workflows/build-android-icon.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  prepare-icon-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout ga-me2
+        uses: actions/checkout@v4
+        with:
+          ref: ga-me2
+
+      - name: Validate source icon
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s Public/icone.svg
+          grep -q '<svg' Public/icone.svg
+          echo "Source SVG found: Public/icone.svg"
+
+      - name: Install SVG and image tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y librsvg2-bin imagemagick
+
+      - name: Locate Android project and generate launcher assets
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          MANIFEST="$(find . -type f -path '*/src/main/AndroidManifest.xml' -not -path '*/build/*' -print -quit)"
+          if [ -z "$MANIFEST" ]; then
+            echo "::error::No Android app module was found (src/main/AndroidManifest.xml). Icon source was validated, but native Android resources cannot be safely installed until the Android module is present."
+            exit 1
+          fi
+
+          MAIN_DIR="$(dirname "$MANIFEST")"
+          RES_DIR="$MAIN_DIR/res"
+          mkdir -p "$RES_DIR/drawable-nodpi" "$RES_DIR/mipmap-mdpi" "$RES_DIR/mipmap-hdpi" "$RES_DIR/mipmap-xhdpi" "$RES_DIR/mipmap-xxhdpi" "$RES_DIR/mipmap-xxxhdpi" "$RES_DIR/mipmap-anydpi-v26"
+
+          # Render the original landscape SVG without stretching. The original blue
+          # background is extended to a square canvas so the full artwork remains visible.
+          rsvg-convert --width 1024 --height 768 Public/icone.svg > /tmp/icone-landscape.png
+          magick /tmp/icone-landscape.png -background '#699AD3' -gravity center -extent 1024x1024 /tmp/icone-square.png
+
+          for spec in "mdpi:48" "hdpi:72" "xhdpi:96" "xxhdpi:144" "xxxhdpi:192"; do
+            density="${spec%%:*}"
+            size="${spec##*:}"
+            magick /tmp/icone-square.png -filter Lanczos -resize "${size}x${size}" "$RES_DIR/mipmap-$density/ic_launcher.png"
+          done
+
+          # Keep a high-resolution source in resources for future launcher variants.
+          magick /tmp/icone-square.png "$RES_DIR/drawable-nodpi/ic_launcher_source.png"
+
+          # Android 8+ adaptive icon resources. Using the square source in the
+          # foreground preserves the source artwork and its original colours.
+          magick /tmp/icone-square.png -filter Lanczos -resize 432x432 "$RES_DIR/mipmap-xxxhdpi/ic_launcher_foreground.png"
+          cat > "$RES_DIR/values-icon.xml" <<'XML'
+          <resources>
+              <color name="ic_launcher_background">#699AD3</color>
+          </resources>
+          XML
+          cat > "$RES_DIR/mipmap-anydpi-v26/ic_launcher.xml" <<'XML'
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+              <background android:drawable="@color/ic_launcher_background" />
+              <foreground android:drawable="@mipmap/ic_launcher_foreground" />
+          </adaptive-icon>
+          XML
+
+          # Point the manifest at the generated launcher resources, preserving all
+          # other manifest settings.
+          python3 - "$MANIFEST" <<'PY'
+          import pathlib, re, sys
+          p = pathlib.Path(sys.argv[1])
+          s = p.read_text(encoding="utf-8")
+          app = re.search(r"<application\b[^>]*>", s)
+          if not app:
+              raise SystemExit("AndroidManifest.xml has no <application> element")
+          tag = app.group(0)
+          tag = re.sub(r'\s+android:icon="[^"]*"', '', tag)
+          tag = re.sub(r'\s+android:roundIcon="[^"]*"', '', tag)
+          tag = tag[:-1] + ' android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher" >'
+          s = s[:app.start()] + tag + s[app.end():]
+          p.write_text(s, encoding="utf-8")
+          PY
+
+          echo "Generated Android launcher resources in $RES_DIR"
+          echo "ANDROID_MANIFEST=$MANIFEST" >> "$GITHUB_ENV"
+
+      - name: Build debug APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          GRADLEW="$(find . -type f -name gradlew -not -path '*/build/*' -print -quit)"
+          if [ -z "$GRADLEW" ]; then
+            echo "::error::No Gradle wrapper (gradlew) was found; cannot build APK in this repository state."
+            exit 1
+          fi
+          chmod +x "$GRADLEW"
+          cd "$(dirname "$GRADLEW")"
+          ./gradlew assembleDebug --stacktrace
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Sling-wing-ga-me2-icon-debug-apk
+          path: "**/build/outputs/apk/debug/*.apk"
+          if-no-files-found: error
+          retention-days: 14
