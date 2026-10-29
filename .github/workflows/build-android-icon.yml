@@ -47,7 +47,7 @@ jobs:
 
           MAIN_DIR="$(dirname "$MANIFEST")"
           RES_DIR="$MAIN_DIR/res"
-          mkdir -p "$RES_DIR/drawable-nodpi" "$RES_DIR/mipmap-mdpi" "$RES_DIR/mipmap-hdpi" "$RES_DIR/mipmap-xhdpi" "$RES_DIR/mipmap-xxhdpi" "$RES_DIR/mipmap-xxxhdpi" "$RES_DIR/mipmap-anydpi-v26"
+          mkdir -p "$RES_DIR/values" "$RES_DIR/drawable-nodpi" "$RES_DIR/mipmap-mdpi" "$RES_DIR/mipmap-hdpi" "$RES_DIR/mipmap-xhdpi" "$RES_DIR/mipmap-xxhdpi" "$RES_DIR/mipmap-xxxhdpi" "$RES_DIR/mipmap-anydpi-v26"
 
           # Render the original landscape SVG without stretching. The original blue
           # background is extended to a square canvas so the full artwork remains visible.
@@ -66,7 +66,7 @@ jobs:
           # Android 8+ adaptive icon resources. Using the square source in the
           # foreground preserves the source artwork and its original colours.
           magick /tmp/icone-square.png -filter Lanczos -resize 432x432 "$RES_DIR/mipmap-xxxhdpi/ic_launcher_foreground.png"
-          cat > "$RES_DIR/values-icon.xml" <<'XML'
+          cat > "$RES_DIR/values/values-icon.xml" <<'XML'
           <resources>
               <color name="ic_launcher_background">#699AD3</color>
           </resources>
