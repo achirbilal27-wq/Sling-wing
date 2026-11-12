@@ -262,23 +262,52 @@
         ".glb"
       ],
       "runtimeIntegration": "runtime-integrated",
-      "purpose": "نماذج الزعماء الرئيسية التي تُحمّل أثناء القتال، مع بدائل إجرائية عند فشل التحميل.",
+      "purpose": "مصدر النماذج البصرية للزعماء الخمسة هو ملفات GLB فقط. تُحمّل النماذج عند بدء اللعبة وتُربط بكيان الزعيم مع الإبقاء على بديل إجرائي عند تعذر تحميل ملف GLB.",
       "models": {
         "iron_eagle.glb": {
           "role": "iron_eagle_boss",
+          "stage": 1,
           "biomes": [
             "green_plains"
           ],
           "behavior": "boss_air_combat",
           "fallback": "procedural_boss"
         },
+        "Storm Bomb.glb": {
+          "role": "storm_bomber_boss",
+          "stage": 2,
+          "biomes": [
+            "desert"
+          ],
+          "behavior": "boss_air_combat",
+          "fallback": "procedural_boss"
+        },
         "current_serpent_boss.glb": {
           "role": "current_serpent_boss",
+          "stage": 3,
           "biomes": [
             "ocean_boss_arena"
           ],
-          "behavior": "custom_glb_boss_with_procedural_fallback",
+          "behavior": "custom_glb_boss_with_serpent_motion_and_procedural_fallback",
           "runtimeUrl": "current_serpent_boss.glb",
+          "fallback": "procedural_boss"
+        },
+        "cloud-warden.glb": {
+          "role": "cloud_warden_boss",
+          "stage": 4,
+          "biomes": [
+            "snow"
+          ],
+          "behavior": "boss_air_combat",
+          "fallback": "procedural_boss"
+        },
+        "Grey Ruler.glb": {
+          "role": "grey_ruler_final_boss",
+          "stage": 5,
+          "biomes": [
+            "final_boss_arena"
+          ],
+          "behavior": "final_boss_air_combat",
           "fallback": "procedural_boss"
         }
       }

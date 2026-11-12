@@ -435,14 +435,54 @@ function applyPlaneColors(){
   if(model!==appliedModel)appliedModel=model;
 }
 
-const bossImageLoader=new THREE.TextureLoader(),bossImageTextures=Object.create(null),bossSpriteMaterials=Object.create(null);
-let ironEagleModelTemplate=null,ironEagleModelLoadStarted=false;
-let currentSerpentModelTemplate=null,currentSerpentModelLoadStarted=false;
+const BOSS_MODEL_PATHS=[
+  'assets/models/bosses/iron_eagle.glb',
+  'assets/models/bosses/Storm Bomb.glb',
+  'assets/models/bosses/current_serpent_boss.glb',
+  'assets/models/bosses/cloud-warden.glb',
+  'assets/models/bosses/Grey Ruler.glb'
+];
+const bossModelTemplates=Array(BOSS_MODEL_PATHS.length).fill(null);
+const bossModelLoadStarted=Array(BOSS_MODEL_PATHS.length).fill(false);
+function prepareGenericBossModel(root,index){
+  const normalized=new THREE.Group();
+  normalized.add(root);
+  normalized.updateMatrixWorld(true);
+  let box=new THREE.Box3().setFromObject(normalized);
+  if(box.isEmpty())return null;
+  let size=box.getSize(new THREE.Vector3());
+  if(size.y>Math.max(size.x,size.z)*1.2){
+    normalized.rotation.x=Math.PI/2;
+    normalized.updateMatrixWorld(true);
+    box=new THREE.Box3().setFromObject(normalized);
+    size=box.getSize(new THREE.Vector3());
+  }
+  if(size.x>size.z)normalized.rotation.y=Math.PI/2;
+  normalized.rotation.y+=Math.PI;
+  normalized.updateMatrixWorld(true);
+  box=new THREE.Box3().setFromObject(normalized);
+  size=box.getSize(new THREE.Vector3());
+  const span=Math.max(size.x,size.z);
+  if(!Number.isFinite(span)||span<0.001)return null;
+  normalized.scale.setScalar((index===4?64:54)/span);
+  normalized.updateMatrixWorld(true);
+  box=new THREE.Box3().setFromObject(normalized);
+  normalized.position.sub(box.getCenter(new THREE.Vector3()));
+  normalized.updateMatrixWorld(true);
+  normalized.traverse(node=>{
+    if(!node.isMesh)return;
+    node.castShadow=true;node.receiveShadow=true;
+    if(node.material){
+      const materials=Array.isArray(node.material)?node.material:[node.material];
+      materials.forEach(material=>{material.side=THREE.DoubleSide;material.needsUpdate=true;});
+    }
+  });
+  return normalized;
+}
 function prepareCurrentSerpentModel(root){
   const normalized=new THREE.Group();normalized.add(root);normalized.updateMatrixWorld(true);
   let box=new THREE.Box3().setFromObject(normalized);if(box.isEmpty())return null;
   let size=box.getSize(new THREE.Vector3());
-  // Keep the long body horizontal in the game's X/Z flight plane.
   if(size.y>Math.max(size.x,size.z)*1.15){normalized.rotation.x=Math.PI/2;normalized.updateMatrixWorld(true);box=new THREE.Box3().setFromObject(normalized);size=box.getSize(new THREE.Vector3());}
   if(size.x<size.z)normalized.rotation.y=Math.PI/2;
   normalized.updateMatrixWorld(true);box=new THREE.Box3().setFromObject(normalized);size=box.getSize(new THREE.Vector3());
@@ -452,29 +492,71 @@ function prepareCurrentSerpentModel(root){
   normalized.traverse(node=>{if(node.isMesh){node.castShadow=true;node.receiveShadow=true;if(node.material){const ms=Array.isArray(node.material)?node.material:[node.material];ms.forEach(m=>{m.side=THREE.DoubleSide;m.needsUpdate=true;});}}});
   return normalized;
 }
-function attachCurrentSerpentModel(group){
-  if(!currentSerpentModelTemplate||!group||!group.userData.currentSerpentBoss||group.userData.currentSerpentModelAttached)return;
-  // Keep a single visible boss representation; hide both the procedural
-  // fallback and any sprite before the custom GLB becomes visible.
-  if(group.userData.proceduralFallback)group.userData.proceduralFallback.visible=false;
-  if(group.userData.bossSprite)group.userData.bossSprite.visible=false;
-  const model=currentSerpentModelTemplate.clone(true);
-  model.userData.currentSerpentBossVisual=true;
+function prepareIronEagleBoss(root){
+  const normalized=new THREE.Group();
+  normalized.add(root);
+  normalized.updateMatrixWorld(true);
+  let box=new THREE.Box3().setFromObject(normalized);
+  if(box.isEmpty())return null;
+  let size=box.getSize(new THREE.Vector3());
+  if(size.y>Math.max(size.x,size.z)*1.2){
+    normalized.rotation.x=Math.PI/2;
+    normalized.updateMatrixWorld(true);
+    box=new THREE.Box3().setFromObject(normalized);
+    size=box.getSize(new THREE.Vector3());
+  }
+  if(size.x>size.z)normalized.rotation.y=Math.PI/2;
+  normalized.rotation.y+=Math.PI;
+  normalized.updateMatrixWorld(true);
+  box=new THREE.Box3().setFromObject(normalized);
+  size=box.getSize(new THREE.Vector3());
+  const span=Math.max(size.x,size.z);
+  if(!Number.isFinite(span)||span<0.001)return null;
+  normalized.scale.setScalar(54/span);
+  normalized.updateMatrixWorld(true);
+  box=new THREE.Box3().setFromObject(normalized);
+  normalized.position.sub(box.getCenter(new THREE.Vector3()));
+  normalized.updateMatrixWorld(true);
+  normalized.traverse(node=>{
+    if(!node.isMesh)return;
+    node.castShadow=true;node.receiveShadow=true;
+    if(node.material){
+      const materials=Array.isArray(node.material)?node.material:[node.material];
+      materials.forEach(material=>{material.side=THREE.DoubleSide;material.needsUpdate=true;});
+    }
+  });
+  return normalized;
+}
+function attachBossModel(group,index){
+  const template=bossModelTemplates[index];
+  if(!template||!group||group.userData.bossModelAttached)return;
+  const model=template.clone(true);
+  model.userData.bossModelVisual=true;
+  if(index===2)model.userData.currentSerpentBossVisual=true;
   group.add(model);
-  group.userData.currentSerpentModel=model;
-  group.userData.currentSerpentModelAttached=true;
+  group.userData.bossModel=model;
+  group.userData.bossModelAttached=true;
+  if(index===0)group.userData.ironEagleModel=model;
+  if(index===2)group.userData.currentSerpentModel=model;
+  if(group.userData.proceduralFallback)group.userData.proceduralFallback.visible=false;
 }
-function loadCurrentSerpentBossModel(){
-  if(currentSerpentModelLoadStarted||typeof THREE.GLTFLoader!=='function')return;
-  currentSerpentModelLoadStarted=true;
-  new THREE.GLTFLoader().load('assets/models/bosses/current_serpent_boss.glb',gltf=>{
-    const model=prepareCurrentSerpentModel(gltf.scene);if(!model){console.warn('Current Serpent GLB has no usable geometry; fallback retained.');return;}
-    currentSerpentModelTemplate=model;
-    if(typeof objs!=='undefined'&&objs&&Array.isArray(objs.enemies))objs.enemies.forEach(enemy=>{if(enemy.boss&&enemy.bossStage===3&&!enemy.hit)attachCurrentSerpentModel(enemy.mesh);});
-    console.info('Current Serpent custom GLB loaded.');
-  },undefined,error=>console.warn('Current Serpent GLB failed to load; fallback retained.',error));
+function loadBossModel(index){
+  if(bossModelLoadStarted[index]||bossModelTemplates[index]||typeof THREE.GLTFLoader!=='function')return;
+  bossModelLoadStarted[index]=true;
+  new THREE.GLTFLoader().load(BOSS_MODEL_PATHS[index],gltf=>{
+    const source=gltf&&gltf.scene;
+    const model=index===0?prepareIronEagleBoss(source):index===2?prepareCurrentSerpentModel(source):prepareGenericBossModel(source,index);
+    if(!model){console.warn('Boss GLB has no usable geometry:',BOSS_MODEL_PATHS[index]);return;}
+    bossModelTemplates[index]=model;
+    if(typeof objs!=='undefined'&&objs&&Array.isArray(objs.enemies)){
+      objs.enemies.forEach(enemy=>{
+        if(enemy.boss&&!enemy.hit&&Math.max(0,((enemy.bossStage||1)-1)%BOSS_MODEL_PATHS.length)===index)attachBossModel(enemy.mesh,index);
+      });
+    }
+    console.info('Boss GLB loaded:',BOSS_MODEL_PATHS[index]);
+  },undefined,error=>console.warn('Boss GLB failed to load; procedural fallback retained:',BOSS_MODEL_PATHS[index],error));
 }
-loadCurrentSerpentBossModel();
+BOSS_MODEL_PATHS.forEach((_,index)=>loadBossModel(index));
 /* ---------- objects ---------- */
 const objGroup=new THREE.Group();scene.add(objGroup);
 const coinGeo=new THREE.CylinderGeometry(1.5,1.5,0.35,18);coinGeo.rotateZ(Math.PI/2);
@@ -625,137 +707,20 @@ function makeProceduralBossPlane(biomeIndex){
   g.rotation.y=Math.PI;g.userData.boss=true;return g;
 }
 function makeBossPlane(biomeIndex){
-  const names=['iron-eagle','storm-bomber','Current-serpent','cloud-warden','grey-ruler'];
-  const g=new THREE.Group();
-  const fallback=makeProceduralBossPlane(biomeIndex);
-  fallback.scale.setScalar(biomeIndex===4?2.85:2.15);
-  fallback.visible=true;
-  g.add(fallback);
-  g.userData.boss=true;
-  if(biomeIndex===0){
-    // A real GLB takes priority for Iron Eagle; preserve the procedural fallback.
-    g.userData.ironEagleBoss=true;
-    g.userData.proceduralFallback=fallback;
-    g.userData.imageBoss=false;
-    if(ironEagleModelTemplate)attachIronEagleModel(g);
-    else loadIronEagleBossModel();
-    return g;
-  }
-  if(biomeIndex===2){
-    g.userData.currentSerpentBoss=true;
-    g.userData.proceduralFallback=fallback;
-    g.userData.imageBoss=false;
-    if(currentSerpentModelTemplate)attachCurrentSerpentModel(g);else loadCurrentSerpentBossModel();
-    return g;
-  }
-  const path='assets/images/bosses/'+names[biomeIndex]+'.png';
-  const material=bossSpriteMaterials[path]||(bossSpriteMaterials[path]=new THREE.SpriteMaterial({transparent:true,alphaTest:0.015,depthWrite:false,depthTest:true}));
-  const image=new THREE.Sprite(material);
-  image.center.set(0.5,0.5);
-  image.visible=false;
-  g.add(image);
-  g.userData.imageBoss=true;g.userData.bossSprite=image;
-  const applyBossTexture=texture=>{
-    texture.encoding=THREE.sRGBEncoding;
-    texture.generateMipmaps=false;
-    texture.minFilter=THREE.LinearFilter;
-    texture.magFilter=THREE.LinearFilter;
-    material.map=texture;
-    material.needsUpdate=true;
-    const aspect=(texture.image&&texture.image.width&&texture.image.height)?texture.image.width/texture.image.height:1;
-    const maxWidth=biomeIndex===4?52:46;
-    const maxHeight=biomeIndex===4?36:33;
-    const height=Math.min(maxHeight,maxWidth/Math.max(0.1,aspect));
-    image.scale.set(height*aspect,height,1);
-    image.visible=true;
-    fallback.visible=false;
-  };
-  const cachedTexture=bossImageTextures[path];
-  if(cachedTexture)applyBossTexture(cachedTexture);
-  else bossImageLoader.load(path,texture=>{
-    bossImageTextures[path]=texture;
-    applyBossTexture(texture);
-  },undefined,()=>{
-    image.visible=false;
-    fallback.visible=true;
-  });
-  return g;
+  const index=((biomeIndex%BOSS_MODEL_PATHS.length)+BOSS_MODEL_PATHS.length)%BOSS_MODEL_PATHS.length;
+  const group=new THREE.Group();
+  const fallback=makeProceduralBossPlane(index);
+  fallback.scale.setScalar(index===4?2.85:2.15);
+  group.add(fallback);
+  group.userData.boss=true;
+  group.userData.bossModelIndex=index;
+  group.userData.proceduralFallback=fallback;
+  if(index===0)group.userData.ironEagleBoss=true;
+  if(index===2)group.userData.currentSerpentBoss=true;
+  if(bossModelTemplates[index])attachBossModel(group,index);
+  else loadBossModel(index);
+  return group;
 }
-function prepareIronEagleBoss(root){
-  // Normalize the imported hierarchy before applying game-specific orientation.
-  const normalized=new THREE.Group();
-  normalized.add(root);
-  normalized.updateMatrixWorld(true);
-  let box=new THREE.Box3().setFromObject(normalized);
-  if(box.isEmpty())return null;
-  let size=box.getSize(new THREE.Vector3());
-
-  // Some exported GLBs arrive Z-up/sideways. If Y is clearly the dominant
-  // span, lay the aircraft onto the game's horizontal flight plane first.
-  if(size.y>Math.max(size.x,size.z)*1.2){
-    normalized.rotation.x=Math.PI/2;
-    normalized.updateMatrixWorld(true);
-    box=new THREE.Box3().setFromObject(normalized);
-    size=box.getSize(new THREE.Vector3());
-  }
-
-  // The game's aircraft span across Z and point along X. Align the wider
-  // horizontal axis first, then turn the nose toward the approaching player.
-  if(size.x>size.z)normalized.rotation.y=Math.PI/2;
-  normalized.rotation.y+=Math.PI;
-  normalized.updateMatrixWorld(true);
-
-  // Fit and center only after the FINAL rotation. Centering before the yaw
-  // caused the offset itself to rotate, making the boss appear displaced.
-  box=new THREE.Box3().setFromObject(normalized);
-  size=box.getSize(new THREE.Vector3());
-  const span=Math.max(size.x,size.z);
-  if(!Number.isFinite(span)||span<0.001)return null;
-  normalized.scale.setScalar(54/span);
-  normalized.updateMatrixWorld(true);
-  box=new THREE.Box3().setFromObject(normalized);
-  normalized.position.sub(box.getCenter(new THREE.Vector3()));
-  normalized.updateMatrixWorld(true);
-
-  normalized.traverse(node=>{
-    if(!node.isMesh)return;
-    node.castShadow=true;node.receiveShadow=true;
-    if(node.material){
-      const materials=Array.isArray(node.material)?node.material:[node.material];
-      materials.forEach(material=>{material.side=THREE.DoubleSide;material.needsUpdate=true;});
-    }
-  });
-  return normalized;
-}
-function attachIronEagleModel(group){
-  if(!ironEagleModelTemplate||!group||!group.userData.ironEagleBoss||group.userData.ironEagleModelAttached)return;
-  // Orientation and centering are already finalized in prepareIronEagleBoss.
-  const model=ironEagleModelTemplate.clone(true);
-  group.add(model);
-  group.userData.ironEagleModel=model;
-  group.userData.ironEagleModelAttached=true;
-  if(group.userData.proceduralFallback)group.userData.proceduralFallback.visible=false;
-  group.userData.imageBoss=false;
-}
-function loadIronEagleBossModel(){
-  if(ironEagleModelLoadStarted)return;
-  if(typeof THREE.GLTFLoader!=='function'){
-    console.warn('GLTFLoader unavailable; keeping the procedural Iron Eagle boss.');
-    return;
-  }
-  ironEagleModelLoadStarted=true;
-  new THREE.GLTFLoader().load('assets/models/bosses/iron_eagle.glb',gltf=>{
-    const model=prepareIronEagleBoss(gltf.scene);
-    if(!model){console.warn('Iron Eagle GLB has no usable geometry; keeping the procedural boss.');return;}
-    ironEagleModelTemplate=model;
-    if(typeof objs!=='undefined'&&objs&&Array.isArray(objs.enemies)){
-      objs.enemies.forEach(enemy=>{if(enemy.boss&&enemy.bossStage===1&&!enemy.hit)attachIronEagleModel(enemy.mesh);});
-    }
-    console.info('Iron Eagle GLB loaded successfully.');
-  },undefined,error=>console.warn('Iron Eagle GLB failed to load; keeping the procedural boss.',error));
-}
-// Preload the first boss before the player reaches its arena to avoid a visible model swap mid-fight.
-loadIronEagleBossModel();
 let enemyModelTemplate=null;
 let enemyModelLoadStarted=false;
 function prepareEnemyModel(root){
@@ -1528,8 +1493,6 @@ function spawn(until){
     ['coins','rings','birds','fuels','drafts','storms','stations'].forEach(key=>{objs[key].forEach(o=>{if(o.mesh)objGroup.remove(o.mesh);});objs[key]=[];});
     const e={x,alt:250+Math.random()*260,z:zc((Math.random()-.5)*260),phase:Math.random()*6.28,fireT:2.3,hit:false,boss:true,hp:bossHp,maxHp:bossHp,contactHit:false,attackState:'ranged',attackTimer:3.2+Math.random()*1.5,diveWarning:0,diveTimer:0,weaponCycle:0,diveTargetAlt:300,diveTargetZ:0,combatPhase:1,biomeIndex,bossName:BOSS_PROFILES[biomeIndex].name,bossStage:stage+1,hitRadiusX:biomeIndex===0?92:82,hitRadiusY:biomeIndex===0?64:72,hitRadiusZ:biomeIndex===0?112:80,bank:0};
     e.finalBoss=biomeIndex===4;e.mesh=makeBossPlane(biomeIndex);e.mesh.position.set(x*S,Y(e.alt),e.z*S);objGroup.add(e.mesh);objs.enemies.push(e);
-    const portrait=$('bossPortrait');
-    if(portrait){portrait.hidden=true;portrait.onerror=()=>{portrait.hidden=true;};portrait.onload=()=>{portrait.hidden=false;};portrait.src='assets/images/bosses/'+['iron-eagle','storm-bomber','Current-serpent','cloud-warden','grey-ruler'][biomeIndex]+'.png';}
     run.bossBattle=true;playSfx('boss-warning');addFloat(x,e.alt+75,'دخول ساحة '+e.bossName+' — الوقود محمي حتى نهاية المعركة!','#ff9b91',e.z);
     objs.nextBoss=bossDistanceMeters(stage+1)/M_PER_PX;return;
   }
