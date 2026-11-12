@@ -84,7 +84,9 @@ for (const model of expectedModels) {
 }
 
 check(js.includes('BOSS_MODEL_PATHS.forEach') && js.includes('function attachBossModel') && js.includes('function loadBossModel'), 'All five boss GLBs must be loaded and attached by the shared boss-model pipeline.');
-check(!js.includes('assets/images/bosses') && !html.includes('bossPortrait') && !css.includes('#bossPortrait'), 'Boss PNG portraits and sprite rendering must be fully removed.');
+const removedBossImagePath=['assets','images','bosses'].join('/');
+const removedBossPortraitId='boss'+'Portrait';
+check(!js.includes(removedBossImagePath) && !html.includes(removedBossPortraitId) && !css.includes('#'+removedBossPortraitId), 'Boss PNG portraits and sprite rendering must be fully removed.');
 check(html.indexOf('GLTFLoader.js') >= 0 && html.indexOf('js/game.js') > html.indexOf('GLTFLoader.js'), 'GLTFLoader must load before js/game.js.');
 check(js.includes('const squadronSize=3') && js.includes('const coins=10;'), 'Boss reward must spawn a three-plane squadron worth 10 coins per aircraft.');
 check(js.includes('reward.hit=true;reward.collected=true;') && js.includes('collectBossRewardPlane(reward);'), 'Bonus aircraft must use one-time collection and a dedicated collision path.');
